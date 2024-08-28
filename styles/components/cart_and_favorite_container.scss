@@ -1,0 +1,134 @@
+@import "@/styles/mixin/_ellipsis.scss";
+
+a {
+  display: block;
+  text-decoration: none;
+}
+
+.cart_container,
+.favorite_container {
+  width: 300px;
+  padding: 15px;
+  position: fixed;
+  top: 45px;
+  right: 10px;
+  transform: translateX(110%);
+
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 5px 1px $secondColor;
+  transition: 0.5s;
+  z-index: 150;
+
+  &.active {
+    transform: translateX(0%);
+  }
+
+  .items,
+  .items {
+    max-height: 500px;
+    overflow-y: auto;
+
+    li {
+      &:last-child {
+        a {
+          border-bottom: none;
+        }
+      }
+
+      a {
+        padding: 10px;
+        border-bottom: 1px solid rgba($secondColor, 0.8);
+        color: #555;
+        cursor: pointer;
+
+        &:hover {
+          background: rgba(0, 0, 0, 0.1);
+        }
+
+        .img_and_name {
+          margin-bottom: 10px;
+          display: flex;
+          align-items: center;
+
+          .img {
+            flex-grow: 0;
+            flex-shrink: 0;
+            width: 50px;
+            height: 50px;
+            margin-right: 10px;
+            background-size: cover;
+            background-position: center;
+          }
+          .name {
+            flex-grow: 1;
+
+            @include multiline_ellipsis(3);
+          }
+        }
+
+        .price_and_delete {
+          display: flex;
+          height: 30px;
+          padding-left: 60px;
+
+          .price {
+            flex-grow: 1;
+
+            height: 100%;
+            display: flex;
+            align-items: center;
+          }
+
+          .delete {
+            flex-grow: 0;
+            flex-shrink: 0;
+
+            width: 50px;
+            height: 100%;
+            color: $dangerColor;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            transition: 0.3s;
+            cursor: pointer;
+
+            &:hover {
+              color: darken($dangerColor, 10%);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .pushTo_cart {
+    margin-top: 10px;
+
+    a {
+      height: 40px;
+      font-size: 14px;
+      border-radius: 3px;
+      border: 1px solid $primaryColor;
+      background: #fff;
+      color: $primaryColor;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      transition: 0.4s;
+      cursor: pointer;
+
+      &:hover {
+        background: $primaryColor;
+        color: #fff;
+      }
+
+      i {
+        margin-right: 5px;
+      }
+    }
+  }
+}

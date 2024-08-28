@@ -1,0 +1,43 @@
+// ============================================================
+
+.main {
+  width: 1170px;
+  margin: 0 auto;
+  padding: 10px 20px;
+
+  .title {
+    padding: 10px 0 25px;
+    margin-bottom: 28px;
+    text-align: center;
+    letter-spacing: 3px;
+    font-size: 22px;
+    color: #666;
+    position: relative;
+
+    &:before {
+      content: '';
+      width: 25px;
+      height: 3px;
+      position: absolute;
+      left: 50%;
+      bottom: -3px;
+      margin-left: -12.5px;
+      background-color: $primaryColor;
+    }
+  }
+}
+@include xl {
+  .main {
+    width: 970px;
+  }
+}
+@include l {
+  .main {
+    width: 750px;
+  }
+}
+@include m {
+  .main {
+    width: 100%;
+  }
+}

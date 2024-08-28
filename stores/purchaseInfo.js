@@ -1,0 +1,346 @@
+// json
+import city_district_json from "@/json/city_district.json"
+
+export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
+  let commonStore = useCommonStore()
+  let cartStore = useCartStore()
+  let memberInfoStore = useMemberInfoStore()
+  let orderStore = useOrderStore()
+
+  // state ==============================
+  // 購買人資訊
+  const info = ref({
+    purchaser_email: {
+      value: "",
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        mail: {
+          message: "email格式不符"
+        }
+      },
+      is_error: false,
+      message: ""
+    },
+    purchaser_name: {
+      value: "",
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        name: {
+          message: "請輸入全中文或全英文"
+        },
+        nameLength: {
+          message: "中文長度請介於2~5，英文長度請介於4~10"
+        }
+      },
+      is_error: false,
+      message: ""
+    },
+    purchaser_number: {
+      value: "",
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        cellphone: {
+          message: "格式錯誤"
+        }
+      },
+      is_error: false,
+      message: ""
+    },
+    receiver_name: {
+      value: "",
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        name: {
+          message: "請輸入全中文或全英文"
+        },
+        nameLength: {
+          message: "中文長度請介於2~5，英文長度請介於4~10"
+        }
+      },
+      is_error: false,
+      message: ""
+    },
+    receiver_number: {
+      value: "",
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        cellphone: {
+          message: "格式錯誤"
+        }
+      },
+      is_error: false,
+      message: ""
+    },
+
+    //
+    address: {
+      city_active: "",
+      is_show_city: false,
+      district_active: "",
+      is_show_district: false,
+      detail_address: "",
+      rules: {
+        required: {
+          message: "請輸入收件地址"
+        }
+      },
+      is_error: false,
+      message: ""
+    }
+  })
+  // 訂單備註
+  const info_message = ref("")
+
+  // 地址是否為常用地址
+  const has_address = ref(false)
+  // 是否儲存為常用地址
+  const is_save_address = ref(false)
+
+  // 便利商店 門市
+  const storeid = ref("")
+  const storename = ref("")
+  const storeaddress = ref("")
+
+  // 發票
+  // "0" "1" 個人紙本 "2" "3" "4"
+  const invoice_type = ref("0")
+  // "個人發票" "公司發票"
+  const personal_or_company = ref("")
+  // invoice_type "3" 手機載具
+  const phone_barCode = ref("")
+  // invoice_type "4" 自然人載具
+  const natural_barCode = ref("")
+  // invoice_type "2" 公司
+  const invoice_title = ref("")
+  const invoice_uniNumber = ref("")
+
+  // 運送方式
+  const transport = ref("0")
+  const transport_obj = ref({
+    0: "",
+    1: "一般宅配",
+    2: "到店自取",
+    UNIMARTDelivery: "7-11 取貨付款",
+    UNIMARTC2CDelivery: "7-11 取貨付款",
+    UNIMART: "7-11 取貨不付款",
+    UNIMARTC2C: "7-11 取貨不付款",
+    UNIMARTFREEZEDelivery: "7-11冷凍 取貨付款",
+    UNIMARTFREEZE: "7-11冷凍 取貨不付款",
+
+    FAMIDelivery: "全家 取貨付款",
+    FAMIC2CDelivery: "全家 取貨付款",
+    FAMI: "全家 取貨不付款",
+    FAMIC2C: "全家 取貨不付款",
+
+    HILIFEDelivery: "萊爾富 取貨付款",
+    HILIFEC2CDelivery: "萊爾富 取貨付款",
+    HILIFE: "萊爾富 取貨不付款",
+    HILIFEC2C: "萊爾富 取貨不付款",
+
+    OKMARTC2CDelivery: "OK超商 取貨付款",
+    OKMARTC2C: "OK超商 取貨不付款"
+  })
+  const is_show_transport_options = ref(false)
+
+  // 支付方式
+  const pay_method = ref("0")
+
+  //
+  const city_district = city_district_json
+
+  // computed ==============================
+  // `${city} ${district} ${detail}`
+  const receiver_address = computed(() => {
+    let address = `${info.value.address.city_active} ${info.value.address.district_active} ${info.value.address.detail_address}`
+    if (memberStore.memberInfo.address_obj) {
+      has_address.value = false
+      for (let key in memberStore.memberInfo.address_obj) {
+        let item = memberStore.memberInfo.address_obj[key]
+        if (item.address == address) {
+          has_address.value = true
+        }
+      }
+    }
+    return address
+  })
+  // 運送方式是否選擇門市
+  const is_store = computed(() => {
+    if (transport.value == 0) return undefined
+    else if (transport.value === "1" || transport.value === "2") return false
+    else return true
+  })
+
+  // methods ==============================
+  // 選擇超商
+  function pickConvenienceStore() {
+    let order_info = {
+      info: {
+        purchaser_email: info.value.purchaser_email.value,
+        purchaser_name: info.value.purchaser_name.value,
+        purchaser_number: info.value.purchaser_number.value,
+        receiver_name: info.value.receiver_name.value,
+        receiver_number: info.value.receiver_number.value
+      },
+      info_message: info_message.value,
+
+      transport: transport.value,
+      pay_method: pay_method.value,
+
+      invoice_type: invoice_type.value,
+      personal_or_company: personal_or_company.value,
+      phone_barCode: phone_barCode.value,
+      natural_barCode: natural_barCode.value,
+      invoice_title: invoice_title.value,
+      invoice_uniNumber: invoice_uniNumber.value,
+
+      is_use_bonus: cartStore.is_use_bonus,
+      use_bonus: cartStore.use_bonus,
+
+      discountCode: cartStore.discountCode,
+      successUsedDiscountCode: cartStore.successUsedDiscountCode
+    }
+    localStorage.setItem("order_info", JSON.stringify(order_info))
+
+    let MerchantID
+    if (process.env.NODE_ENV === "development") {
+      orderStore.ECPay_store_form = `<form id="ECPay_store_form" action="https://logistics-stage.ecpay.com.tw/Express/map" method="post">`
+      MerchantID = transport.value.indexOf("C2C") > -1 ? "2000933" : "2000132"
+    } else {
+      orderStore.ECPay_store_form = `<form id="ECPay_store_form" action="https://logistics.ecpay.com.tw/Express/map" method="post">`
+      MerchantID = cartCommonStore.store.ECStore
+    }
+    let LogisticsSubType = transport.value.replace("Delivery", "")
+    let IsCollection = transport.value.indexOf("Delivery") > -1 ? "Y" : "N"
+
+    let obj = {
+      MerchantID,
+      MerchantTradeNo: "",
+      LogisticsType: "CVS",
+      LogisticsSubType,
+      IsCollection,
+      ServerReplyURL: `${location.origin}/interface/store/SpmarketAddress${
+        cartCommonStore.showPage == "singleProduct"
+          ? "?spid=" + productsStore.selectedProduct.ID
+          : ""
+      }`,
+      ExtraData: "",
+      Device: ""
+    }
+
+    for (let key in obj) {
+      orderStore.ECPay_store_form += `<input type="${
+        key == "Device" ? "number" : "text"
+      }" name="${key}" value="${obj[key]}">`
+    }
+    orderStore.ECPay_store_form += `</form>`
+
+    setTimeout(() => {
+      let ECPay_store_form = document.querySelector("#ECPay_store_form")
+      ECPay_store_form.submit()
+    }, 1000)
+  }
+  function getConvenienceStore(id, name, address) {
+    if (!id || !name || !address) return
+
+    methods.returnInfo()
+
+    purchaseInfoStore.storeid = id
+    purchaseInfoStore.storename = decodeURI(name)
+    purchaseInfoStore.storeaddress = decodeURI(address)
+
+    if (!productsStore.isSingleProduct) {
+      cartStore.showPage = "cart"
+      cartStore.stepIndex = 2
+    }
+  }
+  function returnInfo() {
+    let order_info = JSON.parse(localStorage.getItem("order_info")) || {}
+
+    info.value = order_info.info
+    info_message.value = order_info.info_message
+
+    transport.value = order_info.transport
+    pay_method.value = order_info.pay_method
+
+    invoice_type.value = order_info.invoice_type
+    invoice_title.value = order_info.invoice_title
+    invoice_uniNumber.value = order_info.invoice_uniNumber
+
+    cartStore.is_use_bonus = order_info.is_use_bonus
+    cartStore.use_bonus = order_info.use_bonus
+
+    cartStore.discountCode = order_info.discountCode
+    cartStore.successUsedDiscountCode = order_info.successUsedDiscountCode
+  }
+
+  // 調整 use_bonus， 不能 > total_bonus，不能 > Total - Discount - DiscountCode
+  async function filter_use_bonus(stepPage) {
+    if (!commonStore.user_account) {
+      cartStore.is_use_bonus = false
+      cartStore.use_bonus = 0
+      return
+    }
+
+    cartStore.use_bonus = useNumber(cartStore.use_bonus)
+
+    if (cartStore.use_bonus > 0) {
+      let use_bonus_max = Math.min(
+        cartStore.total_bonus * 1,
+        cartStore.total.Total * 1 -
+          cartStore.total.Discount * 1 -
+          cartStore.total.DiscountCode * 1
+      )
+      if (cartStore.use_bonus > use_bonus_max)
+        cartStore.use_bonus = use_bonus_max
+    }
+
+    await cartStore.getTotal(stepPage)
+  }
+
+  return {
+    info,
+
+    has_address,
+    is_save_address,
+
+    storeid,
+    storename,
+    storeaddress,
+
+    info_message,
+
+    invoice_type,
+    personal_or_company,
+    phone_barCode,
+    natural_barCode,
+    invoice_title,
+    invoice_uniNumber,
+
+    transport,
+    transport_obj,
+    is_show_transport_options,
+
+    pay_method,
+
+    city_district,
+
+    receiver_address,
+    is_store,
+
+    pickConvenienceStore,
+    getConvenienceStore,
+    returnInfo,
+
+    filter_use_bonus
+  }
+})
