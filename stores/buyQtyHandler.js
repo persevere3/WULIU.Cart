@@ -16,6 +16,8 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
   // methods ==============================
   // 改變 主商品數量
   async function changeMainBuyQty(main, specIndex, qty, e) {
+    console.log(main, specIndex, qty)
+
     let spec = specIndex == null ? null : main.specArr[specIndex]
     let target = spec ? spec : main
 
@@ -171,7 +173,7 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
           if (leftBuyQty <= 0) qty = 0
           else qty = leftBuyQty
         }
-        cartCommonStore.showMessage(
+        commonStore.showMessage(
           `目前商品數量僅剩 ${target.Amount * 1 < 1 ? 0 : target.Amount} 組`,
           false
         )
@@ -199,11 +201,6 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
       cartItem.addProducts = JSON.parse(JSON.stringify(product.addProducts))
 
     cartStore.setCart()
-  }
-
-  // test ---------------
-  function changeBuyQty(target, qty) {
-    target.buyQty = qty
   }
 
   // ---------------
@@ -311,7 +308,6 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
   return {
     changeMainBuyQty,
     changeAddProductBuyQty,
-    changeBuyQty,
     getAmount
   }
 })

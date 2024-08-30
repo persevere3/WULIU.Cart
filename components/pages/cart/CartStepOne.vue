@@ -33,15 +33,15 @@ const cartSpecCheckedId = ref(-1)
           </template>
 
           <!-- 加價購 -->
-          <template v-if="item.addPrice">
-            <div v-for="item2 in item.addPrice">
+          <template v-if="item.addProducts">
+            <div v-for="item2 in item.addProducts">
               <!-- 有規格 -->
               <template v-if="item2.specArr">
                 <template v-for="spec2 in item2.specArr" :key="spec2.ID">
                   <CartStepOneTr
                     v-if="spec2.buyQty > 0"
                     :main="item"
-                    :addPrice="item2"
+                    :addProduct="item2"
                     :spec="spec2"
                     :cartSpecCheckedId="cartSpecCheckedId"
                   />
@@ -52,7 +52,7 @@ const cartSpecCheckedId = ref(-1)
                 <CartStepOneTr
                   v-if="item2.buyQty > 0"
                   :main="item"
-                  :addPrice="item2"
+                  :addProduct="item2"
                   :cartSpecCheckedId="cartSpecCheckedId"
                 />
               </template>
@@ -61,9 +61,8 @@ const cartSpecCheckedId = ref(-1)
         </div>
       </div>
     </div>
-
     <div class="discount" v-if="commonStore.store">
-      <p v-show="commonStore.commonStorestore.Discount == 1" class="notice">
+      <p v-show="commonStore.store.Discount == 1" class="notice">
         消費滿{{ commonStore.store.Price }}元 ，折扣{{
           commonStore.store.Ratio
         }}元 。

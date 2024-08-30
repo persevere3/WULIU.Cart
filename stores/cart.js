@@ -3,11 +3,14 @@ import { discountApi, getTotalApi } from "@/apis/cart"
 
 // composables
 import { useNumberThousands } from "@/composables/numberThousands"
+import { useRequest } from "@/composables/request"
 
 export const useCartStore = defineStore("cart", () => {
   let commonStore = useCommonStore()
   let productStore = useProductStore()
   let purchaseInfoStore = usePurchaseInfoStore()
+
+  let { return_formData } = useRequest()
 
   // state ==============================
   const is_cart_modal = ref(false)
@@ -277,7 +280,7 @@ export const useCartStore = defineStore("cart", () => {
     // if (!productStore.isSingleProduct) {
     //   commonStore.showPage = "main"
     //   productStore.getCategories()
-    // } else cartCommonStore.step = 1
+    // } else cartStore.step = 1
 
     // await productStore.getProducts()
     // productStore.productsHandler()
@@ -310,7 +313,7 @@ export const useCartStore = defineStore("cart", () => {
 
         if (status === "0") discountErrorMessage.value = "您的折扣碼無效"
         else if (status === "2") discountErrorMessage.value = "此折扣碼已使用完"
-        cartCommonStore.showMessage(
+        commonStore.showMessage(
           `抱歉!${discountErrorMessage.value}，請重新輸入`,
           false
         )
@@ -367,19 +370,13 @@ export const useCartStore = defineStore("cart", () => {
     if (shipping === 4) query["Mart"] = purchaseInfoStore.transport
 
     try {
-      let res = JSON.parse(await getTotalApi(query))
-      // const isReqSuccess = commonStore.resHandler(res, getTotal, [isStepTwo])
-      // if (!isReqSuccess) return
-
-      console.log(res)
-
-      return
+      let res = JSON.parse(await getTotalApi(return_formData(query)))
+      const isReqSuccess = commonStore.resHandler(res, getTotal, [isStepTwo])
+      if (!isReqSuccess) return
 
       let originTotal = res.data[0]
       originTotal.FreeItem = JSON.parse(originTotal.FreeItem)
-      originTotal.tradeDataCheckInfo = JSON.parse(
-        originTotal.tradeDataCheckInfo
-      )
+
       total.value = originTotal
     } catch (error) {
       throw new Error(error)
@@ -450,16 +447,16 @@ export const useCartStore = defineStore("cart", () => {
           }
           // 沒規格
           else {
-            if (addProductSpec.buyQty != 0) {
+            if (addProduct.buyQty != 0) {
               cartStrObj.additionalid +=
-                (cartStrObj.additionalid ? "," : "") + addProductSpec.ID
+                (cartStrObj.additionalid ? "," : "") + addProduct.ID
               cartStrObj.additionalprice +=
-                (cartStrObj.additionalprice ? "," : "") + addProductSpec.Price
+                (cartStrObj.additionalprice ? "," : "") + addProduct.Price
               cartStrObj.additionalqry +=
-                (cartStrObj.additionalqry ? "," : "") + addProductSpec.buyQty
+                (cartStrObj.additionalqry ? "," : "") + addProduct.buyQty
               cartStrObj.ItemName +=
                 (cartStrObj.ItemName ? "#" : "") +
-                `加價購 ${addProductSpec.Name} NT$${addProductStr} x ${addProductSpec.buyQty}`
+                `加價購 ${addProduct.Name} NT$${addProductStr} x ${addProduct.buyQty}`
             }
           }
         })

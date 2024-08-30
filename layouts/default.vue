@@ -16,6 +16,9 @@
   <ToTopIcon />
 
   <Third />
+
+  <Message />
+  <Confirm />
 </template>
 
 <script setup>
@@ -30,6 +33,9 @@ import Footer from "@/components/layouts/default/footer"
 
 import ToTopIcon from "@/components/layouts/default/toTopIcon.vue"
 import Third from "@/components/layouts/default/third"
+
+import Message from "@/components/layouts/default/Message.vue"
+import Confirm from "@/components/layouts/default/Confirm.vue"
 
 const commonStore = useCommonStore()
 

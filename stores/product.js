@@ -73,8 +73,6 @@ export const useProductStore = defineStore("product", () => {
         })
 
         category_products.value[0].products = products.value
-
-        console.log(category_products.value)
       }
     },
     { deep: true }

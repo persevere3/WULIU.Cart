@@ -218,7 +218,7 @@
                   class="button"
                   v-if="pathname.toLowerCase().indexOf('order') > -1"
                   @click="
-                    pay_method = item.PayMethod
+                    purchaseInfoStore.pay_method = item.PayMethod
                     rePay(
                       item.FilNo,
                       `${
@@ -235,7 +235,7 @@
                   class="button"
                   v-if="pathname.toLowerCase().indexOf('info') > -1"
                   @click="
-                    pay_method = item.PayMethod
+                    purchaseInfoStore.pay_method = item.PayMethod
                     rePay(
                       item.FilNo,
                       `${

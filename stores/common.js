@@ -7,18 +7,20 @@ import {
 
 import bank_json from "@/json/bank"
 
-import { useNumberThousands } from "@/composables/numberThousands"
 import { useAppendScript } from "@/composables/appendScript"
 import { useUrlPush } from "@/composables/urlPush"
 
 export const useCommonStore = defineStore("common", () => {
   const config = useRuntimeConfig()
   const productStore = useProductStore()
+  const cartStore = useCartStore()
+  const purchaseInfoStore = usePurchaseInfoStore()
+  const memberInfoStore = useMemberInfoStore()
 
   // state ==============================
 
   /*
-    MemberFuction: 會員系統
+    site.MemberFuction: 會員系統
   */
   const site = ref({})
   const searchObj = ref({})
@@ -48,17 +50,11 @@ export const useCommonStore = defineStore("common", () => {
   // web ------------
   const webData = ref({})
   const all = ref({})
-  const webStore = ref({})
   const footer_community = ref({})
   const copyRight = ref({})
   const customerService = ref({})
 
   const is_initial = ref(false)
-
-  // index, search page
-  // const perpage_num = ref(8)
-  // const totalpage_num = ref(0)
-  // const page_active = ref(1)
 
   //
   const is_logout = ref(null)
@@ -118,73 +114,11 @@ export const useCommonStore = defineStore("common", () => {
 
       site.value = res.GetSite.data[0]
       localStorage.setItem("site", JSON.stringify(site.value))
-      console.log("site", site.value)
 
       if (site.value.WebEnable == 0) {
         useUrlPush("/error.html")
         return
       }
-
-      getSearch()
-
-      // user_account ----------
-      // Line 登入
-      let account = searchObj.value["account"]
-      if (account) localStorage.setItem("user_account", account)
-
-      // Line 綁定
-      let result = searchObj.value["result"]
-      if (result) {
-        result = JSON.parse(decodeURI(result))
-        if (!result.status) alert(result.msg)
-        else localStorage.setItem("user_account", result.account)
-      }
-
-      user_account.value = localStorage.getItem("user_account")
-
-      // 超商取貨付款
-      let storeid = searchObj.value["CVSStoreID"]
-      let storename = searchObj.value["CVSStoreName"]
-      let storeaddress = searchObj.value["CVSAddress"]
-      if (storeid || storename || storeaddress) {
-        // purchaseInfoStore.getConvenienceStore(storeid, storename, storeaddress)
-        // window.history.replaceState({}, document.title, location.pathname)
-      }
-
-      //
-      // if (site.value.FeedbackFund)
-      //   orderStore.bonus_array = JSON.parse(commonStore.site.FeedbackFund)
-
-      storeHandler(site.value.GetStore.data[0], "GA")
-      // productsStore.getCategories()
-      // await productsStore.getProducts()
-      // productsStore.productsHandler()
-      // purchaseInfoStore.getMemberInfo()
-
-      // id 查看某商品
-      // let id = searchObj.value["id"]
-      // if (id) {
-      //   let product = productsStore.products.find((product) => product.ID == id)
-      //   if (product) productsStore.selectProduct(product)
-      // }
-
-      // spid singleProduct 一頁商品
-      // let spid = searchObj.value["spid"]
-      // if (spid) {
-      //   let product = productsStore.products.find(
-      //     (product) => product.ID == spid
-      //   )
-      //   if (product) {
-      //     productsStore.isSingleProduct = true
-      //     productsStore.selectProduct(product)
-      //   }
-      // }
-
-      // open_cart 查看購物車
-      // let open_cart = searchObj.value["open_cart"]
-      // if (open_cart) {
-      //   state.showPage = "cart"
-      // }
     } catch (error) {
       console.log(error)
     }
@@ -263,21 +197,16 @@ export const useCommonStore = defineStore("common", () => {
 
     //
     store.value = originStore
-    console.log(store.value)
 
     //
     !document.title && (document.title = store.value.Name)
-
-    //
-    if (process.env.NODE_ENV === "development")
-      store.value.Logo = config.public.apiUrl + store.value.Logo
 
     //
     cartArrangement.value = store.value.Sort || "0"
 
     if (isGA && store.value.GA) {
       let GAText = store.value.GA
-      console.log(store.value)
+
       if (GAText && GAText.indexOf("GTM-") > -1) {
         let GTMID = GAText.split("GTM-")[1].split("')")[0]
 
@@ -315,16 +244,16 @@ export const useCommonStore = defineStore("common", () => {
     })
 
     await promiseSetTimeout(() => {
-      messageArr.find((item) => item.id === id).messageActive = true
+      messageArr.value.find((item) => item.id === id).messageActive = true
     }, 100)
 
     await promiseSetTimeout(() => {
-      messageArr.find((item) => item.id === id).messagefadeout = true
+      messageArr.value.find((item) => item.id === id).messagefadeout = true
     }, 5000)
 
     await promiseSetTimeout(() => {
-      let index = messageArr.findIndex((item) => item.id === id)
-      index > -1 && state.messageArr.splice(index, 1)
+      let index = messageArr.value.findIndex((item) => item.id === id)
+      index > -1 && messageArr.value.splice(index, 1)
     }, 500)
   }
   function promiseSetTimeout(func, ms) {
@@ -468,16 +397,23 @@ export const useCommonStore = defineStore("common", () => {
   }
 
   async function storeHandler() {
-    webStore.value = webData.value.GetStore.data[0] || {}
+    store.value = webData.value.GetStore.data[0] || {}
+
+    let cartStore = webData.value.GetStoreFromStore.data[0]
+    delete cartStore.Logo
+
+    store.value = { ...store.value, ...cartStore }
 
     if (process.env.NODE_ENV === "development") {
-      webStore.value.Logo = config.public.apiUrl + webStore.value.Logo
+      store.value.Logo = config.public.apiUrl + store.value.Logo
     }
+
+    console.log(store.value)
 
     footer_community.value = webData.value.GetStore.footer[0] || {}
 
     // title ------------
-    document.title ? "" : (document.title = webStore.value.Name)
+    document.title ? "" : (document.title = store.value.Name)
     if (site.value.WebPreview == 2) document.title += " (預覽模式)"
 
     // GA ------------
@@ -499,6 +435,67 @@ export const useCommonStore = defineStore("common", () => {
         .insertBefore(noscript, document.querySelector("body div"))
     }
     useAppendScript(GAText, "head")
+
+    getSearch()
+
+    // user_account ----------
+    // Line 登入
+    let account = searchObj.value["account"]
+    if (account) localStorage.setItem("user_account", account)
+
+    // Line 綁定
+    let result = searchObj.value["result"]
+    if (result) {
+      result = JSON.parse(decodeURI(result))
+      if (!result.status) alert(result.msg)
+      else localStorage.setItem("user_account", result.account)
+    }
+
+    user_account.value = localStorage.getItem("user_account")
+
+    // 超商取貨付款
+    let storeid = searchObj.value["CVSStoreID"]
+    let storename = searchObj.value["CVSStoreName"]
+    let storeaddress = searchObj.value["CVSAddress"]
+    if (storeid || storename || storeaddress) {
+      // purchaseInfoStore.getConvenienceStore(storeid, storename, storeaddress)
+      // window.history.replaceState({}, document.title, location.pathname)
+    }
+
+    //
+    if (site.value.FeedbackFund)
+      cartStore.bonus_array = JSON.parse(site.value.FeedbackFund)
+
+    cartStoreHandler(store.value, "GA")
+    // productsStore.getCategories()
+    // await productsStore.getProducts()
+    // productsStore.productsHandler()
+    // purchaseInfoStore.getMemberInfo()
+
+    // id 查看某商品
+    // let id = searchObj.value["id"]
+    // if (id) {
+    //   let product = productsStore.products.find((product) => product.ID == id)
+    //   if (product) productsStore.selectProduct(product)
+    // }
+
+    // spid singleProduct 一頁商品
+    // let spid = searchObj.value["spid"]
+    // if (spid) {
+    //   let product = productsStore.products.find(
+    //     (product) => product.ID == spid
+    //   )
+    //   if (product) {
+    //     productsStore.isSingleProduct = true
+    //     productsStore.selectProduct(product)
+    //   }
+    // }
+
+    // open_cart 查看購物車
+    // let open_cart = searchObj.value["open_cart"]
+    // if (open_cart) {
+    //   state.showPage = "cart"
+    // }
   }
 
   function copyRightHandler() {
@@ -578,6 +575,20 @@ export const useCommonStore = defineStore("common", () => {
     }
   }
 
+  watch(user_account, (newV) => {
+    localStorage.setItem("user_account", newV)
+
+    if (!newV) {
+      purchaseInfoStore.info.purchaser_email.value = ""
+      purchaseInfoStore.info.purchaser_name.value = ""
+      purchaseInfoStore.info.purchaser_number.value = ""
+      purchaseInfoStore.info.receiver_name.value = ""
+      purchaseInfoStore.info.receiver_number.value = ""
+
+      memberInfoStore.memberInfo = {}
+    }
+  })
+
   return {
     webData,
     isShowFavorite,
@@ -594,10 +605,12 @@ export const useCommonStore = defineStore("common", () => {
     isConfirmIsRegister,
     isConfirmRegister,
 
+    bank,
+
     webData,
     site,
+    store,
     all,
-    webStore,
     footer_community,
     copyRight,
     customerService,

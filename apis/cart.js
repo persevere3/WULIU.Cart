@@ -51,5 +51,5 @@ export const discountApi = (query) =>
 export const getTotalApi = (query) =>
   $fetch("/interface/store/GetProductTotal", {
     method: "POST",
-    query
+    body: query
   })

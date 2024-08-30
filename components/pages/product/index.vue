@@ -157,7 +157,7 @@ setTimeout(() => {
     </div>
 
     <div
-      class="addPrice"
+      class="addProduct"
       v-if="product.addProducts && product.addProducts.length"
     >
       <div class="title">
@@ -201,7 +201,7 @@ setTimeout(() => {
               </template>
             </template>
 
-            <ProductBuyQtyBox :main="product" :addPrice="item" />
+            <ProductBuyQtyBox :main="product" :addProduct="item" />
           </div>
         </li>
       </ul>
@@ -398,7 +398,7 @@ setTimeout(() => {
     }
   }
 
-  .addPrice,
+  .addProduct,
   .detail,
   .buyNow {
     > .title {
@@ -422,7 +422,7 @@ setTimeout(() => {
     }
   }
 
-  .addPrice {
+  .addProduct {
     > ul {
       width: 100%;
       position: relative;

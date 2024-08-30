@@ -7,11 +7,15 @@ import {
 } from "@/apis/order"
 
 import { useUrlPush } from "@/composables/urlPush"
+import { useVerify } from "@/composables/verify"
 
 export const useOrderStore = defineStore("order", () => {
   let commonStore = useCommonStore()
   let cartStore = useCartStore()
   let purchaseInfoStore = usePurchaseInfoStore()
+  let memberInfoStore = useMemberInfoStore()
+
+  const { verify } = useVerify()
 
   // state ==============================
   const is_click_finish_order = ref(false) // true => 驗證 運送方式 支付方式 地址
@@ -82,10 +86,6 @@ export const useOrderStore = defineStore("order", () => {
   const account_number = ref("")
 
   // 前往付款
-  const pay_method = ref("")
-
-  const ECPay_form = ref("")
-
   const noOrder = ref(false)
 
   // methods ==============================
@@ -107,16 +107,16 @@ export const useOrderStore = defineStore("order", () => {
       purchaseInfoStore.info.receiver_number
     ]
     // 地址驗證
-    if (cartStore.transport == 1)
+    if (purchaseInfoStore.transport == 1)
       verify_arr.push(purchaseInfoStore.info.address)
     let v = verify(...verify_arr)
 
     if (v) {
       if (
         // 運送驗證
-        cartStore.transport !== "0" &&
+        purchaseInfoStore.transport !== "0" &&
         // 支付驗證
-        cartStore.pay_method !== "0" &&
+        purchaseInfoStore.pay_method !== "0" &&
         // 發票驗證
         (commonStore.store.Receipt === "0" ||
           purchaseInfoStore.invoice_type === "1" ||
@@ -220,8 +220,8 @@ export const useOrderStore = defineStore("order", () => {
       )
     else query["Address"] = encodeURI(purchaseInfoStore.receiver_address)
     if (
-      memberStore.memberInfo.address_obj &&
-      Object.keys(memberStore.memberInfo.address_obj).length < 3 &&
+      memberInfoStore.memberInfo.address_obj &&
+      Object.keys(memberInfoStore.memberInfo.address_obj).length < 3 &&
       !purchaseInfoStore.has_address &&
       purchaseInfoStore.is_save_address
     ) {
@@ -233,12 +233,12 @@ export const useOrderStore = defineStore("order", () => {
 
     // 郵遞區號
     if (
-      memberStore.memberInfo.city_active &&
-      memberStore.memberInfo.district_active
+      memberInfoStore.memberInfo.city_active &&
+      memberInfoStore.memberInfo.district_active
     ) {
       query["ZipCode"] =
-        purchaseInfoStore.city_district[memberStore.memberInfo.city_active][
-          memberStore.memberInfo.district_active
+        purchaseInfoStore.city_district[memberInfoStore.memberInfo.city_active][
+          memberInfoStore.memberInfo.district_active
         ]
     } else {
       query["ZipCode"] = ""
@@ -340,7 +340,7 @@ export const useOrderStore = defineStore("order", () => {
 
     // LinePay
     if (purchaseInfoStore.pay_method == "LinePay") {
-      useUrlPush(purchaseInfoStore.payResult.payUrl)
+      useUrlPush(payResult.value.payUrl)
     }
     // company account
     else if (
@@ -356,12 +356,12 @@ export const useOrderStore = defineStore("order", () => {
     // ecpay
     else {
       if (process.env.NODE_ENV === "development") {
-        orderStore.ECPay_form_value = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
+        ECPay_form_value.value = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
       } else {
-        orderStore.ECPay_form_value = `<form id="ECPay_form" action="https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
+        ECPay_form_value.value = `<form id="ECPay_form" action="https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
       }
 
-      for (let item in payResult) {
+      for (let item in payResult.value) {
         if (item === "success" || item === "message" || item === "membered")
           continue
         // EncryptType, TotalAmount, ExpireDate: number，other: string
@@ -369,10 +369,10 @@ export const useOrderStore = defineStore("order", () => {
           item == "EncryptType" || item == "TotalAmount" || item == "ExpireDate"
             ? "number"
             : "text"
-        }" name="${item}" value="${orderStore.payResult[item]}">`
+        }" name="${item}" value="${payResult.value[item]}">`
       }
 
-      orderStore.ECPay_form_value += `</form>`
+      ECPay_form_value.value += `</form>`
 
       setTimeout(() => {
         let ECPay_form_dom = document.querySelector("#ECPay_form")
@@ -383,7 +383,7 @@ export const useOrderStore = defineStore("order", () => {
 
   function toPay2() {
     // LinePay
-    if (pay_method.value === "LinePay") {
+    if (purchaseInfoStore.pay_method === "LinePay") {
       useUrlPush(payResult.value.payUrl)
     }
     // ecpay
@@ -395,7 +395,7 @@ export const useOrderStore = defineStore("order", () => {
         ECPay_form.value = `<form id="ECPay_form" action="https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
       }
 
-      for (let item in state.payResult) {
+      for (let item in payResult.value) {
         if (item === "success" || item === "message") continue
         // EncryptType TotalAmount ExpireDate: number，other: text
         ECPay_form.value += `<input 

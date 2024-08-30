@@ -8,8 +8,8 @@
     }"
   >
     <div class="widthContainer">
-      <div class="logo" v-if="commonStore.webStore" @click="useUrlPush('/')">
-        <img :src="commonStore.webStore.Logo" alt="" />
+      <div class="logo" v-if="commonStore.store" @click="useUrlPush('/')">
+        <img :src="commonStore.store.Logo" alt="" />
       </div>
       <div class="iconbar">
         <ul>
@@ -44,17 +44,11 @@
             @click.stop="
               productStore.is_favorite_modal = !productStore.is_favorite_modal
             "
-            tabindex="0"
-            @blur="productStore.is_favorite_modal = false"
           >
             <i class="fas fa-heart"></i>
             <div class="tip">我的最愛</div>
           </li>
-          <li
-            @click.stop="cartStore.is_cart_modal = !cartStore.is_cart_modal"
-            tabindex="0"
-            @blur="cartStore.is_cart_modal = false"
-          >
+          <li @click.stop="cartStore.is_cart_modal = !cartStore.is_cart_modal">
             <i class="fa fa-shopping-cart" aria-hidden="true"></i>
             <div class="tip">購物車</div>
           </li>
@@ -143,7 +137,5 @@ function resizeHandler() {
 onMounted(() => {
   resizeHandler()
   window.addEventListener("scroll", resizeHandler)
-
-  // commonStore.initialWeb()
 })
 </script>

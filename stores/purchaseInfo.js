@@ -3,6 +3,7 @@ import city_district_json from "@/json/city_district.json"
 
 export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
   let commonStore = useCommonStore()
+  let productStore = useProductStore()
   let cartStore = useCartStore()
   let memberInfoStore = useMemberInfoStore()
   let orderStore = useOrderStore()
@@ -162,10 +163,10 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
   // `${city} ${district} ${detail}`
   const receiver_address = computed(() => {
     let address = `${info.value.address.city_active} ${info.value.address.district_active} ${info.value.address.detail_address}`
-    if (memberStore.memberInfo.address_obj) {
+    if (memberInfoStore.memberInfo.address_obj) {
       has_address.value = false
-      for (let key in memberStore.memberInfo.address_obj) {
-        let item = memberStore.memberInfo.address_obj[key]
+      for (let key in memberInfoStore.memberInfo.address_obj) {
+        let item = memberInfoStore.memberInfo.address_obj[key]
         if (item.address == address) {
           has_address.value = true
         }
@@ -213,11 +214,11 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
 
     let MerchantID
     if (process.env.NODE_ENV === "development") {
-      orderStore.ECPay_store_form = `<form id="ECPay_store_form" action="https://logistics-stage.ecpay.com.tw/Express/map" method="post">`
+      orderStore.ECPay_store_form_value = `<form id="ECPay_store_form" action="https://logistics-stage.ecpay.com.tw/Express/map" method="post">`
       MerchantID = transport.value.indexOf("C2C") > -1 ? "2000933" : "2000132"
     } else {
-      orderStore.ECPay_store_form = `<form id="ECPay_store_form" action="https://logistics.ecpay.com.tw/Express/map" method="post">`
-      MerchantID = cartCommonStore.store.ECStore
+      orderStore.ECPay_store_form_value = `<form id="ECPay_store_form" action="https://logistics.ecpay.com.tw/Express/map" method="post">`
+      MerchantID = commonStore.store.ECStore
     }
     let LogisticsSubType = transport.value.replace("Delivery", "")
     let IsCollection = transport.value.indexOf("Delivery") > -1 ? "Y" : "N"
@@ -229,7 +230,7 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
       LogisticsSubType,
       IsCollection,
       ServerReplyURL: `${location.origin}/interface/store/SpmarketAddress${
-        cartCommonStore.showPage == "singleProduct"
+        productStore.isSingleProduct
           ? "?spid=" + productsStore.selectedProduct.ID
           : ""
       }`,
@@ -238,15 +239,15 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     }
 
     for (let key in obj) {
-      orderStore.ECPay_store_form += `<input type="${
+      orderStore.ECPay_store_form_value += `<input type="${
         key == "Device" ? "number" : "text"
       }" name="${key}" value="${obj[key]}">`
     }
-    orderStore.ECPay_store_form += `</form>`
+    orderStore.ECPay_store_form_value += `</form>`
 
     setTimeout(() => {
       let ECPay_store_form = document.querySelector("#ECPay_store_form")
-      ECPay_store_form.submit()
+      ECPay_store_form && ECPay_store_form.submit()
     }, 1000)
   }
   function getConvenienceStore(id, name, address) {

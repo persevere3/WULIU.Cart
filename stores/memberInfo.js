@@ -397,6 +397,17 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
     }
   }
 
+  watch(
+    memberInfo,
+    (newV) => {
+      if (!newV.Phone && !newV.Email) {
+        commonStore.user_account = ""
+      }
+      total_bonus.value = newV.Wallet * 1
+    },
+    { deep: true }
+  )
+
   return {
     memberInfo,
 

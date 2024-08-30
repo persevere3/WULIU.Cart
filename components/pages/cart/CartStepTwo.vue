@@ -320,7 +320,7 @@
               }"
             >
               <li
-                @click.stop="changeTransport('1', true)"
+                @click.stop="changeTransport('1', false)"
                 v-if="
                   commonStore.store.Shipping === '1' ||
                   commonStore.store.Shipping === '2'
@@ -509,7 +509,10 @@
             }"
             :style="`order: ${commonStore.store.paymethodOrder['PayOnDelivery']}`"
             @click="purchaseInfoStore.pay_method = 'PayOnDelivery'"
-            v-if="commonStore.store.PayOnDelivery != 0 && !is_store"
+            v-if="
+              commonStore.store.PayOnDelivery != 0 &&
+              !purchaseInfoStore.is_store
+            "
           >
             取貨付款
           </div>
@@ -605,7 +608,7 @@
             >
               <li
                 v-for="(value, city) in purchaseInfoStore.city_district"
-                :key="key"
+                :key="city"
                 @click.stop="changeCity(city, false)"
               >
                 {{ city }}
@@ -725,9 +728,6 @@
             <div v-if="storeaddress">
               門市地址: {{ purchaseInfoStore.storeaddress }}
             </div>
-          </div>
-          <div class="button" @click="purchaseInfoStore.pickConvenienceStore">
-            搜尋門市
           </div>
           <div
             class="button2"
@@ -993,8 +993,9 @@ const commonStore = useCommonStore()
 const cartStore = useCartStore()
 const orderStore = useOrderStore()
 const purchaseInfoStore = usePurchaseInfoStore()
+const memberInfoStore = useMemberInfoStore()
 
-let props = defineProps(["main", "addPrice", "event"])
+let props = defineProps(["main", "addProduct", "event"])
 
 const isSame = ref(false)
 const city_district = ref(city_district_json)
@@ -1049,24 +1050,28 @@ watch(isSame, (v) => {
   )
 })
 
-watch(transport, (newV, oldV) => {
-  if (v.indexOf("Delivery") > -1) orderStore.pay_method = "MartPayOnDelivery"
-  let newMart = newV
-    .replace("C2CC", "")
-    .replace("C2C", "")
-    .replace("Delivery", "")
-  let oldMart = oldV
-    .replace("C2CC", "")
-    .replace("C2C", "")
-    .replace("Delivery", "")
-  if (newMart != oldMart) {
-    purchaseInfoStore.storeid = ""
-    purchaseInfoStore.storename = ""
-    purchaseInfoStore.storeaddress = ""
-  }
+watch(
+  () => purchaseInfoStore.transport,
+  (newV, oldV) => {
+    if (newV.indexOf("Delivery") > -1)
+      purchaseInfoStore.pay_method = "MartPayOnDelivery"
+    let newMart = newV
+      .replace("C2CC", "")
+      .replace("C2C", "")
+      .replace("Delivery", "")
+    let oldMart = oldV
+      .replace("C2CC", "")
+      .replace("C2C", "")
+      .replace("Delivery", "")
+    if (newMart != oldMart) {
+      purchaseInfoStore.storeid = ""
+      purchaseInfoStore.storename = ""
+      purchaseInfoStore.storeaddress = ""
+    }
 
-  cartStore.getTotal(1)
-})
+    cartStore.getTotal(1)
+  }
+)
 
 watch(
   () => purchaseInfoStore.info.address.city_active,

@@ -1,23 +1,30 @@
 <script setup>
 const commonStore = useCommonStore()
-const productStore = useProductStore()
 const cartStore = useCartStore()
 const buyQtyHandlerStore = useBuyQtyHandlerStore()
 
-let props = defineProps(["main", "addPrice", "event"])
+// assignIndex: 指定的規格index
+// 沒指定的話顯示Select => 商品列表
+// 指定的話不會顯示Select => 購物車列表
+let props = defineProps(["main", "addProduct", "assignIndex"])
 
 // computed ========== ========== ========== ========== ==========
+// 主商品 或 加購商品
 const product = computed(() => {
-  return props.addPrice ? props.addPrice : props.main
+  return props.addProduct ? props.addProduct : props.main
 })
 
-const productSpec = computed(() => {
+// 商品 或 商品的規格
+const target = computed(() => {
   // 沒規格
   if (!product.value.selectSpecItem) {
     return product.value
   }
   // 有規格
   else {
+    if (props.assignIndex !== undefined)
+      product.value.selectSpecItem = product.value.specArr[props.assignIndex]
+
     // 沒選
     if (!product.value.selectSpecItem.ID) {
       return -1
@@ -29,15 +36,15 @@ const productSpec = computed(() => {
   }
 })
 
-const addPriceIndex = computed(() => {
-  if (props.addPrice) {
+// addProductIndex, specIndex => changeButQty
+const addProductIndex = computed(() => {
+  if (props.addProduct) {
     return props.main.addProducts
       .map((item) => item.ID)
-      .indexOf(props.addPrice.ID)
+      .indexOf(props.addProduct.ID)
   }
   return null
 })
-
 const specIndex = computed(() => {
   if (product.value.specArr) {
     return product.value.specArr
@@ -49,10 +56,10 @@ const specIndex = computed(() => {
 
 const buyQty = computed({
   get() {
-    return productSpec.value["buyQty"]
+    return target.value["buyQty"]
   },
   set(newBuyQty) {
-    productSpec.value["buyQty"] = newBuyQty
+    target.value["buyQty"] = newBuyQty
   }
 })
 
@@ -61,9 +68,9 @@ const productSpecStatus = computed(() => {
   if (commonStore.store?.Enable == 0) return -1
   // 暫無庫存 0
   if (
-    productSpec.value !== -1 &&
-    productSpec.value.Enable == 1 &&
-    productSpec.value.Amount == 0
+    target.value !== -1 &&
+    target.value.Enable == 1 &&
+    target.value.Amount == 0
   )
     return 0
 
@@ -78,47 +85,51 @@ function selectSpec(item, spec) {
 
 <template>
   <div class="ProductBuyQtyBox">
-    <div class="spec" v-if="product.specArr">
-      <!-- tabindex="0" => @blur 生效 -->
-      <div
-        class="select"
-        @click="product.isShowOption = !product.isShowOption"
-        tabindex="0"
-        @blur="product.isShowOption = false"
-      >
-        <div class="text">
-          {{ productSpec === -1 ? "請選擇規格" : productSpec.Name }}
+    <!-- 規格 -->
+    <template v-if="assignIndex === undefined">
+      <div class="spec" v-if="product.specArr">
+        <!-- tabindex="0" => @blur 生效 -->
+        <div
+          class="select"
+          @click="product.isShowOption = !product.isShowOption"
+          tabindex="0"
+          @blur="product.isShowOption = false"
+        >
+          <div class="text">
+            {{ target === -1 ? "請選擇規格" : target.Name }}
+          </div>
+          <div class="icon" :class="{ iconActive: product.isShowOption }">
+            <i class="fa fa-caret-down" aria-hidden="true"></i>
+          </div>
+          <ul class="option" :class="{ showOption: product.isShowOption }">
+            <li
+              v-for="spec in product.specArr"
+              :key="spec.ID"
+              @click.stop="selectSpec(product, spec)"
+            >
+              {{ spec.Name }}
+            </li>
+          </ul>
         </div>
-        <div class="icon" :class="{ iconActive: product.isShowOption }">
-          <i class="fa fa-caret-down" aria-hidden="true"></i>
-        </div>
-        <ul class="option" :class="{ showOption: product.isShowOption }">
-          <li
-            v-for="spec in product.specArr"
-            :key="spec.ID"
-            @click.stop="selectSpec(product, spec)"
-          >
-            {{ spec.Name }}
-          </li>
-        </ul>
       </div>
-    </div>
-    <div class="noSpec" v-else></div>
+      <div class="noSpec" v-else></div>
+    </template>
 
+    <!-- 數量 -->
     <div class="discontinued" v-if="productSpecStatus === -1">停售中</div>
     <div class="discontinued" v-else-if="productSpecStatus === 0">暫無庫存</div>
-    <div class="qtyBox" :class="{ noSelect: productSpec === -1 }" v-else>
-      <!-- 規格 -->
-      <template v-if="productSpec !== -1">
-        <!-- 加購 規格 -->
-        <template v-if="addPrice">
+    <div class="qtyBox" :class="{ noSelect: target === -1 }" v-else>
+      <!-- 沒有規格 or 有規格且有選規格  -->
+      <template v-if="target !== -1">
+        <!-- 加購商品 -->
+        <template v-if="addProduct">
           <div
             class="reduce"
             :class="{ qtyDisabled: buyQty < 1 }"
             @click="
               buyQtyHandlerStore.changeAddProductBuyQty(
                 main,
-                addPriceIndex,
+                addProductIndex,
                 specIndex,
                 buyQty - 1
               )
@@ -136,7 +147,7 @@ function selectSpec(item, spec) {
             @blur="
               buyQtyHandlerStore.changeAddProductBuyQty(
                 main,
-                addPriceIndex,
+                addProductIndex,
                 specIndex,
                 buyQty
               )
@@ -144,7 +155,7 @@ function selectSpec(item, spec) {
             @keyup.enter="
               buyQtyHandlerStore.changeAddProductBuyQty(
                 main,
-                addPriceIndex,
+                addProductIndex,
                 specIndex,
                 buyQty
               )
@@ -155,13 +166,13 @@ function selectSpec(item, spec) {
             :class="{
               qtyDisabled:
                 buyQty > cartStore.getMainTotalQty(main) - 1 ||
-                (productSpec.Enable == 1 && buyQty > productSpec.Amount - 1) ||
+                (target.Enable == 1 && buyQty > target.Amount - 1) ||
                 buyQty > 998
             }"
             @click="
               buyQtyHandlerStore.changeAddProductBuyQty(
                 main,
-                addPriceIndex,
+                addProductIndex,
                 specIndex,
                 buyQty * 1 + 1
               )
@@ -170,7 +181,7 @@ function selectSpec(item, spec) {
             <i class="fa fa-plus"></i>
           </div>
         </template>
-        <!-- 主商品 規格 -->
+        <!-- 主商品 -->
         <template v-else>
           <div
             class="reduce"
@@ -201,7 +212,7 @@ function selectSpec(item, spec) {
             class="add"
             :class="{
               qtyDisabled:
-                (productSpec.Enable == 1 && buyQty > productSpec.Amount - 1) ||
+                (target.Enable == 1 && buyQty > target.Amount - 1) ||
                 buyQty > 998
             }"
             @click="
@@ -217,7 +228,7 @@ function selectSpec(item, spec) {
           </div>
         </template>
       </template>
-      <!-- 沒規格 -->
+      <!-- 有規格且沒選規格 -->
       <template v-else>
         <div class="reduce"><i class="fa fa-minus"></i></div>
         <input type="text" size="3" maxlength="3" class="number" disabled />

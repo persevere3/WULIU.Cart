@@ -7,7 +7,7 @@ a {
 
 .cart_container,
 .favorite_container {
-  width: 300px;
+  width: 350px;
   padding: 15px;
   position: fixed;
   top: 45px;
@@ -23,18 +23,11 @@ a {
     transform: translateX(0%);
   }
 
-  .items,
   .items {
-    max-height: 500px;
+    max-height: 450px;
     overflow-y: auto;
 
     li {
-      &:last-child {
-        a {
-          border-bottom: none;
-        }
-      }
-
       a {
         padding: 10px;
         border-bottom: 1px solid rgba($secondColor, 0.8);

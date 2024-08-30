@@ -201,9 +201,6 @@ watch(is_initial, (value) => {
 
     <!--  -->
     <div class="products">
-      <div class="title" v-if="commonStore.store">
-        {{ commonStore.store.Name }}
-      </div>
       <div class="productList">
         <ul>
           <li v-for="(item, index) in commonStore.all.data" :key="item.ID">

@@ -76,4 +76,8 @@ let subtotal = computed(() => {
     parseInt(cartStore.total.DiscountCode)
   )
 })
+
+onMounted(() => {
+  cartStore.getTotal(cartStore.step - 1)
+})
 </script>

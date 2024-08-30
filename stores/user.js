@@ -1,5 +1,7 @@
 import { useRoute } from "vue-router"
 
+import { useVerify } from "@/composables/verify"
+
 // apis ========== ========== ========== ========== ==========
 import {
   getLineProfileApi,
@@ -12,10 +14,15 @@ import {
 } from "@/apis/user"
 
 export const useUserStore = defineStore("user", () => {
+  const commonStore = useCommonStore()
+
+  const { verify } = useVerify()
+
   // state ==============================
   const r_form = reactive({
     recommender: {
-      value: ""
+      value: "",
+      placeholder: "請輸入推薦人代碼"
     },
 
     name: {
@@ -33,7 +40,9 @@ export const useUserStore = defineStore("user", () => {
         }
       },
       is_error: false,
-      message: ""
+      message: "",
+      readonly: false,
+      placeholder: "* 請輸入姓名"
     },
     sex: "male",
     birthday: {
@@ -44,7 +53,10 @@ export const useUserStore = defineStore("user", () => {
         }
       },
       is_error: false,
-      message: ""
+      message: "",
+      readonly: false,
+      placeholder: "* 請輸入生日",
+      type: "date"
     },
 
     mail: {
@@ -58,7 +70,9 @@ export const useUserStore = defineStore("user", () => {
         }
       },
       is_error: false,
-      message: ""
+      message: "",
+      readonly: true,
+      placeholder: "* 請輸入電子信箱"
     },
     mail_verify_code: {
       value: "",
@@ -73,7 +87,9 @@ export const useUserStore = defineStore("user", () => {
         }
       },
       is_error: false,
-      message: ""
+      message: "",
+      readonly: false,
+      placeholder: "* 請輸入電子信箱驗證碼"
     },
     phone2: {
       value: "",
@@ -86,7 +102,9 @@ export const useUserStore = defineStore("user", () => {
         }
       },
       is_error: false,
-      message: ""
+      message: "",
+      readonly: true,
+      placeholder: "* 請輸入手機(帳號)"
     },
     phone_verify_code: {
       value: "",
@@ -101,7 +119,9 @@ export const useUserStore = defineStore("user", () => {
         }
       },
       is_error: false,
-      message: ""
+      message: "",
+      readonly: false,
+      placeholder: "* 請輸入手機驗證碼"
     },
     second: 0,
 
@@ -130,9 +150,12 @@ export const useUserStore = defineStore("user", () => {
         }
       },
       is_error: false,
-      message: ""
+      message: "",
+      readonly: false,
+      placeholder: "* 請輸入密碼",
+      type: "password",
+      visible: false
     },
-    password_type: "password",
     confirm_password: {
       value: "",
       rules: {
@@ -140,16 +163,24 @@ export const useUserStore = defineStore("user", () => {
           message: "此項目為必填"
         },
         confirm: {
-          password: "password",
+          password: null,
           message: "密碼不正確"
         }
       },
       is_error: false,
-      message: ""
+      message: "",
+      readonly: false,
+      placeholder: "* 請再次輸入密碼",
+      type: "password",
+      visible: false
     },
-    confirm_password_type: "password",
+
+    // 會員條款與隱私權政策
+    is_member_and_privacy: false,
+
     is_agree: false
   })
+  r_form.confirm_password.rules.confirm.password = r_form.password
 
   const l_form = reactive({
     account: {
@@ -351,15 +382,15 @@ export const useUserStore = defineStore("user", () => {
       if (commonStore.store.NotificationSystem == 0) {
         if (!verify(r_form.mail)) return
       } else if (commonStore.store.NotificationSystem == 1) {
-        if (!verify(r_form.account)) return
+        if (!verify(r_form.phone2)) return
       } else {
-        if (!verify(r_form.account) || !verify(r_form.mail)) return
+        if (!verify(r_form.phone2) || !verify(r_form.mail)) return
       }
 
       let query = {
         storeid: commonStore.site.Name,
         storeName: commonStore.site.Store,
-        phone: r_form.account.value.trim(),
+        phone: r_form.phone2.value.trim(),
         mail: r_form.mail.value.trim(),
         type: commonStore.store.NotificationSystem,
         notificationsystem: commonStore.store.NotificationSystem
@@ -380,11 +411,12 @@ export const useUserStore = defineStore("user", () => {
         }
         user_message.value = res.msg
         is_userMessage.value = true
+
+        // commonStore.showMessage(res.data.msg, true)
       } catch (error) {
         throw new Error(error)
       }
     },
-
     async register() {
       if (commonStore.site.TermsNotices && !r_form.is_agree) return
 
@@ -404,7 +436,7 @@ export const useUserStore = defineStore("user", () => {
           r_form.mail,
           ...verify_code,
           r_form.birthday,
-          r_form.account,
+          r_form.phone2,
           r_form.password,
           r_form.confirm_password
         )
@@ -419,7 +451,7 @@ export const useUserStore = defineStore("user", () => {
         email: r_form.mail.value,
         gender: r_form.sex == "male" ? 1 : 0,
         birthday: useFormatDate(r_form.birthday),
-        phone: r_form.account.value,
+        phone: r_form.phone2.value,
         password: r_form.password.value
       }
       if (commonStore.store.NotificationSystem == 0)
@@ -437,12 +469,15 @@ export const useUserStore = defineStore("user", () => {
         if (!isReqSuccess) return
 
         if (res.status) {
-          l_form.account = l_form.account
-          l_form.password = l_form.password
-          user_login()
+          user_message.value = res.msg
+          is_userMessage.value = true
+          // commonStore.showMessage(res.msg, false)
+          return true
         } else {
           user_message.value = res.msg
           is_userMessage.value = true
+          // commonStore.showMessage(res.msg, false)
+          return false
         }
       } catch (error) {
         throw new Error(error)
@@ -592,7 +627,8 @@ export const useUserStore = defineStore("user", () => {
   }
 
   return {
-    ...toRefs(state),
+    r_form,
+    // ...toRefs(state),
 
     ...methods
   }

@@ -205,7 +205,7 @@
             <i class="fas fa-check" v-show="r_is_agree"></i>
           </div>
           <label for="agree"> 我已同意 </label>
-          <div class="modal_text" @click="is_userModal = true">
+          <div class="modal_text" @click="userStore.r_form.is_userModal = true">
             會員條款與隱私權政策
           </div>
         </div>
@@ -213,7 +213,7 @@
         <div
           class="button"
           :class="{ disabled: !r_is_agree }"
-          @click="register"
+          @click="user_register"
         >
           註冊
         </div>
@@ -469,8 +469,8 @@
     </div>
   </div>
 
-  <div class="user_modal_container" v-if="is_userModal">
-    <div class="close" @click="is_userModal = false">
+  <div class="user_modal_container" v-if="userStore.r_form.is_userModal">
+    <div class="close" @click="userStore.r_form.is_userModal = false">
       <i class="fas fa-times"></i>
     </div>
     <div class="user_modal">
@@ -591,4 +591,13 @@ watch(is_getSite, async () => {
   await nextTick()
   imgHandler()
 })
+
+async function user_register() {
+  const res = await userStore.register()
+  if (res) {
+    userStore.l_form.account.value = userStore.r_form.phone2.value
+    userStore.l_form.password.value = userStore.r_form.password.value
+    userStore.user_login()
+  }
+}
 </script>

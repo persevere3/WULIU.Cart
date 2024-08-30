@@ -1,11 +1,32 @@
 <script setup>
 import { useNumberThousands } from "@/composables/numberThousands"
-const commonStore = useCommonStore()
 const productStore = useProductStore()
+
+const modal = ref(null)
+
+//
+function closeModal() {
+  productStore.is_favorite_modal = false
+}
+
+function handleClickOutside(event) {
+  if (modal.value && !modal.value.contains(event.target)) {
+    closeModal()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleClickOutside)
+})
 </script>
 
 <template>
   <div
+    ref="modal"
     class="favorite_container"
     :class="{ active: productStore.is_favorite_modal }"
     v-if="Object.keys(productStore.favorite).length"
@@ -30,7 +51,7 @@ const productStore = useProductStore()
 
               <div
                 class="delete"
-                @click.stop="productStore.toggleFavorite(item.ID)"
+                @click.prevent="productStore.toggleFavorite(item.ID)"
               >
                 <i class="fas fa-trash-alt"></i>
               </div>

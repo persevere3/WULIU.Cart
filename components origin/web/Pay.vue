@@ -140,7 +140,7 @@
     </div>
   </div>
 
-  <div class="ECPay_form_container" v-html="ECPay_form"></div>
+  <div class="ECPay_form_container" v-html="ECPay_form_value"></div>
 </template>
 
 <script setup>

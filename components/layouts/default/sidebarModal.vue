@@ -69,8 +69,6 @@
             @click.stop="
               productStore.is_favorite_modal = !productStore.is_favorite_modal
             "
-            tabindex="0"
-            @blur="productStore.is_favorite_modal = false"
           >
             我的最愛
             <i class="fas fa-heart"></i>
@@ -81,8 +79,6 @@
                 ? (cartStore.is_cart_active = !cartStore.is_cart_active)
                 : commonStore.pushTo_cart()
             "
-            tabindex="0"
-            @blur="cartStore.is_cart_active = false"
           >
             購物車
             <i class="fa fa-shopping-cart" aria-hidden="true"></i>
