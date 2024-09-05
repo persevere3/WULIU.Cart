@@ -149,7 +149,10 @@ watch(
             <div class="title">密碼</div>
             <div
               class="button"
-              @click=";(is_payModal = true), (payModal_message = 'template3')"
+              @click="
+                ;(commonStore.is_payModal = true),
+                  (commonStore.payModal_message = 'template3')
+              "
             >
               修改密碼
             </div>

@@ -539,11 +539,30 @@ async function checkPay() {
       margin-right: 5px;
       font-size: 16px;
       outline: none;
-      border: none;
 
       &[type="number"]::-webkit-inner-spin-button {
         -webkit-appearance: none;
         margin: 0;
+      }
+    }
+
+    .message {
+      font-size: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      input {
+        width: 100%;
+        margin: 10px 0px;
+        border-radius: 5px;
+        border: 1px solid $primaryColor;
+        box-shadow: 0 0 3px 1px transparent;
+        transition: 0.3s;
+
+        &:focus {
+          box-shadow: 0 0 3px 1px $primaryColor;
+        }
       }
     }
 

@@ -47,8 +47,8 @@ export const useCommonStore = defineStore("common", () => {
   const isConfirmIsRegister = ref(false)
   const isConfirmRegister = ref(false)
 
-  const is_payModal = ref(true)
-  const payModal_message = ref("template3")
+  const is_payModal = ref(false)
+  const payModal_message = ref("")
 
   // web ------------
   const webData = ref({})
