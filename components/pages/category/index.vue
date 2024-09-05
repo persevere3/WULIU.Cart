@@ -1,5 +1,6 @@
 <script setup>
-import { useNumberThousands } from "@/composables/numberThousands"
+import ProductItem from "@/components/productItem.vue"
+
 import { useUnescapeHTML } from "@/composables/unescapeHTML"
 
 const config = useRuntimeConfig()
@@ -149,57 +150,14 @@ watch(is_initial, async (value) => {
         <div class="title">
           {{ item.Name }}
         </div>
-        <div class="product_list">
+        <div class="productList">
           <ul>
             <li
               v-for="(item2, key2) in item.Products"
               :key="`Products${key2}`"
               @click="commonStore.pushTo_cart(item2.ID)"
             >
-              <div
-                class="pic"
-                :style="{ backgroundImage: `url(${item2.Img1})` }"
-              >
-                <div
-                  class="addTo_favorite_btn"
-                  @click.stop="productStore.toggleFavorite(item2.ID)"
-                >
-                  加入我的最愛
-                  <i
-                    class="fas fa-heart"
-                    :class="{ is_favorite: productStore.favorite[item2.ID] }"
-                  ></i>
-                </div>
-                <div class="addTo_cart_btn">加入購物車</div>
-              </div>
-              <div class="info">
-                <div class="name">{{ item2.Name }}</div>
-
-                <!-- 多價格 products 主商品 單價 -->
-                <template v-if="item2.priceType === 'onePrice'">
-                  <div class="discount_price">
-                    NT${{ useNumberThousands(item2.NowPrice) }}
-                  </div>
-                  <div
-                    class="origin_price"
-                    :class="{ opacity0: parseInt(item2.Price) < 0 }"
-                  >
-                    NT${{ useNumberThousands(item2.Price) }}
-                  </div>
-                </template>
-                <template v-else>
-                  <div class="discount_price">NT${{ item2.nowPriceRange }}</div>
-                  <div
-                    class="origin_price"
-                    :class="{ opacity0: !item2.priceRange }"
-                  >
-                    NT${{ item2.priceRange }}
-                  </div>
-                </template>
-              </div>
-              <div class="l_addTo_cart_btn">
-                <i class="fa fa-shopping-cart" aria-hidden="true"></i>
-              </div>
+              <ProductItem :product="item2" />
             </li>
           </ul>
         </div>

@@ -58,6 +58,7 @@ export const useCommonStore = defineStore("common", () => {
   const customerService = ref({})
 
   const is_initial = ref(false)
+  const is_getAll = ref(false)
 
   //
   const is_logout = ref(null)
@@ -94,15 +95,6 @@ export const useCommonStore = defineStore("common", () => {
       }
       return false
     } else return true
-  }
-
-  function getSearch() {
-    let searchArr = location.search.substring(1).split("&")
-    searchArr.forEach((item) => {
-      let key = item.split("=")[0]
-      let value = item.split("=")[1]
-      if (key && value) query.value[key] = value
-    })
   }
 
   async function initialCart() {
@@ -392,6 +384,8 @@ export const useCommonStore = defineStore("common", () => {
         item.Img1 = config.public.apiUrl + item.Img1
       })
     }
+
+    is_getAll.value = true
     productStore.getFavorite()
   }
 
@@ -432,8 +426,6 @@ export const useCommonStore = defineStore("common", () => {
         .insertBefore(noscript, document.querySelector("body div"))
     }
     useAppendScript(GAText, "head")
-
-    getSearch()
 
     // user_account ----------
     // Line 登入
@@ -608,6 +600,7 @@ export const useCommonStore = defineStore("common", () => {
     customerService,
 
     is_initial,
+    is_getAll,
 
     //
     is_logout,

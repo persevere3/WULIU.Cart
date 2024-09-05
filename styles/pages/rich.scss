@@ -1,6 +1,6 @@
 // ============================================================
 
-.main {
+.rich {
   width: 1170px;
   margin: 0 auto;
   padding: 10px 20px;
@@ -15,7 +15,7 @@
     position: relative;
 
     &:before {
-      content: '';
+      content: "";
       width: 25px;
       height: 3px;
       position: absolute;
