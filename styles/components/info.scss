@@ -1,110 +1,18 @@
-@import "@/styles/mixin/_datepicker.scss";
-@import "@/styles/mixin/_input.scss";
 @import "@/styles/mixin/_button.scss";
 
-// info ==================================================
-@include datepicker;
-
-.input_container {
-  margin-bottom: 10px;
-  position: relative;
-
-  input {
-    margin-bottom: 5px;
-    border: 1px solid #ddd;
-
-    &[readonly="readonly"] {
-      background: #eee;
-      cursor: not-allowed;
-    }
-  }
-
-  .eyes_icon {
-    width: 30px;
-    height: 40px;
-    position: absolute;
-    top: 0;
-    right: 0;
-    color: $primaryColor;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-  }
-
-  .copy {
-    width: 30px;
-    height: 40px;
-    position: absolute;
-    top: 40px;
-    right: 0;
-    font-size: $font_m;
-    color: $primaryColor;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0.5;
-    transition: 0.3s;
-    cursor: pointer;
-
-    &:hover {
-      opacity: 1;
-    }
-  }
-
-  .message {
-    padding: 0px 10px;
-    font-size: $font_s;
-
-    &.error {
-      color: $dangerColor;
-      align-items: center;
-      display: none;
-
-      .error_icon {
-        margin-right: 5px;
-      }
-    }
-  }
-
-  &.error {
-    input {
-      border: 1px solid $dangerColor;
-    }
-    .message {
-      &.error {
-        display: flex;
-      }
-    }
-  }
-}
-// ============================================================
-input {
-  // input($width, $height, $padding, $margin, $borderRadius, $border, $shadow, $backgroundColor, $color, $font-size)
-  @include input(
-    100%,
-    40px,
-    0 30px 0 10px,
-    0,
-    3px,
-    none,
-    0 0 3px 1px $primaryColor,
-    transparent,
-    #333,
-    $font_s
-  );
-}
-
 .button_row {
+  width: 100%;
   display: flex;
+  justify-content: flex-end;
 }
 .button {
   // button($width, $height, $padding, $margin, $borderRadius, $backgroundColor, $color)
   @include button(auto, 40px, 0 20px, 0, 3px, $primaryColor, #fff, $font_s);
+
+  display: inline-flex;
 }
 
-// ============================================================
-.main {
+.info {
   width: 1380px;
   margin: 15px auto 0;
 
@@ -120,11 +28,10 @@ input {
 
     .nav {
       flex: 1 1;
-      height: 50px;
-      line-height: 50px;
+      height: 45px;
+      line-height: 45px;
       text-align: center;
       border-right: 1px solid #ddd;
-      border-bottom: 1px solid #ddd;
       background-color: #eee;
       color: #888;
       font-size: $font_s;
@@ -133,8 +40,13 @@ input {
       &:last-child {
         border-right: none;
       }
+
+      &.active {
+        background-color: #fff;
+      }
     }
   }
+
   .forms {
     border: 1px solid #ddd;
     border-top: none;
@@ -143,20 +55,23 @@ input {
     .title {
       height: 40px;
       line-height: 40px;
-      padding-left: 10px;
+      margin-left: 5px;
       font-size: $font_s;
       color: #333;
+
       display: flex;
       align-items: center;
 
       &.top {
         width: 100%;
+        margin-bottom: 10px;
         justify-content: center;
 
         i {
           margin-right: 5px;
           margin-bottom: 3px;
         }
+
         .current_bonus {
           margin-left: 10px;
         }
@@ -166,12 +81,15 @@ input {
         width: 30px;
         height: 40px;
         margin-left: 5px;
+
         color: $primaryColor;
         opacity: 0.5;
         transition: 0.3s;
+
         display: flex;
         justify-content: center;
         align-items: center;
+
         cursor: pointer;
 
         &:hover {
@@ -182,7 +100,19 @@ input {
 
     .form {
       padding: 20px;
-      display: none;
+
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+
+      .left,
+      .right {
+        width: 49%;
+
+        @include s {
+          width: 100%;
+        }
+      }
 
       .radio_container {
         display: flex;
@@ -232,10 +162,6 @@ input {
 
       .password_container {
         margin-bottom: 15px;
-
-        .button {
-          display: inline-block;
-        }
       }
 
       .address_container {
@@ -406,6 +332,7 @@ input {
 
       .table {
         margin: 0;
+        width: 100%;
 
         .head,
         .body {
@@ -595,8 +522,11 @@ input {
           }
         }
       }
+
       .page_container {
+        width: 100%;
         margin-top: 25px;
+
         display: flex;
         justify-content: flex-end;
         align-items: flex-start;
@@ -805,69 +735,10 @@ input {
           }
         }
       }
-
-      &.info_form {
-        flex-wrap: wrap;
-        justify-content: space-between;
-
-        .left,
-        .right {
-          width: 49%;
-        }
-
-        .button_row {
-          width: 100%;
-          justify-content: flex-end;
-        }
-
-        @include s {
-          .left,
-          .right {
-            width: 100%;
-          }
-        }
-      }
-      &.bonus_form {
-        padding: 5px;
-      }
-      &.order_form {
-        padding: 5px;
-      }
-    }
-  }
-
-  &.info {
-    .info_nav {
-      border-bottom: none;
-      background-color: #fff;
-      color: #555;
-    }
-    .info_form {
-      display: flex;
-    }
-  }
-  &.bonus {
-    .bonus_nav {
-      border-bottom: none;
-      background-color: #fff;
-      color: #555;
-    }
-    .bonus_form {
-      display: block;
-    }
-  }
-  &.order {
-    .order_nav {
-      border-bottom: none;
-      background-color: #fff;
-      color: #555;
-    }
-    .order_form {
-      display: block;
     }
   }
 
   @include xxl {
-    width: 98%;
+    width: 95%;
   }
 }

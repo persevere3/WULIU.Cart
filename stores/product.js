@@ -318,13 +318,6 @@ export const useProductStore = defineStore("product", () => {
     })
   }
 
-  // 選中某商品
-  async function selectProduct(item) {
-    await getAddProducts(item)
-
-    selectedProduct.value = item
-  }
-
   // favorite
   async function getFavorite() {
     // 登入狀態
@@ -345,7 +338,7 @@ export const useProductStore = defineStore("product", () => {
           let favorite_list = res.datas[0] || []
           for (let item of favorite_list) {
             favorite.value[item.Product] = products.value.find(
-              (product) => product.ID == favorite.Product
+              (product) => product.ID == item.Product
             )
           }
         } else {

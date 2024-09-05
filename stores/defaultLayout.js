@@ -82,7 +82,7 @@ export const useDefaultLayoutStore = defineStore("defaultLayout", () => {
 
         try {
           const res = JSON.parse(await connectHandlerApi())
-          const isReqSuccess = resHandler(res, connectHandler)
+          const isReqSuccess = commonStore.resHandler(res, connectHandler)
           if (!isReqSuccess) return
 
           state.is_connect = false

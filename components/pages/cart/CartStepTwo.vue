@@ -906,7 +906,12 @@
     </form>
 
     <!--  有點數 或 有設定回饋% -->
-    <template v-if="cartStore.total_bonus * 1 || cartStore.bonus_array.length">
+    <template
+      v-if="
+        memberInfoStore.memberInfo.total_bonus * 1 ||
+        cartStore.bonus_array.length
+      "
+    >
       <div class="title">
         購物金
         <span v-if="cartStore.bonus_array.length">
@@ -930,7 +935,9 @@
           購物金餘額 :
           {{
             useNumberThousands(
-              cartStore.total_bonus < 0 ? 0 : cartStore.total_bonus
+              memberInfoStore.memberInfo.total_bonus < 0
+                ? 0
+                : memberInfoStore.memberInfo.total_bonus
             )
           }}
           點
@@ -939,7 +946,7 @@
         <div
           class="custom_option"
           @click="cartStore.is_use_bonus = !cartStore.is_use_bonus"
-          v-if="total_bonus * 1"
+          v-if="memberInfoStore.memberInfo.total_bonus * 1"
         >
           <i
             class="fa-regular fa-square-check"

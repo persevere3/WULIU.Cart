@@ -2,6 +2,7 @@
 import Select from "@/components/select.vue"
 import ProductItem from "~/components/productItem.vue"
 import Pagination from "@/components/pagination.vue"
+import Notice from "@/components/Notice.vue"
 
 const commonStore = useCommonStore()
 const productStore = useProductStore()
@@ -158,25 +159,7 @@ setTimeout(() => {
       <Pagination :pagination="pagination" />
     </div>
 
-    <!-- <div class="notice">
-      <ul>
-        <li v-if="commonStore.store.Content" @click="showPage = 'Content'">
-          訂購須知
-        </li>
-        <li
-          v-if="commonStore.store.Description"
-          @click="showPage = 'Description'"`
-        >
-          配送須知
-        </li>
-        <li
-          v-if="commonStore.store.PrivacyPolicy"
-          @click="showPage = 'PrivacyPolicy'"
-        >
-          隱私權聲明
-        </li>
-      </ul>
-    </div> -->
+    <Notice />
   </div>
 </template>
 

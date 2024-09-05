@@ -6,6 +6,7 @@ import {
   searchMartDeliveryApi
 } from "@/apis/order"
 
+import { useRequest } from "@/composables/request"
 import { useUrlPush } from "@/composables/urlPush"
 import { useVerify } from "@/composables/verify"
 
@@ -14,7 +15,9 @@ export const useOrderStore = defineStore("order", () => {
   let cartStore = useCartStore()
   let purchaseInfoStore = usePurchaseInfoStore()
   let memberInfoStore = useMemberInfoStore()
+  let userStore = useUserStore()
 
+  const { return_formData } = useRequest()
   const { verify } = useVerify()
 
   // state ==============================
@@ -26,13 +29,13 @@ export const useOrderStore = defineStore("order", () => {
   const ECPay_store_form_value = ref("")
 
   //
-  const search_phone = ref("")
-  const search_mail = ref("")
+  const search_phone = ref("0910456456")
+  const search_mail = ref("test@gmail.com")
   const filter_number = ref("")
   const filter_pay = ref("0")
   const filter_delivery = ref("0")
 
-  const order = ref("")
+  const order = ref({})
   // 展開某一筆訂單的產品列表
   const active_order_products = ref("")
   const activeOrder = ref(null)
@@ -220,8 +223,8 @@ export const useOrderStore = defineStore("order", () => {
       )
     else query["Address"] = encodeURI(purchaseInfoStore.receiver_address)
     if (
-      memberInfoStore.memberInfo.address_obj &&
-      Object.keys(memberInfoStore.memberInfo.address_obj).length < 3 &&
+      memberInfoStore.memberInfo.value.address_obj &&
+      Object.keys(memberInfoStore.memberInfo.value.address_obj).length < 3 &&
       !purchaseInfoStore.has_address &&
       purchaseInfoStore.is_save_address
     ) {
@@ -233,13 +236,13 @@ export const useOrderStore = defineStore("order", () => {
 
     // 郵遞區號
     if (
-      memberInfoStore.memberInfo.city_active &&
-      memberInfoStore.memberInfo.district_active
+      memberInfoStore.memberInfo.value.city_active &&
+      memberInfoStore.memberInfo.value.district_active
     ) {
       query["ZipCode"] =
-        purchaseInfoStore.city_district[memberInfoStore.memberInfo.city_active][
-          memberInfoStore.memberInfo.district_active
-        ]
+        purchaseInfoStore.city_district[
+          memberInfoStore.memberInfo.value.city_active
+        ][memberInfoStore.memberInfo.value.district_active]
     } else {
       query["ZipCode"] = ""
     }
@@ -261,7 +264,7 @@ export const useOrderStore = defineStore("order", () => {
     } else query["UniNumber"] = purchaseInfoStore.invoice_uniNumber
 
     try {
-      const res = await createOrderApi(query)
+      const res = JSON.parse(await createOrderApi(query))
       const isReqSuccess = commonStore.resHandler(res, createOrder)
       if (!isReqSuccess) return
 
@@ -280,7 +283,7 @@ export const useOrderStore = defineStore("order", () => {
           // 登入
           else {
             commonStore.isConfirmToPay = true
-            memberStore.getMemberInfo()
+            memberInfoStore.getMemberInfo()
           }
         }
 
@@ -298,7 +301,7 @@ export const useOrderStore = defineStore("order", () => {
           cartStore.clearCart()
         }
         if (res.message.indexOf("購物金不足") > -1) {
-          await memberStore.getMemberInfo()
+          await memberInfoStore.getMemberInfo()
           cartStore.use_bonus = 0
           cartStore.getTotal(1)
         }
@@ -326,7 +329,7 @@ export const useOrderStore = defineStore("order", () => {
     }
 
     try {
-      const res = await registerApi(query)
+      const res = JSON.parse(await registerApi(query))
       const isReqSuccess = commonStore.resHandler(res, checkAccount)
       if (!isReqSuccess) return
 
@@ -426,23 +429,22 @@ export const useOrderStore = defineStore("order", () => {
 
   //
   async function getOrder(type, is_filter) {
+    console.log("getOrder")
     if (!search_phone.value) {
-      commonStore.payModal_message = "請填寫購買人連絡電話"
-      commonStore.is_payModal = true
-      order.value = null
+      commonStore.showMessage("請填寫購買人連絡電話", false)
+      order.value = {}
       return
-    } else if (!state.order_mail) {
-      commonStore.payModal_message = "請填寫購買人電子信箱"
-      commonStore.is_payModal = true
-      order.value = null
+    } else if (!search_phone.value) {
+      commonStore.showMessage("請填寫購買人電子信箱", false)
+      order.value = {}
       return
     }
 
-    if (!type) state.order_page_index = 1
+    if (!type) order_page_index.value = 1
     if (!is_filter) {
-      state.filter_number = ""
-      state.filter_pay = "0"
-      state.filter_delivery = "0"
+      filter_number.value = ""
+      filter_pay.value = "0"
+      filter_delivery.value = "0"
     }
     let query = {
       Site: commonStore.site.Site,
@@ -459,16 +461,18 @@ export const useOrderStore = defineStore("order", () => {
       filter_delivery: filter_delivery.value
     }
 
+    let formData = return_formData(query)
+
     try {
-      const res = JSON.parse(await getOrderApi(query))
-      const isReqSuccess = resHandler(res, getOrder)
+      const res = JSON.parse(await getOrderApi(formData))
+      const isReqSuccess = commonStore.resHandler(res, getOrder)
       if (!isReqSuccess) return
 
       let orders = res.Orders
       let totalPage = Math.ceil(res.Count / order_page_size.value)
       if (totalPage == 0) {
-        commonStore.payModal_message = "沒有您查詢的訂單資料"
-        commonStore.is_payModal = true
+        commonStore.showMessage("沒有您查詢的訂單資料", false)
+
         filter_number.value = ""
         filter_pay.value = "0"
         filter_delivery.value = "0"
@@ -494,6 +498,7 @@ export const useOrderStore = defineStore("order", () => {
     }
   }
   function getMemberOrder(type, is_filter) {
+    console.log("getMemberOrder")
     return new Promise(async (resolve) => {
       if (!type) order_page_index.value = 1
       if (!is_filter) {
@@ -517,9 +522,11 @@ export const useOrderStore = defineStore("order", () => {
         filter_delivery: filter_delivery.value
       }
 
+      let formData = return_formData(query)
+
       try {
-        const res = JSON.parse(await getMemberOrderApi(query))
-        const isReqSuccess = resHandler(res, getMemberOrder)
+        const res = JSON.parse(await getMemberOrderApi(formData))
+        const isReqSuccess = commonStore.resHandler(res, getMemberOrder)
         if (!isReqSuccess) return
 
         if (res.status) {
@@ -529,9 +536,8 @@ export const useOrderStore = defineStore("order", () => {
             data.Count / order_page_size.value
           )
           if (order_page_number.value == 0) {
-            commonStore.payModal_message = "沒有您查詢的訂單資料"
-            commonStore.is_payModal = true
-            order.value = null
+            commonStore.showMessage("沒有您查詢的訂單資料", false)
+            order.value = {}
             return
           }
 
@@ -548,9 +554,8 @@ export const useOrderStore = defineStore("order", () => {
             })
           }, 100)
         } else {
-          commonStore.payModal_message = res.data.msg
-          check_logout()
-          commonStore.is_payModal = true
+          commonStore.showMessage(res.msg, false)
+          userStore.check_logout(res.msg)
         }
 
         resolve()
@@ -569,7 +574,7 @@ export const useOrderStore = defineStore("order", () => {
 
     try {
       const res = JSON.parse(await rePayApi(query))
-      const isReqSuccess = resHandler(res, rePay, [flino, url])
+      const isReqSuccess = commonStore.resHandler(res, rePay, [flino, url])
       if (!isReqSuccess) return
 
       if ("status" in res) {
@@ -596,9 +601,13 @@ export const useOrderStore = defineStore("order", () => {
       LogisticsSubType
     }
 
+    let formData = return_formData(query)
+
     try {
-      const res = JSON.parse(await searchMartDeliveryApi(query))
-      const isReqSuccess = resHandler(res, searchMartDelivery, [item])
+      const res = JSON.parse(await searchMartDeliveryApi(formData))
+      const isReqSuccess = commonStore.resHandler(res, searchMartDelivery, [
+        item
+      ])
       if (!isReqSuccess) return
 
       let martName = decodeURI(item.Address).split(" - ")[1] || ""
@@ -621,10 +630,48 @@ export const useOrderStore = defineStore("order", () => {
     ECPay_form_value,
     ECPay_store_form_value,
 
+    search_phone,
+    search_mail,
+    search_phone,
+    filter_number,
+    search_phone,
+    filter_pay,
+    filter_delivery,
+
+    order,
+    search_phone,
+
+    active_order_products,
+    search_phone,
+    activeOrder,
+
+    payStatus_arr,
+
+    delivery_arr,
+
+    payMethod_obj,
+
+    mart_obj,
+
+    order_page_number,
+    order_page_index,
+    order_page_size,
+    select_active,
+    order_number,
+    account_number,
+
+    noOrder,
+
     checkOrder,
     cancelDiscountCodeCreateOrder,
     createOrder,
     checkAccount,
-    toPay
+    toPay,
+    toPay2,
+
+    getOrder,
+    getMemberOrder,
+    rePay,
+    searchMartDelivery
   }
 })

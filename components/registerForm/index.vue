@@ -1,10 +1,10 @@
 <template>
-  <div class="form">
+  <div class="r_form">
     <!-- recommender -->
-    <RegisterInput :input="userStore.r_form.recommender" />
+    <c_input :input="userStore.r_form.recommender" />
 
     <!-- name -->
-    <RegisterInput :input="userStore.r_form.name" />
+    <c_input :input="userStore.r_form.name" />
 
     <!-- sex -->
     <div class="radio_container">
@@ -33,11 +33,11 @@
     </div>
 
     <!-- birthday -->
-    <RegisterInput :input="userStore.r_form.birthday" />
+    <c_input :input="userStore.r_form.birthday" />
 
     <!-- mail -->
-    <RegisterInput :input="userStore.r_form.mail" />
-    <RegisterInput
+    <c_input :input="userStore.r_form.mail" />
+    <c_input
       :input="userStore.r_form.mail_verify_code"
       v-if="
         commonStore.store.NotificationSystem == 0 ||
@@ -46,8 +46,8 @@
     />
 
     <!-- phone -->
-    <RegisterInput :input="userStore.r_form.phone2" />
-    <RegisterInput
+    <c_input :input="userStore.r_form.phone2" />
+    <c_input
       :input="userStore.r_form.phone_verify_code"
       v-if="
         commonStore.store.NotificationSystem == 1 ||
@@ -56,7 +56,11 @@
     />
 
     <!-- 驗證碼 -->
-    <div class="button" style="margin-bottom: 20px" @click="send_verify_code">
+    <div
+      class="button"
+      style="margin-bottom: 20px"
+      @click="send_verify_code(userStore.r_form)"
+    >
       獲取驗證碼
       <span v-if="userStore.r_form.second > 0">
         ( {{ userStore.r_form.second }}s )
@@ -64,8 +68,8 @@
     </div>
 
     <!-- 密碼 -->
-    <RegisterInput :input="userStore.r_form.password" />
-    <RegisterInput :input="userStore.r_form.confirm_password" />
+    <c_input :input="userStore.r_form.password" />
+    <c_input :input="userStore.r_form.confirm_password" />
 
     <!-- agree -->
     <div class="agree_container">
@@ -106,7 +110,7 @@
 </template>
 
 <script setup>
-import RegisterInput from "./RegisterInput.vue"
+import c_input from "./Input.vue"
 
 import { useUnescapeHTML } from "@/composables/unescapeHTML"
 
@@ -117,9 +121,9 @@ const userStore = useUserStore()
 <style lang="scss" scoped>
 @import "@/styles/mixin/_button.scss";
 
-.form {
-  width: calc(100% - 80px);
-  z-index: 3;
+.r_form {
+  width: 100%;
+  z-index: 10;
 
   .radio_container {
     display: flex;

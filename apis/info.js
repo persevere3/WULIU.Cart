@@ -7,19 +7,19 @@
   }
   let formData = return_formData(obj)
 */
-export const getMemberInfoApi = (query) =>
+export const getMemberInfoApi = (formData) =>
   $fetch("/interface/WebMember/GetMemberInfo", {
     method: "POST",
-    query
+    body: formData
   })
 
 /*
   改
 */
-export const updateMemberInfoApi = (query) =>
+export const updateMemberInfoApi = (formData) =>
   $fetch("/interface/WebMember/EditMemberInfo", {
     method: "POST",
-    query
+    body: formData
   })
 
 /* 改密碼
@@ -35,7 +35,7 @@ export const updateMemberPassApi = (query) =>
 export const getBonusApi = (formData) =>
   $fetch("/interface/WebMember/GetMemberBonusOrders", {
     method: "POST",
-    query
+    body: formData
   })
 
 /* 會員登出

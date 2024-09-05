@@ -159,7 +159,9 @@
         <div class="text">加入會員！</div>
       </div>
 
-      <RegisterForm />
+      <div class="r_form_container">
+        <RegisterForm />
+      </div>
 
       <div class="buttonGroup">
         <div
@@ -192,18 +194,86 @@
     class="ECPay_form_container"
     v-html="orderStore.ECPay_store_form_value"
   ></div>
+
+  <!--  -->
+  <div class="payModal_container" v-if="commonStore.is_payModal">
+    <div class="payModal bank">
+      <div
+        class="close"
+        @click="
+          ;(commonStore.is_payModal = false),
+            (commonStore.payModal_message = ''),
+            commonStore.is_logout ? memberInfoStore.ajaxLogout() : ''
+        "
+      >
+        <i class="fas fa-times"></i>
+      </div>
+
+      <!-- 顯示帳戶 -->
+      <template v-if="commonStore.payModal_message == 'template1'">
+        <div>
+          匯款銀行 : {{ commonStore.store.SelfAtmBankId }}
+          {{ commonStore.bank[commonStore.store.SelfAtmBankId] }}
+        </div>
+        <div class="bank_account">
+          <div class="bank_title">匯款帳號 :</div>
+          <input
+            type="text"
+            id="bank_copy_input"
+            readonly
+            v-model="commonStore.store.SelfAtmId"
+          />
+          <div
+            class="copy"
+            @click="useCopy(commonStore.store.SelfAtmId, '#bank_copy_input')"
+          >
+            <i class="fas fa-copy"></i>
+          </div>
+        </div>
+      </template>
+
+      <!-- 輸入帳戶 -->
+      <template v-else-if="commonStore.payModal_message == 'template2'">
+        <div class="message" style="margin: 0 auto">
+          請輸入匯款帳戶末6碼:
+          <input
+            type="number"
+            @input="filter_account_number"
+            @keydown.enter="checkPay"
+            v-model="orderStore.account_number"
+          />
+        </div>
+        <div class="button_row" style="margin: 0 auto">
+          <div class="button" @click="checkPay">確認</div>
+        </div>
+      </template>
+
+      <!-- 修改密碼 -->
+      <template v-else-if="commonStore.payModal_message == 'template3'">
+        <c_input :input="memberInfoStore.e_form.o_password" />
+        <c_input :input="memberInfoStore.e_form.password" />
+        <c_input :input="memberInfoStore.e_form.confirm_password" />
+
+        <div class="button" @click="memberInfoStore.edit_pass">修改密碼</div>
+      </template>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import RegisterForm from "@/components/registerForm/index.vue"
+import c_input from "@/components/registerForm/Input.vue"
+
+import { confirmPayApi } from "@/apis/pay"
 
 import { useCopy } from "@/composables/copy"
 import { useUrlPush } from "@/composables/urlPush"
 
 const commonStore = useCommonStore()
-const purchaseInfoStore = usePurchaseInfoStore()
 const orderStore = useOrderStore()
 const userStore = useUserStore()
+const purchaseInfoStore = usePurchaseInfoStore()
+const memberInfoStore = useMemberInfoStore()
 
 watch(
   () => commonStore.isConfirmRegister,
@@ -218,7 +288,7 @@ watch(
 )
 
 async function order_register() {
-  const res = await userStore.register()
+  const res = JSON.parse(await userStore.register())
   if (res) {
     setTimeout(function () {
       isConfirmRegister.value = false
@@ -226,10 +296,55 @@ async function order_register() {
     toPay()
   }
 }
+
+function filter_account_number() {
+  let account = String(orderStore.account_number)
+  if (account.length > 6) {
+    account = account.substring(0, 6)
+    orderStore.account_number = account
+  }
+}
+
+async function checkPay() {
+  if (
+    !orderStore.order_number ||
+    !orderStore.account_number ||
+    orderStore.account_number.length < 6
+  ) {
+    commonStore.showMessage("請填寫匯款帳號末6碼", false)
+    return
+  }
+
+  let formData = new FormData()
+  formData.append("payflino", orderStore.order_number)
+  formData.append("paytradeno", orderStore.account_number)
+
+  try {
+    const res = JSON.parse(await confirmPayApi(formData))
+    const isReqSuccess = commonStore.resHandler(res, checkPay)
+    if (!isReqSuccess) return
+
+    if (res.status) {
+      commonStore.showMessage("帳號末6碼已送出，確認您的付款中", true)
+      commonStore.payModal_message = ""
+      commonStore.is_payModal = false
+    } else commonStore.showMessage("抱歉，請重新輸入帳號末6碼", false)
+
+    if (commonStore.pathname.indexOf("order") > -1 && !user_account.value)
+      orderStore.getOrder("page", true)
+    else orderStore.getMemberOrder("page", true)
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 </script>
 
 <style lang="scss" scoped>
 @import "@/styles/mixin/_button.scss";
+
+.button {
+  @include button(auto, auto, 6px 10px, 0, 5px, $secondColor_3, $white, 14);
+}
 
 .confirm {
   width: 100%;
@@ -252,6 +367,13 @@ async function order_register() {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+
+    @include m {
+      width: 400px;
+    }
+    @include s {
+      width: 300px;
+    }
 
     .border {
       width: calc(100% - 20px);
@@ -276,6 +398,8 @@ async function order_register() {
         margin-left: 15px;
       }
     }
+
+    // modal 內容
     .message {
       padding: 10px 30px;
       font-size: 18px;
@@ -347,6 +471,11 @@ async function order_register() {
         }
       }
     }
+    .r_form_container {
+      width: 80%;
+      z-index: 2;
+    }
+
     .buttonGroup {
       width: 90%;
       display: flex;
@@ -356,16 +485,6 @@ async function order_register() {
 
       // confirm
       .button {
-        @include button(
-          auto,
-          auto,
-          6px 10px,
-          0,
-          5px,
-          $secondColor_3,
-          $white,
-          14
-        );
         max-width: calc(50% - 15px);
 
         &.cancel {
@@ -379,17 +498,77 @@ async function order_register() {
     }
   }
 }
-@include m {
-  .confirm {
-    .frame {
-      width: 400px;
+
+.payModal_container {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: $modalBackground;
+  z-index: 100;
+
+  .payModal {
+    width: 300px;
+    padding: 30px 20px;
+    margin: 200px auto 0 auto;
+    border-radius: 5px;
+    background: #fff;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    .close {
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
     }
-  }
-}
-@include s {
-  .confirm {
-    .frame {
-      width: 300px;
+
+    input {
+      width: 160px;
+      height: 35px;
+      line-height: 35px;
+      padding: 0 5px;
+      margin-top: 5px;
+      margin-right: 5px;
+      font-size: 16px;
+      outline: none;
+      border: none;
+
+      &[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+    }
+
+    .bank_account {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+
+      .bank_title {
+        margin-right: 5px;
+        white-space: nowrap;
+      }
+
+      .copy {
+        font-size: 20px;
+        color: $primaryColor;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+      }
+    }
+
+    .button_row {
+      display: flex;
+      justify-content: center;
     }
   }
 }

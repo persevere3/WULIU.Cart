@@ -1,4 +1,4 @@
-import { formRequest, formDataRequest } from '@/utils/https'
+import { formRequest, formDataRequest } from "@/utils/https"
 
 /*
   確認付款(已轉帳，post帳戶號碼)
@@ -8,7 +8,11 @@ import { formRequest, formDataRequest } from '@/utils/https'
   }
   let formData = return_formData(obj)
 */
-export const confirmPayApi = formData => formDataRequest.post('/interface/web/ATMComfirmBack', formData);
+export const confirmPayApi = (formData) =>
+  $fetch("/interface/web/ATMComfirmBack", {
+    method: "POST",
+    body: formData
+  })
 
 /*
   重新付款
@@ -19,4 +23,8 @@ export const confirmPayApi = formData => formDataRequest.post('/interface/web/AT
   }
   let params = return_formData(obj)
 */
-export const rePayApi = params => formRequest.post('/LineMK/Line/RePayConfirm', params);
+export const rePayApi = (query) =>
+  $fetch("/LineMK/Line/RePayConfirm", {
+    method: "POST",
+    query
+  })

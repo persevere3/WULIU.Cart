@@ -2,16 +2,32 @@
   <div class="input_container" :class="{ error: input.is_error }">
     <!-- 日期 -->
     <template v-if="input.type === 'date'">
-      <VueDatePicker
-        :placeholder="input.placeholder"
-        format="yyyy/MM/dd"
-        :enable-time-picker="false"
-        v-model="input.value"
-        @closed="verify(input)"
-        @cleared="verify(input)"
-      >
-      </VueDatePicker>
+      <template v-if="input.originValue">
+        <input type="text" readonly v-model.trim="input.originValue" />
+      </template>
+
+      <template v-else>
+        <VueDatePicker
+          :placeholder="input.placeholder"
+          format="yyyy/MM/dd"
+          :enable-time-picker="false"
+          v-model="input.value"
+          @closed="verify(input)"
+          @cleared="verify(input)"
+        >
+        </VueDatePicker>
+      </template>
     </template>
+
+    <template v-else-if="input.type === 'copy'">
+      <div class="copy_container">
+        <input type="text" id="copy_input" readonly v-model="input.value" />
+        <div class="copy" @click="useCopy(input.value, '#copy_input')">
+          <i class="fas fa-copy"></i>
+        </div>
+      </div>
+    </template>
+
     <!-- 一般 -->
     <template v-else>
       <input
@@ -46,6 +62,7 @@ import VueDatePicker from "@vuepic/vue-datepicker"
 import "@vuepic/vue-datepicker/dist/main.css"
 
 import { useVerify } from "@/composables/verify"
+import { useCopy } from "@/composables/copy"
 let { verify } = useVerify()
 
 let { input } = defineProps(["input"])
@@ -55,6 +72,29 @@ let { input } = defineProps(["input"])
 .input_container {
   margin-bottom: 10px;
   position: relative;
+
+  .copy_container {
+    display: flex;
+    position: relative;
+
+    .copy {
+      width: 30px;
+      height: 40px;
+      position: absolute;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      font-size: $font_m;
+      color: $primaryColor;
+      opacity: 0.5;
+      transition: 0.3s;
+      cursor: pointer;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
 
   input {
     width: 100%;
@@ -69,6 +109,11 @@ let { input } = defineProps(["input"])
     color: $secondColor_3;
     transition: box-shadow 0.3s;
     box-sizing: border-box;
+
+    &[readonly] {
+      background: #eee;
+      cursor: not-allowed;
+    }
   }
   .eyes_icon {
     width: 30px;

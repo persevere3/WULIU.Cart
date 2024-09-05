@@ -27,7 +27,6 @@ export const useCartStore = defineStore("cart", () => {
 
   // bonus
   const bonus_array = ref([])
-  const total_bonus = ref(0)
   const is_use_bonus = ref(false)
   const use_bonus = ref(0)
 
@@ -511,7 +510,6 @@ export const useCartStore = defineStore("cart", () => {
     discountErrorMessage,
 
     bonus_array,
-    total_bonus,
     is_use_bonus,
     use_bonus,
 

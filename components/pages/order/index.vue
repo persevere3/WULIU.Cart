@@ -1,22 +1,70 @@
-<style lang="scss" scoped>
-@import "@/styles/components/order.scss";
-</style>
+<script setup>
+const commonStore = useCommonStore()
+const orderStore = useOrderStore()
+const memberInfoStore = useMemberInfoStore()
+
+// useRouter().replace({ path: commonStore.pathname })
+
+let getOrderHandler = computed(() => {
+  return commonStore.user_account
+    ? orderStore.getMemberOrder
+    : orderStore.getOrder
+})
+
+const { RtnMsg, account, result, phone, email } = useRoute().query
+
+// 付款成功
+if (RtnMsg) {
+  commonStore.showMessage("已收到您的付款", true)
+}
+
+// Line 登入
+if (account) {
+  commonStore.user_account = account
+  localStorage.setItem("user_account", commonStore.user_account)
+}
+// Line 綁定
+if (result) {
+  result = JSON.parse(decodeURI(result))
+  if (!result.status) alert(result.msg)
+  else {
+    commonStore.user_account = result.account
+    localStorage.setItem("user_account", commonStore.user_account)
+  }
+}
+
+watch(
+  () => commonStore.is_initial,
+  async () => {
+    if (commonStore.user_account) {
+      await memberInfoStore.getMemberInfo()
+      orderStore.getMemberOrder()
+    } else {
+      if (phone && email) {
+        orderStore.search_phone = phone
+        orderStore.search_mail = email
+        orderStore.getOrder()
+      }
+    }
+  }
+)
+</script>
 
 <template>
   <div class="order">
-    <div class="box" v-if="!user_account">
+    <div class="box" v-if="!commonStore.user_account">
       <div class="info">
         <label> 訂單查詢 </label>
         <input
           type="text"
           placeholder="購買人手機號碼"
-          v-model="order_phone"
+          v-model="orderStore.search_phone"
           @keyup.enter="getOrderHandler()"
         />
         <input
           type="text"
           placeholder="購買人電子信箱"
-          v-model="order_mail"
+          v-model="orderStore.search_mail"
           @keyup.enter="getOrderHandler()"
         />
         <div class="button_row">
@@ -25,20 +73,24 @@
       </div>
     </div>
 
-    <div class="box" v-if="order">
+    <div class="box" v-if="orderStore.order">
       <div class="filter">
         <div class="item">
           <label> 訂單編號 </label>
-          <input type="text" placeholder="訂單編號" v-model="filter_number" />
+          <input
+            type="text"
+            placeholder="訂單編號"
+            v-model="orderStore.filter_number"
+          />
         </div>
 
         <div class="item">
           <label> 付款狀態 </label>
-          <select v-model="filter_pay">
+          <select v-model="orderStore.filter_pay">
             <option value="0">=== 付款狀態 ===</option>
             <option
               :value="index"
-              v-for="(item, index) in payStatus_arr"
+              v-for="(item, index) in orderStore.payStatus_arr"
               :key="index"
               v-show="index != 0 && index != 5"
             >
@@ -49,11 +101,11 @@
 
         <div class="item">
           <label> 運送狀態 </label>
-          <select v-model="filter_delivery">
+          <select v-model="orderStore.filter_delivery">
             <option value="0">=== 運送狀態 ===</option>
             <option
               :value="index"
-              v-for="(item, index) in delivery_arr"
+              v-for="(item, index) in orderStore.delivery_arr"
               :key="index"
               v-show="index != 0"
             >
@@ -68,7 +120,10 @@
       </div>
     </div>
 
-    <div :class="{ box: pathname.indexOf('order') > -1 }" v-if="order">
+    <div
+      :class="{ box: commonStore.pathname.indexOf('order') > -1 }"
+      v-if="orderStore.order"
+    >
       <div class="table">
         <div class="head">
           <div class="tr">
@@ -81,27 +136,30 @@
           </div>
         </div>
         <div class="body">
-          <div class="tr" v-for="item in order" :key="item.FilNo">
+          <div class="tr" v-for="item in orderStore.order" :key="item.FilNo">
             <div class="td number">
               {{ item.FilNo }}
             </div>
+
             <div
               class="td products"
               :class="{
-                active: product_active == item.FilNo,
+                active: orderStore.active_order_products == item.FilNo,
                 expandable: item.expandable
               }"
               @click="
-                product_active == item.FilNo
-                  ? (product_active = '')
-                  : (product_active = item.FilNo)
+                orderStore.active_order_products == item.FilNo
+                  ? (orderStore.active_order_products = '')
+                  : (orderStore.active_order_products = item.FilNo)
               "
             >
               <ul>
                 <li
                   v-for="(item2, index) in item.Items"
                   :key="index"
-                  v-show="product_active == item.FilNo || index < 4"
+                  v-show="
+                    orderStore.active_order_products == item.FilNo || index < 4
+                  "
                 >
                   {{ item2.ProductType == 2 ? "加價購" : "" }} {{ item2.Name
                   }}{{ item2.Spec ? `(${item2.Spec})` : "" }} NT${{
@@ -111,7 +169,10 @@
                 </li>
               </ul>
               <template v-if="item.expandable">
-                <div class="icon" v-if="product_active == item.FilNo">
+                <div
+                  class="icon"
+                  v-if="orderStore.active_order_products == item.FilNo"
+                >
                   <i class="fa-solid fa-chevron-up"></i>
                 </div>
                 <div class="icon" v-else>
@@ -119,6 +180,7 @@
                 </div>
               </template>
             </div>
+
             <div class="td amount">
               <div class="total">
                 應付金額: NT$ {{ useNumberThousands(item.TotalAmount) }}
@@ -148,20 +210,23 @@
                 </div>
               </div>
             </div>
+
             <div class="td payState">
               <div class="l_head">付款狀態</div>
               <!-- 付款方式 -->
               <template v-if="item.Mart">
                 <div v-if="item.Mart.indexOf('Delivery') < 0" class="payMethod">
-                  <div>{{ payMethod_obj["MartOnDelivery"] }}</div>
-                  <div>{{ payMethod_obj[item.PayMethod] }}</div>
+                  <div>{{ orderStore.payMethod_obj["MartOnDelivery"] }}</div>
+                  <div>{{ orderStore.payMethod_obj[item.PayMethod] }}</div>
                 </div>
                 <div v-else class="payMethod">
-                  {{ payMethod_obj["MartPayOnDelivery"] }}
+                  {{ orderStore.payMethod_obj["MartPayOnDelivery"] }}
                 </div>
               </template>
               <template v-else>
-                <div class="payMethod">{{ payMethod_obj[item.PayMethod] }}</div>
+                <div class="payMethod">
+                  {{ orderStore.payMethod_obj[item.PayMethod] }}
+                </div>
               </template>
 
               <!-- 付款狀態 -->
@@ -169,7 +234,7 @@
                 class="state_container"
                 v-if="item.Delivery == 3 || item.Delivery == 4"
               >
-                <div>{{ payStatus_arr[item.PayStatus] }}</div>
+                <div>{{ orderStore.payStatus_arr[item.PayStatus] }}</div>
               </div>
               <!-- PayStatus == 2 (待付款)，PayMethod == 'ATM'，PayType == 1 (公司) -->
               <div
@@ -180,7 +245,7 @@
                   item.PayType == 1
                 "
               >
-                <template v-if="store.SelfAtmStatus == 0">
+                <template v-if="commonStore.store.SelfAtmStatus == 0">
                   <div>ATM帳戶關閉，請聯繫我們</div>
                 </template>
                 <template v-else>
@@ -188,8 +253,8 @@
                     <div
                       class="button"
                       @click.stop="
-                        is_payModal = true
-                        payModal_message = 'template1'
+                        ;(commonStore.is_payModal = true),
+                          (commonStore.payModal_message = 'template1')
                       "
                     >
                       匯款帳戶
@@ -198,10 +263,10 @@
                   <div
                     class="button"
                     @click.stop="
-                      is_payModal = true
-                      payModal_message = 'template2'
-                      account_number = ''
-                      order_number = item.PayFilNo
+                      ;(commonStore.is_payModal = true),
+                        (commonStore.payModal_message = 'template2'),
+                        (orderStore.account_number = ''),
+                        (orderStore.order_number = item.PayFilNo)
                     "
                   >
                     付款確認
@@ -216,56 +281,55 @@
               >
                 <div
                   class="button"
-                  v-if="pathname.toLowerCase().indexOf('order') > -1"
+                  v-if="
+                    commonStore.pathname.toLowerCase().indexOf('order') > -1
+                  "
                   @click="
-                    purchaseInfoStore.pay_method = item.PayMethod
-                    rePay(
-                      item.FilNo,
-                      `${
-                        item.PayType === '2'
-                          ? ''
-                          : location.origin + getPathname('order')
-                      }`
-                    )
+                    ;(purchaseInfoStore.pay_method = item.PayMethod),
+                      rePay(
+                        item.FilNo,
+                        `${
+                          item.PayType === '2' ? '' : location.origin + '/order'
+                        }`
+                      )
                   "
                 >
                   立即付款
                 </div>
                 <div
                   class="button"
-                  v-if="pathname.toLowerCase().indexOf('info') > -1"
+                  v-if="commonStore.pathname.toLowerCase().indexOf('info') > -1"
                   @click="
-                    purchaseInfoStore.pay_method = item.PayMethod
-                    rePay(
-                      item.FilNo,
-                      `${
-                        item.PayType === '2'
-                          ? ''
-                          : location.origin +
-                            getPathname('info') +
-                            '?page=order'
-                      }`
-                    )
+                    ;(purchaseInfoStore.pay_method = item.PayMethod),
+                      rePay(
+                        item.FilNo,
+                        `${
+                          item.PayType === '2'
+                            ? ''
+                            : location.origin + '/info' + '?page=order'
+                        }`
+                      )
                   "
                 >
                   立即付款
                 </div>
               </div>
               <div class="state_container" v-else>
-                <div>{{ payStatus_arr[item.PayStatus] }}</div>
+                <div>{{ orderStore.payStatus_arr[item.PayStatus] }}</div>
               </div>
             </div>
+
             <div class="td transportState">
               <div class="l_head">運送狀態</div>
               <div class="text">
-                <span> {{ delivery_arr[item.Delivery] }} </span>
+                <span> {{ orderStore.delivery_arr[item.Delivery] }} </span>
                 <span
                   class="search"
                   v-if="
                     item.Mart &&
                     (item.Delivery === '1' || item.Delivery === '6')
                   "
-                  @click="searchMartDelivery(item)"
+                  @click="orderStore.searchMartDelivery(item)"
                 >
                   查詢
                 </span>
@@ -288,6 +352,7 @@
                 <div>{{ item.DeliveryTime.split(" ")[1] }}</div>
               </template>
             </div>
+
             <div class="td time">
               <div class="l_head">成立時間</div>
               <div>{{ item.CreateTime.split(" ")[0] }}</div>
@@ -297,72 +362,51 @@
         </div>
       </div>
 
-      <div class="martDeliveryModal" v-if="activeOrder">
-        <div class="number_container" v-if="activeOrder.deliveryNumber">
-          <div class="number_title">
-            {{
-              martObj[
-                activeOrder.Mart.replace("C2C", "").replace("Delivery", "")
-              ]
-            }}
-            包裹查詢號碼
-          </div>
-          <input
-            type="text"
-            id="number_input"
-            readonly
-            v-model="activeOrder.deliveryNumber"
-          />
-          <div
-            class="copy"
-            @click="useCopy(activeOrder.deliveryNumber, '#number_input')"
-          >
-            <i class="fas fa-copy"></i>
-          </div>
-        </div>
-
-        <div class="message">{{ activeOrder.deliveryMsg }}</div>
-        <div class="time"></div>
-        <div class="button close" @click="activeOrder = null">確認</div>
-      </div>
-
       <div class="page_container">
         <div class="page">
           <ul>
             <li
-              :class="{ disabled: order_page_index < 2 }"
+              :class="{ disabled: orderStore.order_page_index < 2 }"
               @click="
-                order_page_index > 1 ? order_page_index-- : ''
-                getOrderHandler('page', true)
+                orderStore.order_page_index > 1
+                  ? orderStore.order_page_index--
+                  : '',
+                  getOrderHandler('page', true)
               "
             >
               <i class="fas fa-caret-left"></i>
             </li>
             <li
               v-show="
-                order_page_index > Math.floor(5 / 2) &&
-                order_page_index < order_page_number - Math.floor(5 / 2)
-                  ? item >= order_page_index - Math.floor(5 / 2) &&
-                    item <= order_page_index + Math.floor(5 / 2)
-                  : order_page_index <= 5
+                orderStore.order_page_index > Math.floor(5 / 2) &&
+                orderStore.order_page_index <
+                  orderStore.order_page_number - Math.floor(5 / 2)
+                  ? item >= orderStore.order_page_index - Math.floor(5 / 2) &&
+                    item <= orderStore.order_page_index + Math.floor(5 / 2)
+                  : orderStore.order_page_index <= 5
                   ? item <= 5
-                  : item > order_page_number - 5
+                  : item > orderStore.order_page_number - 5
               "
-              :class="{ active: order_page_index === item }"
-              v-for="item in order_page_number"
+              :class="{ active: orderStore.order_page_index === item }"
+              v-for="item in orderStore.order_page_number"
               :key="item"
               @click="
-                order_page_index = item
-                getOrderHandler('page', true)
+                ;(orderStore.order_page_index = item),
+                  getOrderHandler('page', true)
               "
             >
               {{ item }}
             </li>
             <li
-              :class="{ disabled: order_page_index > order_page_number - 1 }"
+              :class="{
+                disabled:
+                  orderStore.order_page_index > orderStore.order_page_number - 1
+              }"
               @click="
-                order_page_index < order_page_number ? order_page_index++ : ''
-                getOrderHandler('page', true)
+                orderStore.order_page_index < orderStore.order_page_number
+                  ? orderStore.order_page_index++
+                  : '',
+                  getOrderHandler('page', true)
               "
             >
               <i class="fas fa-caret-right"></i>
@@ -370,19 +414,22 @@
           </ul>
         </div>
         <div class="total">
-          {{ order_page_index }} / {{ order_page_number }}
+          {{ orderStore.order_page_index }} / {{ orderStore.order_page_number }}
         </div>
-        <div class="select" @click.stop="select_active = !select_active">
-          <div class="value">{{ order_page_size }}</div>
+        <div
+          class="select"
+          @click.stop="orderStore.select_active = !orderStore.select_active"
+        >
+          <div class="value">{{ orderStore.order_page_size }}</div>
           <i class="fas fa-caret-down"></i>
-          <ul :class="{ active: select_active }">
+          <ul :class="{ active: orderStore.select_active }">
             <li
-              :class="{ active: order_page_size === item * 10 }"
+              :class="{ active: orderStore.order_page_size === item * 10 }"
               v-for="item in 5"
               :key="item"
               @click="
-                order_page_size = item * 10
-                getOrderHandler('', true)
+                ;(orderStore.order_page_size = item * 10),
+                  getOrderHandler('', true)
               "
             >
               {{ item * 10 }}
@@ -391,87 +438,44 @@
         </div>
       </div>
     </div>
-
-    <div class="box" v-if="noOrder" style="text-align: center">
+    <div class="box" v-if="orderStore.noOrder" style="text-align: center">
       查無訂單資料
     </div>
   </div>
+
+  <div class="martDeliveryModal" v-if="orderStore.activeOrder">
+    <div class="number_container" v-if="orderStore.activeOrder.deliveryNumber">
+      <div class="number_title">
+        {{
+          orderStore.mart_obj[
+            orderStore.activeOrder.Mart.replace("C2C", "").replace(
+              "Delivery",
+              ""
+            )
+          ]
+        }}
+        包裹查詢號碼
+      </div>
+      <input
+        type="text"
+        id="number_input"
+        readonly
+        v-model="orderStore.activeOrder.deliveryNumber"
+      />
+      <div
+        class="copy"
+        @click="useCopy(orderStore.activeOrder.deliveryNumber, '#number_input')"
+      >
+        <i class="fas fa-copy"></i>
+      </div>
+    </div>
+
+    <div class="message">{{ orderStore.activeOrder.deliveryMsg }}</div>
+    <div class="time"></div>
+    <div class="button close" @click="orderStore.activeOrder = null">確認</div>
+  </div>
 </template>
 
-<script setup>
-// composables ========== ========== ========== ========== ==========
-import { useNumberThousands } from "@/composables/numberThousands"
-import { useCopy } from "@/composables/copy"
-
-// stores ========== ========== ========== ========== ==========
-let { user_account } = storeToRefs(useCommonStore())
-let { store, pathname, is_payModal, payModal_message } = storeToRefs(
-  useCommonStore()
-)
-let { rePay, getPathname } = useCommonStore()
-let {
-  order_phone,
-  order_mail,
-  filter_number,
-  filter_pay,
-  filter_delivery,
-  payStatus_arr,
-  delivery_arr,
-  order,
-  noOrder,
-  product_active,
-  payMethod_obj,
-  pay_method,
-  martObj,
-  account_number,
-  activeOrder,
-  order_number,
-  order_page_index,
-  order_page_number,
-  order_page_size,
-  select_active
-} = storeToRefs(useOrderStore())
-let { getOrder, getMemberOrder, searchMartDelivery } = useOrderStore()
-let { getUser_info } = useMemberInfoStore()
-
-const { RtnMsg, account, result, phone, email } = useRoute().query
-
-// 付款成功
-if (RtnMsg) {
-  payModal_message.value = "已收到您的付款"
-  is_payModal.value = true
-}
-
-// Line 登入
-if (account) {
-  user_account.value = account
-  localStorage.setItem("user_account", user_account.value)
-}
-// Line 綁定
-if (result) {
-  result = JSON.parse(decodeURI(result))
-  if (!result.status) alert(result.msg)
-  else {
-    user_account.value = result.account
-    localStorage.setItem("user_account", user_account.value)
-  }
-}
-
-if (user_account.value) {
-  await getUser_info()
-  getMemberOrder()
-} else {
-  if (phone && email) {
-    order_phone.value = phone
-    order_mail.value = email
-    getOrder()
-  }
-}
-
-useRouter().replace({ path: getPathname("order") })
-
-// computed ========== ========== ========== ========== ==========
-let getOrderHandler = computed(() => {
-  return user_account.value ? getMemberOrder : getOrder
-})
-</script>
+<style lang="scss" scoped>
+@import "@/styles/pages/order.scss";
+</style>

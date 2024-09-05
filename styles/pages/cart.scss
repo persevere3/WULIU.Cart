@@ -922,17 +922,6 @@
     }
   }
 
-  // ********************************************************************************
-  .notice_page {
-    .content {
-      word-wrap: break-all;
-
-      img {
-        max-width: 100%;
-      }
-    }
-  }
-
   // main page icon ********************************************************************************
   .cartIcon,
   .favoriteIcon {
@@ -1307,55 +1296,6 @@
             opacity: 0.3;
           }
         }
-      }
-    }
-
-    .notice {
-      width: 960px;
-      height: 50px;
-      margin: 0 auto;
-      margin-top: 30px;
-      background: $secondColor_a;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      ul {
-        display: flex;
-        justify-content: center;
-
-        li {
-          @include button(
-            auto,
-            auto,
-            6px 10px,
-            0 5px,
-            3px,
-            $white,
-            $secondColor_3
-          );
-          opacity: 1;
-
-          &:hover {
-            background-color: $secondColor_3;
-            color: $white;
-          }
-        }
-      }
-    }
-    @include l {
-      .notice {
-        width: 700px;
-      }
-    }
-    @include m {
-      .notice {
-        width: 450px;
-      }
-    }
-    @include s {
-      .notice {
-        width: 300px;
       }
     }
   }

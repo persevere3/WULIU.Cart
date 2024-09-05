@@ -47,6 +47,9 @@ export const useCommonStore = defineStore("common", () => {
   const isConfirmIsRegister = ref(false)
   const isConfirmRegister = ref(false)
 
+  const is_payModal = ref(true)
+  const payModal_message = ref("template3")
+
   // web ------------
   const webData = ref({})
   const all = ref({})
@@ -58,10 +61,6 @@ export const useCommonStore = defineStore("common", () => {
 
   //
   const is_logout = ref(null)
-
-  //
-  const payModal_message = ref("")
-  const is_payModal = ref(false)
 
   const pathname = ref(useRoute().name)
 
@@ -408,8 +407,6 @@ export const useCommonStore = defineStore("common", () => {
       store.value.Logo = config.public.apiUrl + store.value.Logo
     }
 
-    console.log(store.value)
-
     footer_community.value = webData.value.GetStore.footer[0] || {}
 
     // title ------------
@@ -516,16 +513,6 @@ export const useCommonStore = defineStore("common", () => {
     else useUrlPush(`/cart?id=${id}`, true)
   }
 
-  // payModal_message.indexOf('登入') > -1
-  function check_logout() {
-    if (
-      payModal_message.value == "請先登入會員" ||
-      payModal_message.value == "閒置逾時，請重新登入" ||
-      payModal_message.value == "已登出，請重新登入"
-    )
-      is_logout.value = true
-  }
-
   // allProducts, category, rich, contact(map) , user ==============================
   function imgHandler() {
     let editorWidth = 0
@@ -585,19 +572,28 @@ export const useCommonStore = defineStore("common", () => {
       purchaseInfoStore.info.receiver_name.value = ""
       purchaseInfoStore.info.receiver_number.value = ""
 
-      memberInfoStore.memberInfo = {}
+      memberInfoStore.memberInfo.value = {}
     }
   })
 
   return {
-    webData,
+    site,
+    searchObj,
+    user_account,
+    bank,
+
+    cartData,
+    store,
+    cartArrangement,
+
+    totalpage_num,
+    perpage_num,
+
+    messageArr,
+
     isShowFavorite,
 
     showPage,
-
-    cartArrangement,
-
-    messageArr,
 
     isConfirmToPay,
     isConfirmDiscountCodeUsed,
@@ -605,11 +601,7 @@ export const useCommonStore = defineStore("common", () => {
     isConfirmIsRegister,
     isConfirmRegister,
 
-    bank,
-
     webData,
-    site,
-    store,
     all,
     footer_community,
     copyRight,
@@ -617,8 +609,10 @@ export const useCommonStore = defineStore("common", () => {
 
     is_initial,
 
+    //
     is_logout,
 
+    //
     payModal_message,
     is_payModal,
 
@@ -631,11 +625,8 @@ export const useCommonStore = defineStore("common", () => {
     ajaxStore,
     showMessage,
 
-    initialWeb,
-
     cartPush,
 
-    check_logout,
     imgHandler
   }
 })

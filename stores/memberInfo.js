@@ -1,4 +1,6 @@
 import { useUrlPush } from "@/composables/urlPush"
+import { useRequest } from "@/composables/request"
+import { useVerify } from "@/composables/verify"
 
 import {
   getMemberInfoApi,
@@ -11,26 +13,226 @@ import {
 } from "@/apis/info"
 
 export const useMemberInfoStore = defineStore("memberInfo", () => {
+  const commonStore = useCommonStore()
+  const userStore = useUserStore()
+  const cartStore = useCartStore()
+  const orderStore = useOrderStore()
+  const purchaseInfoStore = usePurchaseInfoStore()
+
+  const { return_formData } = useRequest()
+  const { verify } = useVerify()
+
   // state ==============================
-  const memberInfo = reactive({})
+  const member_info_nav_active = ref("info")
+
+  // info ---------------
+  const memberInfo = ref({})
+
+  const e_form = reactive({
+    // 姓名 信箱 手機 -----
+    name: {
+      value: "",
+
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        name: {
+          message: "請輸入全中文或全英文"
+        },
+        nameLength: {
+          message: "中文長度請介於2~5，英文長度請介於4~10"
+        }
+      },
+      is_error: false,
+      message: "",
+      readonly: false,
+      placeholder: "* 請輸入姓名"
+    },
+    // :readonly="!!memberInfo.mail"
+    mail: {
+      value: "",
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        mail: {
+          message: "email格式不符"
+        }
+      },
+      is_error: false,
+      message: "",
+      readonly: false,
+      placeholder: "* 請輸入電子信箱"
+    },
+    // :readonly="!!memberInfo.phone2"
+    phone2: {
+      value: "",
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        cellphone: {
+          message: "手機格式錯誤"
+        }
+      },
+      is_error: false,
+      message: "",
+      readonly: false,
+      placeholder: "* 請輸入手機(帳號)"
+    },
+
+    // 驗證 -----
+    mail_verify_code: {
+      value: "",
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        length: {
+          min: 6,
+          max: 6,
+          message: "驗證碼為6位"
+        }
+      },
+      is_error: false,
+      message: "",
+      readonly: false,
+      placeholder: "* 請輸入電子信箱驗證碼"
+    },
+    phone_verify_code: {
+      value: "",
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        length: {
+          min: 6,
+          max: 6,
+          message: "驗證碼為6位"
+        }
+      },
+      is_error: false,
+      message: "",
+      readonly: false,
+      placeholder: "* 請輸入手機驗證碼"
+    },
+    second: 0,
+
+    // 性別 生日 -----
+    sex: "male",
+    birthday: {
+      value: "",
+      placeholder: "* 請輸入生日",
+      type: "date",
+      originValue: ""
+    },
+
+    // 推薦人 推薦代碼 -----
+    recommender: {
+      value: "",
+      readonly: true
+    },
+    recommend_code: {
+      value: "",
+      readonly: true,
+      type: "copy"
+    },
+
+    // 發票 -----
+    phone_barCode: {
+      value: "",
+      placeholder: "請輸入手機條碼載具"
+    },
+    natural_barCode: {
+      value: "",
+      placeholder: "請輸入自然人憑證載具"
+    },
+    invoice_title: {
+      value: "",
+      placeholder: "請輸入公司抬頭"
+    },
+    invoice_uniNumber: {
+      value: "",
+      placeholder: "請輸入統一編號"
+    },
+
+    // 密碼 -----
+    o_password: {
+      value: "",
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        length: {
+          min: 8,
+          message: "不得少於8位"
+        }
+      },
+      is_error: false,
+      message: "",
+      readonly: false,
+      placeholder: "* 請輸入原密碼",
+      type: "password",
+      visible: false
+    },
+    password: {
+      value: "",
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        length: {
+          min: 8,
+          message: "不得少於8位"
+        }
+      },
+      is_error: false,
+      message: "",
+      readonly: false,
+      placeholder: "* 請輸入密碼",
+      type: "password",
+      visible: false
+    },
+    confirm_password: {
+      value: "",
+      rules: {
+        required: {
+          message: "此項目為必填"
+        },
+        confirm: {
+          password: null,
+          message: "密碼不正確"
+        }
+      },
+      is_error: false,
+      message: "",
+      readonly: false,
+      placeholder: "* 請再次輸入密碼",
+      type: "password",
+      visible: false
+    },
+
+    // 地址 -----
+    delivery_address: {},
+    address_select_active: ""
+  })
+  e_form.confirm_password.rules.confirm.password = e_form.password
 
   const o_password = ref("")
   const r_password = ref("")
   const r_confirm_password = ref("")
 
-  const total_bonus = ref(0)
+  // bonus ---------------
   const bonus = ref([])
-
-  const user_info = ref({})
-  const user_info_nav_active = ref("info")
-
-  const phone_barCode = ref("")
-  const natural_barCode = ref("")
-
-  const recommend_code = ref("")
+  const bonus_page_number = ref(0)
+  const bonus_page_size = ref(10)
+  const bonus_page_index = ref(1)
+  const select_active = ref(false)
 
   const delivery_address = ref([])
   const address_select_active = ref("")
+
   // methods ==============================
   // ???
   async function getMemberInfo() {
@@ -38,37 +240,98 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
       storeid: commonStore.site.Name,
       phone: commonStore.user_account
     }
+    let formData = return_formData(query)
+
     try {
-      const res = await getMemberInfoApi(query)
-      const isReqSuccess = resHandler(res, getMemberInfo)
+      const res = JSON.parse(await getMemberInfoApi(formData))
+      const isReqSuccess = commonStore.resHandler(res, getMemberInfo)
       if (!isReqSuccess) return
 
+      console.log(JSON.parse(JSON.stringify(res.datas[0][0])))
+
       if (res.status) {
-        const originMemberInfo = res.datas[0][0] || {}
+        const originInfo = res.datas[0][0] || {}
 
-        //
-        originMemberInfo.ThreeLinkCode = originMemberInfo.ThreeLinkCode || ""
-        originMemberInfo.invoice_title =
-          originMemberInfo.ThreeLinkCode.split("|")[0] || ""
-        originMemberInfo.invoice_uniNumber =
-          originMemberInfo.ThreeLinkCode.split("|")[1] || ""
+        // Registermethod ConnectLine 沒有特別處理
 
-        login_handle_carts()
+        // 姓名 信箱 電話 ---------------
+        originInfo.name = originInfo.Name
+        originInfo.mail = originInfo.Email
+        originInfo.phone = originInfo.Phone
+        originInfo.phone2 = originInfo.Phone2
 
-        originMemberInfo.name = originMemberInfo.Name
-        originMemberInfo.mail = originMemberInfo.Email
-        originMemberInfo.birthday = originMemberInfo.Birthday
-          ? new Date(originMemberInfo.Birthday)
-          : ""
-        originMemberInfo.sex = originMemberInfo.Gender == 1 ? "male" : "female"
-        originMemberInfo.phone = originMemberInfo.Phone
-        originMemberInfo.phone2 = originMemberInfo.Phone2
-        originMemberInfo.recommend_code = originMemberInfo.Promocode
-        originMemberInfo.recommender = originMemberInfo.Recommender
+        // 自動填入 編輯資訊
+        e_form.name.value = originInfo.name
+        e_form.mail.value = originInfo.mail
+        e_form.phone2.value = originInfo.phone2
 
+        e_form.mail.readonly = !!originInfo.mail
+        e_form.phone2.readonly = !!originInfo.phone2
+
+        // 自動填入 訂單查詢
+        orderStore.search_mail = originInfo.mail
+        orderStore.search_phone = originInfo.phone
+
+        // 自動填入 購買人資訊
+        purchaseInfoStore.info.purchaser_name.value = originInfo.name
+        purchaseInfoStore.info.purchaser_email.value = originInfo.mail
+        purchaseInfoStore.info.purchaser_number.value = originInfo.phone2
+
+        // 性別 生日 ---------------
+        originInfo.sex = originInfo.Gender == 1 ? "male" : "female"
+
+        originInfo.birthday = originInfo.Birthday
+
+        // 自動填入 編輯資訊
+        e_form.sex = originInfo.sex
+        e_form.birthday.value = originInfo.Birthday
+        e_form.birthday.originValue = originInfo.Birthday
+
+        // 推薦人代碼 推薦代碼 ---------------
+        originInfo.recommender = originInfo.Recommender
+        originInfo.recommend_code = originInfo.Promocode
+
+        // 自動填入 編輯資訊
+        e_form.recommender.value = originInfo.recommender
+        e_form.recommend_code.value = originInfo.recommend_code
+
+        // 手機條碼 自然人憑證 ---------------
+        originInfo.phone_barCode = originInfo.PhoneCode
+        originInfo.natural_barCode = originInfo.NatureCode
+
+        // 自動填入 編輯資訊
+        e_form.phone_barCode.value = originInfo.phone_barCode
+        e_form.natural_barCode.value = originInfo.natural_barCode
+
+        // 自動填入 購買人資訊
+        purchaseInfoStore.phone_barCode = originInfo.phone_barCode
+        purchaseInfoStore.natural_barCode = originInfo.natural_barCode
+
+        // 抬頭 統編 ---------------
+        originInfo.ThreeLinkCode = originInfo.ThreeLinkCode || ""
+        let invoice_arr = originInfo.ThreeLinkCode.split("|")
+        let title = invoice_arr[0] || ""
+        let uniNumber = invoice_arr[1] || ""
+
+        originInfo.invoice_title = title
+        originInfo.invoice_uniNumber = uniNumber
+
+        // 自動填入 編輯資訊
+        e_form.invoice_title.value = title
+        e_form.invoice_uniNumber.value = uniNumber
+
+        // 自動填入 購買人資訊
+        if (originInfo.ThreeLinkCode) {
+          if (!purchaseInfoStore.invoice_title)
+            purchaseInfoStore.invoice_title = title
+          if (!purchaseInfoStore.invoice_uniNumber)
+            purchaseInfoStore.invoice_uniNumber = uniNumber
+        }
+
+        // 地址 ---------------
         let result_arr = []
-        originMemberInfo.address = decodeURI(originMemberInfo.Adress)
-        let address_arr = originMemberInfo.Adress.split("_#_")
+        originInfo.address = decodeURI(originInfo.Adress)
+        let address_arr = originInfo.Adress.split("_#_")
         address_arr.length = address_arr.length - 1
         for (let address of address_arr) {
           let item = address.split("_ _")
@@ -86,51 +349,40 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
             message: ""
           })
         }
-        originMemberInfo.delivery_address = result_arr
+        originInfo.delivery_address = result_arr
 
-        originMemberInfo.address_obj = createAddressObj(
-          decodeURI(originMemberInfo.Adress)
-        )
+        originInfo.address_obj = createAddressObj(decodeURI(originInfo.Adress))
 
-        originMemberInfo.phone_barCode = originMemberInfo.PhoneCode
-        originMemberInfo.natural_barCode = originMemberInfo.NatureCode
+        // 自動填入 編輯資訊
+        e_form.delivery_address = originInfo.delivery_address
 
-        originMemberInfo.total_bonus = originMemberInfo.Wallet * 1
+        // 回饋金 ---------------
+        originInfo.total_bonus = originInfo.Wallet * 1
 
-        // 取得訂單 參數
-        order_phone.value = originMemberInfo.Phone
-        order_mail.value = originMemberInfo.Email
+        // cart ---------------
+        login_handle_carts()
 
-        purchaseInfoStore.info.purchaser_email.value = originMemberInfo.Email
-        purchaseInfoStore.info.purchaser_name.value = originMemberInfo.Name
-        purchaseInfoStore.info.purchaser_number.value = originMemberInfo.Phone2
-
-        purchaseInfoStore.phone_barCode = originMemberInfo.PhoneCode
-        purchaseInfoStore.natural_barCode = originMemberInfo.NatureCode
-
-        if (originMemberInfo.ThreeLinkCode) {
-          let invoice_arr = originMemberInfo.ThreeLinkCode.split("|")
-          if (!purchaseInfoStore.invoice_title)
-            purchaseInfoStore.invoice_title = invoice_arr[0] || ""
-          if (!purchaseInfoStore.invoice_uniNumber)
-            purchaseInfoStore.invoice_uniNumber = invoice_arr[1] || ""
-        }
+        //
+        memberInfo.value = originInfo
       } else {
-        commonStore.payModal_message = res.msg
-        checkMessage()
-        commonStore.is_payModal = true
+        commonStore.showMessage(res.msg, false)
+        userStore.check_logout(res.msg)
       }
     } catch (error) {
       throw new Error(error)
     }
   }
+
+  // ???
   function login_handle_carts() {
     let userCart =
       JSON.parse(
-        localStorage.getItem(`${site.value.Name}@${user_account.value}@cart`)
+        localStorage.getItem(
+          `${commonStore.site.Name}@${commonStore.user_account}@cart`
+        )
       ) || []
     let localCart =
-      JSON.parse(localStorage.getItem(`${site.value.Name}@cart`)) || []
+      JSON.parse(localStorage.getItem(`${commonStore.site.Name}@cart`)) || []
     for (let localIndex in localCart) {
       let f = false
       for (let userIndex in userCart) {
@@ -143,15 +395,15 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
         userCart[userCart.length] = localCart[localIndex]
       }
     }
-    cart.value = []
-    userCart.forEach((item, index) => (cart.value[index] = item))
+    cartStore.cart = []
+    userCart.forEach((item, index) => (cartStore.cart[index] = item))
     localStorage.setItem(
-      `${site.value.Name}@${user_account.value}@cart`,
-      JSON.stringify(cart.value)
+      `${commonStore.site.Name}@${commonStore.user_account}@cart`,
+      JSON.stringify(cartStore.cart)
     )
   }
   function createAddressObj(address) {
-    // memberInfo.Adress => memberInfo.address_obj
+    // memberInfo.value.Adress => memberInfo.value.address_obj
     // id: {id, address(`${city} ${district} ${detail}`)}
     let address_obj = {}
     let address_arr = address.split("_#_")
@@ -167,23 +419,21 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
   }
 
   async function edit_info() {
-    if (
-      !verify(
-        memberInfo.name,
-        memberInfo.mail,
-        memberInfo.birthday,
-        memberInfo.phone2
-      )
-    )
+    if (!verify(e_form.name, e_form.mail, e_form.birthday, e_form.phone2))
       return
 
     // 手機驗證
     // if(commonStore.store.NotificationSystem == 1 || commonStore.store.NotificationSystem == 2) {
-    //   if(!verify(r_phone_verify_code.value)) return
+    //   if(!verify(e_form.phone_verify_code)) return
     // }
 
-    // 刪除重複地址
-    let address_arr = memberInfo.delivery_address
+    //
+
+    // 刪除 空地址 重複地址
+    e_form.delivery_address = e_form.delivery_address.filter(
+      (a) => a.city && a.district && a.detail
+    )
+    let address_arr = e_form.delivery_address
     for (let i = address_arr.length - 1; i > 0; i--) {
       for (let j = 0; j < i; j++) {
         if (
@@ -201,17 +451,17 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
       storeid: commonStore.site.Name,
       phone: commonStore.user_account,
 
-      name: memberInfo.name,
-      email: memberInfo.mail,
-      phone2: memberInfo.phone2,
-      gender: memberInfo.sex == "male" ? 1 : 0,
-      birthday: useFormatDate(memberInfo.birthday.value),
-      recommender: memberInfo.recommender.value
+      name: e_form.name.value,
+      email: e_form.mail.value,
+      phone2: e_form.phone2.value,
+      gender: e_form.sex == "male" ? 1 : 0,
+      birthday: useFormatDate(new Date(e_form.birthday.value)),
+      recommender: e_form.recommender.value
     }
 
     // query 手機驗證
-    // if(store.value.NotificationSystem == 1 || store.value.NotificationSystem == 2) {
-    //   query["validate"] = r_phone_verify_code.value.value
+    // if(commonStore.store.NotificationSystem == 1 || commonStore.store.NotificationSystem == 2) {
+    //   query["validate"] = e_form.phone_verify_code.value
     // }
 
     //
@@ -220,43 +470,53 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
       address_str += `${item.id}_ _${item.city}_ _${item.district}_ _${item.detail}_#_`
     }
     query["address"] = address_str
-    query["savePhoneCode"] = memberInfo.phone_barCode || ""
-    query["saveNatureCode"] = memberInfo.natural_barCode || ""
+    query["savePhoneCode"] = e_form.phone_barCode.value || ""
+    query["saveNatureCode"] = e_form.natural_barCode.value || ""
     query[
       "threeLinkCode"
-    ] = `${memberInfo.invoice_title}|${memberInfo.invoice_uniNumber}`
+    ] = `${e_form.invoice_title.value}|${e_form.invoice_uniNumber.value}`
+
+    let formData = return_formData(query)
 
     try {
-      const res = await updateMemberInfoApi(query)
+      const res = JSON.parse(await updateMemberInfoApi(formData))
       const isReqSuccess = commonStore.resHandler(res, edit_info)
       if (!isReqSuccess) return
 
-      getMemberInfo()
-      commonStore.payModal_message = res.data.msg
-      if (!res.status) checkMessage()
-      commonStore.is_payModal = true
+      if (res.status) {
+        getMemberInfo()
+        commonStore.showMessage("修改成功", true)
+      } else {
+        commonStore.showMessage("修改失敗，請再試一次", false)
+      }
     } catch (error) {
       throw new Error(error)
     }
   }
   async function edit_pass() {
-    if (!verify(o_password, r_password, r_confirm_password)) return
+    if (!verify(e_form.o_password, e_form.password, e_form.confirm_password))
+      return
 
     let query = {
       storeid: commonStore.site.Name,
       phone: commonStore.user_account,
-      oldpassword: o_password.value.value,
-      newpassword: r_password.value.value
+      oldpassword: e_form.o_password.value,
+      newpassword: e_form.password.value
     }
 
     try {
-      const res = await updateMemberPassApi(query)
+      const res = JSON.parse(await updateMemberPassApi(query))
       const isReqSuccess = commonStore.resHandler(res, edit_pass)
       if (!isReqSuccess) return
 
-      commonStore.payModal_message = res.msg
-      if (!res.status) checkMessage()
-      commonStore.is_payModal = true
+      if (res.status) {
+        commonStore.showMessage(res.msg, true)
+        commonStore.payModal_message = ""
+        commonStore.is_payModal = false
+      } else {
+        commonStore.showMessage(res.msg, false)
+        userStore.check_logout(res.msg)
+      }
     } catch (error) {
       throw new Error(error)
     }
@@ -265,33 +525,34 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
   async function getBonus(type) {
     await getMemberInfo()
 
-    if (!type) order_page_index.value = 1
+    if (!type) orderStore.order_page_index = 1
     let query = {
       storeid: commonStore.site.Name,
       storename: commonStore.site.Store,
       phone: commonStore.user_account,
 
-      recommander: memberInfo.recommend_code,
-      pageindex: order_page_index.value,
-      pagesize: order_page_size.value
+      recommander: memberInfo.value.recommend_code,
+      pageindex: bonus_page_index.value,
+      pagesize: bonus_page_size.value
     }
 
+    let formData = return_formData(query)
+
     try {
-      const res = await getBonusApi(query)
+      const res = JSON.parse(await getBonusApi(formData))
       const isReqSuccess = commonStore.resHandler(res, getBonus)
       if (!isReqSuccess) return
 
       if (res.status) {
         let data = res.datas[0] || {}
 
-        order_page_number.value = Math.ceil(data.Count / order_page_size.value)
-        if (order_page_number.value == 0) {
-          commonStore.payModal_message = "沒有您的購物金紀錄"
-          commonStore.is_payModal = true
+        bonus_page_number.value = Math.ceil(data.Count / bonus_page_size.value)
+        if (bonus_page_number.value == 0) {
+          commonStore.showMessage("沒有您的購物金紀錄", false)
           bonus.value = null
           return
         } else {
-          total_bonus.value = data.Total
+          memberInfo.value.total_bonus = data.Total
           bonus.value = data.Bonuses
           bonus.value.forEach((item) => {
             if (item.Type.indexOf("使用點數") > -1) {
@@ -300,9 +561,8 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
           })
         }
       } else {
-        commonStore.payModal_message = res.data.msg
-        checkMessage()
-        is_payModal.value = true
+        commonStore.showMessage(res.msg, false)
+        userStore.check_logout(res.msg)
       }
     } catch (error) {
       throw new Error(error)
@@ -311,8 +571,8 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
 
   function add_address() {
     let id = new Date().getTime()
-    if (memberInfo.delivery_address.length > 2) return
-    memberInfo.delivery_address.push({
+    if (e_form.delivery_address.length > 2) return
+    e_form.delivery_address.push({
       id,
       city: "",
       district: "",
@@ -327,7 +587,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
     })
   }
   function delete_address(id) {
-    memberInfo.delivery_address = memberInfo.delivery_address.filter(
+    e_form.delivery_address = e_form.delivery_address.filter(
       (address) => address.id != id
     )
   }
@@ -339,8 +599,8 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
   }
   async function ajaxLogout() {
     try {
-      const res = await logoutApi()
-      const isReqSuccess = resHandler(res, ajaxLogout)
+      const res = JSON.parse(await logoutApi())
+      const isReqSuccess = commonStore.resHandler(res, ajaxLogout)
       if (!isReqSuccess) return
 
       logoutHandler()
@@ -352,7 +612,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
   //
   function bindLine() {
     useUrlPush(
-      `${location.origin}/interface/webmember/LineLoginAuthorize?storeid=${site.value.Name}&site=${site.value.Site}&phone=${user_account.value}&method=LineRegister`
+      `${location.origin}/interface/webmember/LineLoginAuthorize?storeid=${commonStore.site.Name}&site=${commonStore.site.Site}&phone=${user_account.value}&method=LineRegister`
     )
   }
 
@@ -367,8 +627,8 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
     }
 
     try {
-      const res = await unbindLine_testApi(query)
-      const isReqSuccess = resHandler(res, unbindLine_test)
+      const res = JSON.parse(await unbindLine_testApi(query))
+      const isReqSuccess = commonStore.resHandler(res, unbindLine_test)
       if (!isReqSuccess) return
 
       getMemberInfo()
@@ -382,13 +642,13 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
     if (!isConfim) return
 
     let query = {
-      storeid: site.value.Name,
+      storeid: commonStore.site.Name,
       phone: user_account.value
     }
 
     try {
-      const res = await deleteAccount_testApi(query)
-      const isReqSuccess = resHandler(res, deleteAccount_test)
+      const res = JSON.parse(await deleteAccount_testApi(query))
+      const isReqSuccess = commonStore.resHandler(res, deleteAccount_test)
       if (!isReqSuccess) return
 
       logoutHandler()
@@ -403,22 +663,47 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
       if (!newV.Phone && !newV.Email) {
         commonStore.user_account = ""
       }
-      total_bonus.value = newV.Wallet * 1
+      memberInfo.value.total_bonus = newV.Wallet * 1
     },
     { deep: true }
   )
 
   return {
     memberInfo,
+    member_info_nav_active,
+
+    e_form,
+
+    o_password,
+    r_password,
+    r_confirm_password,
+
+    bonus,
+    bonus_page_index,
+    bonus_page_number,
+    bonus_page_size,
+    select_active,
+
+    delivery_address,
+    address_select_active,
 
     getMemberInfo,
+    login_handle_carts,
+    createAddressObj,
+
+    edit_info,
+    edit_pass,
+
+    getBonus,
 
     add_address,
     delete_address,
-    ajaxLogout,
+
     logoutHandler,
+    ajaxLogout,
 
     bindLine,
+
     unbindLine_test,
     deleteAccount_test
   }

@@ -6,12 +6,12 @@ input {
   @include input(
     auto,
     35px,
-    0 5px,
+    0 10px,
     0,
     3px,
     none,
     0 0 3px 1px $primaryColor,
-    transparent,
+    #fff,
     #333,
     $font_s
   );
@@ -24,7 +24,7 @@ input {
 
 // ==================================================
 .order {
-  padding: 20px;
+  width: 100%;
 
   .box {
     padding: 20px;
@@ -59,10 +59,14 @@ input {
       margin-top: 5px;
 
       select {
-        width: 150px;
+        width: 160px;
+        height: 35px;
+        line-height: 35px;
         margin-right: 15px;
+        border-radius: 3px;
         border: none;
         outline: none;
+        font-size: $font_s;
         color: #333;
         cursor: pointer;
 

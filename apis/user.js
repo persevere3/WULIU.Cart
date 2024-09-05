@@ -36,7 +36,10 @@ export const validateRecommenderCodeApi = (formData) =>
   let formData = return_formData(obj)
 */
 export const send_verify_codeApi = (formData) =>
-  formDataRequest.post("/interface/WebMember/SendValidateMessage", formData)
+  $fetch("/interface/WebMember/SendValidateMessage", {
+    method: "POST",
+    body: formData
+  })
 
 /*
   會員 註冊
@@ -75,7 +78,10 @@ export const registerApi = (formData) =>
   let formData = return_formData(obj)
 */
 export const userLoginApi = (formData) =>
-  formDataRequest.post("/interface/WebMember/MemberLogin", formData)
+  $fetch("/interface/WebMember/MemberLogin", {
+    method: "POST",
+    body: formData
+  })
 
 /*
   寄發 忘記密碼 驗證碼

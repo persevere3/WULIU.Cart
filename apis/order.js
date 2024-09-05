@@ -28,7 +28,10 @@ export const createOrderApi = (query) =>
   let formData = return_formData(obj)
 */
 export const getOrderApi = (formData) =>
-  formDataRequest.post("/interface/web/GetOrderContactAjax", formData)
+  $fetch("/interface/web/GetOrderContactAjax", {
+    method: "POST",
+    body: formData
+  })
 
 /*
   查(會員)
@@ -50,7 +53,10 @@ export const getOrderApi = (formData) =>
   let formData = return_formData(obj)
 */
 export const getMemberOrderApi = (formData) =>
-  formDataRequest.post("/interface/Webmember/GetMemberOrders", formData)
+  $fetch("/interface/Webmember/GetMemberOrders", {
+    method: "POST",
+    body: formData
+  })
 
 /*
   查便利商店運送狀態 
@@ -63,4 +69,7 @@ export const getMemberOrderApi = (formData) =>
   let formData = return_formData(obj)
 */
 export const searchMartDeliveryApi = (formData) =>
-  formDataRequest.post("/interface/store/QueryLogisticsInfo", formData)
+  $fetch("/interface/store/QueryLogisticsInfo", {
+    method: "POST",
+    body: formData
+  })

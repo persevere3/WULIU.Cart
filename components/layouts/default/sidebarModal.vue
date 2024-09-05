@@ -91,7 +91,7 @@
             v-if="commonStore.site.MemberFuction * 1"
             @click="
               commonStore.user_account
-                ? useUrlPush('/user_info')
+                ? useUrlPush('/info')
                 : useUrlPush('/user')
             "
           >
