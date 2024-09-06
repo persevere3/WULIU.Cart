@@ -35,5 +35,8 @@ export const getSearchApi = (formData) =>
   聯絡
   let params = return_formUrlencoded('WebPreview')
 */
-export const getContactApi = (params) =>
-  formRequest.post("/interface/web/GetWebContact", params)
+export const getContactApi = (formData) =>
+  $fetch("/interface/web/GetWebContact", {
+    method: "POST",
+    body: formData
+  })

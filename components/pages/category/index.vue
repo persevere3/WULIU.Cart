@@ -2,62 +2,9 @@
 import ProductItem from "@/components/productItem.vue"
 
 import { useUnescapeHTML } from "@/composables/unescapeHTML"
-
-const config = useRuntimeConfig()
-
 const commonStore = useCommonStore()
-const productStore = useProductStore()
 
-const { id } = useRoute().query
-
-const category_product = ref({})
-
-async function getCategory() {
-  category_product.value = commonStore.webData.GetWebSubCategory
-
-  category_product.value.Sort = {}
-  let sort = category_product.value.Sort
-
-  // origin data
-  let data = category_product.value.Data[0]
-  let category = category_product.value.Category
-  let product = category_product.value.Product
-
-  productStore.multiPriceHandler(product)
-
-  // category => sort[i]
-  for (let i = 0; i < category.length; i++) {
-    sort[category[i].ID] = {}
-    sort[category[i].ID].Products = {}
-    sort[category[i].ID].Name = category[i].Name
-  }
-
-  // product => sort[i].Products[j]
-  for (let i = 0; i < product.length; i++) {
-    if (process.env.NODE_ENV === "development")
-      product[i].Img1 = config.public.apiUrl + product[i].Img1
-
-    // Category1~5
-    for (let j = 1; j < 6; j++) {
-      let category_item = product[i][`Category${j}`]
-      if (category_item) {
-        if (sort[category_item]) {
-          sort[category_item].Products[product[i].ID] = product[i]
-        }
-      }
-    }
-  }
-
-  data.Img = []
-  for (let i = 1; i < 6; i++) {
-    if (data[`Img${i}`]) {
-      if (process.env.NODE_ENV === "development")
-        data[`Img${i}`] = config.public.apiUrl + data[`Img${i}`]
-
-      data.Img.push(data[`Img${i}`])
-    }
-  }
-}
+const { is_initial, category_product } = storeToRefs(commonStore)
 
 // allProducts, category
 function videoHandler(url) {
@@ -72,13 +19,13 @@ function videoHandler(url) {
   let iframe = ""
   if (code) {
     iframe = `
-        <iframe src="https://www.youtube.com/embed/${code}" 
-          frameborder="0" 
-          allow="accelerometer; 
-            autoplay; clipboard-write; 
-            encrypted-media; 
-            gyroscope; 
-            picture-in-picture" 
+        <iframe src="https://www.youtube.com/embed/${code}"
+          frameborder="0"
+          allow="accelerometer;
+            autoplay; clipboard-write;
+            encrypted-media;
+            gyroscope;
+            picture-in-picture"
           allowfullscreen
         >
         </iframe>
@@ -87,14 +34,17 @@ function videoHandler(url) {
   return iframe
 }
 
-const { is_initial } = storeToRefs(commonStore)
-watch(is_initial, async (value) => {
-  if (value) {
-    await getCategory()
-    await nextTick()
-    commonStore.imgHandler()
-  }
-})
+watch(
+  is_initial,
+  async (value) => {
+    if (value) {
+      await commonStore.getCategoryPage()
+      await nextTick()
+      commonStore.imgHandler()
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -118,14 +68,14 @@ watch(is_initial, async (value) => {
       <div
         class="rich_container"
         v-if="
-          category_product &&
-          category_product.Data &&
-          category_product.Data[0].Text
+          commonStore.category_product &&
+          commonStore.category_product.Data &&
+          commonStore.category_product.Data[0].Text
         "
       >
         <div
           class="ql-editor"
-          v-html="useUnescapeHTML(category_product.Data[0].Text)"
+          v-html="useUnescapeHTML(commonStore.category_product.Data[0].Text)"
         ></div>
       </div>
 
@@ -140,7 +90,7 @@ watch(is_initial, async (value) => {
       ></div>
     </div>
 
-    <template v-if="category_product">
+    <template v-if="commonStore.category_product">
       <div
         class="products"
         v-for="(item, key) in category_product.Sort"

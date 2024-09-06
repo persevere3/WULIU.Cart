@@ -18,7 +18,6 @@ export const useCommonStore = defineStore("common", () => {
   const memberInfoStore = useMemberInfoStore()
 
   // state ==============================
-
   /*
     site.MemberFuction: 會員系統
   */
@@ -26,6 +25,12 @@ export const useCommonStore = defineStore("common", () => {
   const searchObj = ref({})
   const user_account = ref("")
   const bank = bank_json
+
+  const route = useRoute()
+  const componentKey = computed(() => route.query.id || "default-key")
+  watch(componentKey, (v) => {
+    console.log(v)
+  })
 
   // cart ------------
   const cartData = ref({})
@@ -59,6 +64,8 @@ export const useCommonStore = defineStore("common", () => {
 
   const is_initial = ref(false)
   const is_getAll = ref(false)
+
+  const category_product = ref({})
 
   //
   const is_logout = ref(null)
@@ -217,6 +224,55 @@ export const useCommonStore = defineStore("common", () => {
         useAppendScript(GAText, "head")
       }
     }
+  }
+
+  async function getCategoryPage() {
+    category_product.value = webData.value.GetWebSubCategory
+
+    category_product.value.Sort = {}
+    let sort = category_product.value.Sort
+
+    // origin data
+    let data = category_product.value.Data[0]
+    let category = category_product.value.Category
+    let product = category_product.value.Product
+
+    productStore.multiPriceHandler(product)
+
+    // category => sort[i]
+    for (let i = 0; i < category.length; i++) {
+      sort[category[i].ID] = {}
+      sort[category[i].ID].Products = {}
+      sort[category[i].ID].Name = category[i].Name
+    }
+
+    // product => sort[i].Products[j]
+    for (let i = 0; i < product.length; i++) {
+      if (process.env.NODE_ENV === "development")
+        product[i].Img1 = config.public.apiUrl + product[i].Img1
+
+      // Category1~5
+      for (let j = 1; j < 6; j++) {
+        let category_item = product[i][`Category${j}`]
+        if (category_item) {
+          if (sort[category_item]) {
+            sort[category_item].Products[product[i].ID] = product[i]
+          }
+        }
+      }
+    }
+
+    data.Img = []
+    for (let i = 1; i < 6; i++) {
+      if (data[`Img${i}`]) {
+        if (process.env.NODE_ENV === "development")
+          data[`Img${i}`] = config.public.apiUrl + data[`Img${i}`]
+
+        data.Img.push(data[`Img${i}`])
+      }
+    }
+
+    console.log(category_product.value)
   }
 
   async function showMessage(messageStr, isSuccess) {
@@ -537,6 +593,13 @@ export const useCommonStore = defineStore("common", () => {
 
     let imgs = document.querySelectorAll(".ql-editor img")
     for (let i = 0; i < imgs.length; i++) {
+      if (process.env.NODE_ENV === "development") {
+        imgs[i].src = imgs[i].src.replace(
+          "http://localhost:3000",
+          config.public.apiUrl
+        )
+      }
+
       let imgWidth = window.getComputedStyle(imgs[i]).width.split("px")[0] * 1
 
       if (imgWidth > editorWidth) {
@@ -574,6 +637,8 @@ export const useCommonStore = defineStore("common", () => {
     user_account,
     bank,
 
+    componentKey,
+
     cartData,
     store,
     cartArrangement,
@@ -595,6 +660,7 @@ export const useCommonStore = defineStore("common", () => {
 
     webData,
     all,
+    category_product,
     footer_community,
     copyRight,
     customerService,
@@ -616,6 +682,7 @@ export const useCommonStore = defineStore("common", () => {
     initialWeb,
     initialCart,
     ajaxStore,
+    getCategoryPage,
     showMessage,
 
     cartPush,

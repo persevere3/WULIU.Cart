@@ -1,6 +1,7 @@
-
-.main {
-  .opening, .info, .location {
+.contact {
+  .opening,
+  .info,
+  .location {
     width: 1170px;
     padding: 15px 30px;
     margin: 0 auto;
@@ -12,7 +13,7 @@
       position: relative;
 
       &:before {
-        content: '';
+        content: "";
         width: 25px;
         height: 3px;
         position: absolute;
@@ -37,7 +38,7 @@
       ul {
         li {
           white-space: pre-wrap;
-          list-style-position: inside; 
+          list-style-position: inside;
           word-break: break-all;
           display: flex;
 
@@ -45,11 +46,11 @@
             flex-shrink: 0;
           }
           .a {
-            display: inline-block; 
+            display: inline-block;
             color: $primaryColor;
             cursor: pointer;
 
-            &:hover{
+            &:hover {
               color: darken($primaryColor, 20%);
             }
           }
@@ -58,17 +59,23 @@
     }
   }
   @include xl {
-    .opening, .info, .location {
+    .opening,
+    .info,
+    .location {
       width: 970px;
     }
   }
   @include l {
-    .opening, .info, .location {
+    .opening,
+    .info,
+    .location {
       width: 750px;
     }
   }
   @include m {
-    .opening, .info, .location {
+    .opening,
+    .info,
+    .location {
       width: 100%;
       padding: 0px 15px;
     }
@@ -87,8 +94,8 @@
       min-height: 400px;
       padding: 15px 0px;
 
-      iframe{
-        width:100%;
+      iframe {
+        width: 100%;
       }
     }
   }

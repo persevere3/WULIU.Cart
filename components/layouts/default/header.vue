@@ -100,13 +100,17 @@
                 : useUrlPush(item.Link)
             "
           >
-            <nuxt-link to="">
+            <nuxt-link :to="`${item.Link ? item.Link : ''}`">
               {{ item.Name }}
               <template v-if="item.subNavbar">
                 <i class="fa fa-angle-down" aria-hidden="true"></i>
                 <div class="transparent"></div>
                 <ul>
-                  <li v-for="(item2, key2) in item.subNavbar" :key="key2">
+                  <li
+                    v-for="(item2, key2) in item.subNavbar"
+                    :key="key2"
+                    @click.stop
+                  >
                     <nuxt-link :to="`${item2.Link}`">
                       {{ item2.Name }}
                     </nuxt-link>
