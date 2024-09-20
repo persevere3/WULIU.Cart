@@ -44,7 +44,6 @@ function computeVideoSize() {
   let content = document.querySelector(".content.ql-editor")
   if (!content) return
   let contentWidth = content.offsetWidth
-  if (showPage.value == "main") contentWidth -= 20
   let videos = content.querySelectorAll("iframe")
   videos.forEach((video) => {
     if (video.width > contentWidth) {

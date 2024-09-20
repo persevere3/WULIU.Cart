@@ -6,21 +6,22 @@ import {
   searchMartDeliveryApi
 } from "@/apis/order"
 
+import { useVerify } from "@/composables/verify"
 import { useRequest } from "@/composables/request"
 import { useUrlPush } from "@/composables/urlPush"
-import { useVerify } from "@/composables/verify"
 
 export const useOrderStore = defineStore("order", () => {
   let commonStore = useCommonStore()
   let cartStore = useCartStore()
   let purchaseInfoStore = usePurchaseInfoStore()
-  let memberInfoStore = useMemberInfoStore()
   let userStore = useUserStore()
+  let memberInfoStore = useMemberInfoStore()
 
-  const { return_formData } = useRequest()
   const { verify } = useVerify()
+  const { return_formData } = useRequest()
 
   // state ==============================
+  //
   const is_click_finish_order = ref(false) // true => 驗證 運送方式 支付方式 地址
   const isOrderIng = ref(false)
 
@@ -48,7 +49,6 @@ export const useOrderStore = defineStore("order", () => {
     "待對帳",
     "尚未付款"
   ])
-
   const delivery_arr = ref([
     "",
     "已出貨",
@@ -105,7 +105,7 @@ export const useOrderStore = defineStore("order", () => {
     let verify_arr = [
       purchaseInfoStore.info.purchaser_email,
       purchaseInfoStore.info.purchaser_name,
-      purchaseInfoStore.info.purchaser_number,
+      purchaseInfoStore.info.purchaser_phone,
       purchaseInfoStore.info.receiver_name,
       purchaseInfoStore.info.receiver_number
     ]
@@ -180,8 +180,8 @@ export const useOrderStore = defineStore("order", () => {
       // 購買人
       Email: purchaseInfoStore.info.purchaser_email.value,
       Name: purchaseInfoStore.info.purchaser_name.value,
-      Phone: purchaseInfoStore.info.purchaser_number.value,
-      Phone2: purchaseInfoStore.info.purchaser_number.value,
+      Phone: commonStore.user_account,
+      Phone2: purchaseInfoStore.info.purchaser_phone.value,
       Receiver: purchaseInfoStore.info.receiver_name.value,
       ReceiverPhone: purchaseInfoStore.info.receiver_number.value,
       Message: purchaseInfoStore.info_message.value,
@@ -317,7 +317,7 @@ export const useOrderStore = defineStore("order", () => {
     let query = {
       storeid: commonStore.site.Name,
       type: commonStore.store.NotificationSystem,
-      phone: purchaseInfoStore.info.purchaser_number.value,
+      phone: purchaseInfoStore.info.purchaser_phone.value,
       email: purchaseInfoStore.info.purchaser_email.value,
       name: "",
       validate: "",
@@ -338,7 +338,7 @@ export const useOrderStore = defineStore("order", () => {
       throw new Error(error)
     }
   }
-  function toPay() {
+  async function toPay() {
     commonStore.isConfirmToPay = false
 
     // LinePay
@@ -358,6 +358,7 @@ export const useOrderStore = defineStore("order", () => {
     }
     // ecpay
     else {
+      // target="_blank"
       if (process.env.NODE_ENV === "development") {
         ECPay_form_value.value = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
       } else {
@@ -375,55 +376,21 @@ export const useOrderStore = defineStore("order", () => {
         }" name="${item}" value="${payResult.value[item]}">`
       }
 
+      //
+      // ECPay_form.value += `
+      //     <div class="message"> 前往付款頁面 </div>
+      //     <div class="button_row">
+      //       <div class="button" onclick="document.querySelector('.ECPay_form_container').style.display = 'none'" > 取消 </div>
+      //       <div class="button" onclick="document.querySelector('#ECPay_form').submit(); document.querySelector('.ECPay_form_container').style.display = 'none'" > 確認 </div>
+      //     </div>
+      //   </form>
+      // `
+
       ECPay_form_value.value += `</form>`
 
-      setTimeout(() => {
-        let ECPay_form_dom = document.querySelector("#ECPay_form")
-        if (ECPay_form_dom) ECPay_form_dom.submit()
-      }, 1000)
-    }
-  }
-
-  function toPay2() {
-    // LinePay
-    if (purchaseInfoStore.pay_method === "LinePay") {
-      useUrlPush(payResult.value.payUrl)
-    }
-    // ecpay
-    else {
-      if (process.env.NODE_ENV === "development") {
-        // target="_blank"
-        ECPay_form.value = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
-      } else {
-        ECPay_form.value = `<form id="ECPay_form" action="https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
-      }
-
-      for (let item in payResult.value) {
-        if (item === "success" || item === "message") continue
-        // EncryptType TotalAmount ExpireDate: number，other: text
-        ECPay_form.value += `<input 
-          type="${
-            item == "EncryptType" ||
-            item == "TotalAmount" ||
-            item == "ExpireDate"
-              ? "number"
-              : "text"
-          }" 
-          name="${item}" value="${payResult.value[item]}"
-        >`
-      }
-      ECPay_form.value += `
-          <div class="message"> 前往付款頁面 </div>
-          <div class="button_row">
-            <div class="button" onclick="document.querySelector('.ECPay_form_container').style.display = 'none'" > 取消 </div> 
-            <div class="button" onclick="document.querySelector('#ECPay_form').submit(); document.querySelector('.ECPay_form_container').style.display = 'none'" > 確認 </div> 
-          </div>
-        </form>
-      `
-
-      setTimeout(() => {
-        document.querySelector(".ECPay_form_container").style.display = "block"
-      }, 100)
+      await nextTick()
+      let ECPay_form_dom = document.querySelector("#ECPay_form")
+      if (ECPay_form_dom) ECPay_form_dom.submit()
     }
   }
 
@@ -484,15 +451,17 @@ export const useOrderStore = defineStore("order", () => {
         noOrder.value = false
       }
 
-      setTimeout(() => {
-        let uls = document.querySelectorAll(".td.products ul")
-        uls.forEach(function (item, index) {
-          let lis = item.querySelectorAll("li")
-          if (lis.length > 4) {
-            order.value[index]["expandable"] = true
-          }
-        })
-      }, 100)
+      document.querySelector(".ECPay_form_container").style.display = "block"
+
+      await nextTick()
+
+      let uls = document.querySelectorAll(".td.products ul")
+      uls.forEach(function (item, index) {
+        let lis = item.querySelectorAll("li")
+        if (lis.length > 4) {
+          order.value[index]["expandable"] = true
+        }
+      })
     } catch (error) {
       throw new Error(error)
     }
@@ -543,16 +512,15 @@ export const useOrderStore = defineStore("order", () => {
 
           order.value = data.Orders
 
-          setTimeout(() => {
-            let uls = document.querySelectorAll(".td.products ul")
-            uls.forEach(function (item, index) {
-              let lis = item.querySelectorAll("li")
-              if (lis.length > 4) {
-                // 產品列表可展開
-                order.value[index].expandable = true
-              }
-            })
-          }, 100)
+          await nextTick()
+          let uls = document.querySelectorAll(".td.products ul")
+          uls.forEach(function (item, index) {
+            let lis = item.querySelectorAll("li")
+            if (lis.length > 4) {
+              // 產品列表可展開
+              order.value[index].expandable = true
+            }
+          })
         } else {
           commonStore.showMessage(res.msg, false)
           userStore.check_logout(res.msg)
@@ -578,7 +546,7 @@ export const useOrderStore = defineStore("order", () => {
       if (!isReqSuccess) return
 
       if ("status" in res) {
-        alert(res.msg)
+        commonStore.showMessage(res.msg, true)
         if (commonStore.user_account) getMemberOrder()
         else getOrder()
       } else {
@@ -632,21 +600,15 @@ export const useOrderStore = defineStore("order", () => {
 
     search_phone,
     search_mail,
-    search_phone,
     filter_number,
-    search_phone,
     filter_pay,
     filter_delivery,
 
     order,
-    search_phone,
-
     active_order_products,
-    search_phone,
     activeOrder,
 
     payStatus_arr,
-
     delivery_arr,
 
     payMethod_obj,
@@ -657,6 +619,7 @@ export const useOrderStore = defineStore("order", () => {
     order_page_index,
     order_page_size,
     select_active,
+
     order_number,
     account_number,
 
@@ -667,7 +630,6 @@ export const useOrderStore = defineStore("order", () => {
     createOrder,
     checkAccount,
     toPay,
-    toPay2,
 
     getOrder,
     getMemberOrder,

@@ -77,7 +77,7 @@
             @click.stop="
               cart.length
                 ? (cartStore.is_cart_active = !cartStore.is_cart_active)
-                : commonStore.pushTo_cart()
+                : commonStore.cartPush()
             "
           >
             購物車

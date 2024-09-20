@@ -9,7 +9,7 @@
 
   <!-- content start -->
   <Header />
-  <slot :key="commonStore.componentKey" />
+  <slot />
   <Footer />
   <!-- content end -->
 

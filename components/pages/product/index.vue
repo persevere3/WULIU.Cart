@@ -54,9 +54,8 @@ function click_share_link() {
   commonStore.showMessage("複製分享連結", true)
 }
 
-setTimeout(() => {
-  productStore.getAddProducts([props.product.ID])
-}, 1000)
+await nextTick()
+productStore.getAddProducts([props.product.ID])
 </script>
 
 <template>
@@ -129,11 +128,6 @@ setTimeout(() => {
         </div>
 
         <ProductBuyQtyBox :main="product" />
-
-        <!-- v-if="!props.isSingle && isShowGoToCart" -->
-        <div class="goTo_cart_btn" @click="showPage = 'cart'">
-          加入購物車 <i class="fa fa-shopping-cart" aria-hidden="true"></i>
-        </div>
 
         <div class="controller">
           <div

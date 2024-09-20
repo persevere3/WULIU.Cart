@@ -178,7 +178,6 @@ onMounted(() => {
               }, 1000)
 
               // chat 開關
-              console.log("chatHeight", mutation.target.style.maxHeight)
               if (mutation.target.style.maxHeight != "0px") {
                 // 隱藏
                 iframe.style.display = "none"

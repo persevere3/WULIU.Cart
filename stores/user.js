@@ -1,25 +1,24 @@
 import { useRoute } from "vue-router"
 
-import { useRequest } from "@/composables/request"
-import { useVerify } from "@/composables/verify"
-
-// apis ========== ========== ========== ========== ==========
 import {
   getLineProfileApi,
   validateRecommenderCodeApi,
   registerApi,
-  userLoginApi,
   send_verify_codeApi,
+  userLoginApi,
   send_forget_verify_codeApi,
   check_forget_verify_codeApi,
   edit_forget_passApi
 } from "@/apis/user"
 
+import { useVerify } from "@/composables/verify"
+import { useRequest } from "@/composables/request"
+
 export const useUserStore = defineStore("user", () => {
   const commonStore = useCommonStore()
 
-  const { return_formData } = useRequest()
   const { verify } = useVerify()
+  const { return_formData } = useRequest()
 
   // state ==============================
   const r_form = reactive({
@@ -93,7 +92,7 @@ export const useUserStore = defineStore("user", () => {
       readonly: false,
       placeholder: "* 請輸入電子信箱驗證碼"
     },
-    phone2: {
+    phone: {
       value: "",
       rules: {
         required: {
@@ -127,21 +126,6 @@ export const useUserStore = defineStore("user", () => {
     },
     second: 0,
 
-    account: {
-      value: "",
-      rules: {
-        required: {
-          message: "此項目為必填"
-        },
-        cellphone: {
-          message: "手機格式錯誤"
-        }
-      },
-      is_error: false,
-      message: "",
-      readonly: false,
-      placeholder: "* 請輸入帳號"
-    },
     password: {
       value: "",
       rules: {
@@ -318,18 +302,6 @@ export const useUserStore = defineStore("user", () => {
   const is_LineRegister = ref(false)
 
   // methods ==============================
-  // forget
-  function getPhoneOrMail() {
-    if (commonStore.store.NotificationSystem == 0)
-      return f_form.mail.value.trim()
-    else if (commonStore.store.NotificationSystem == 1)
-      return f_form.account.value.trim()
-    else
-      return f_form.mailOrAccount == 0
-        ? f_form.mail.value.trim()
-        : f_form.account.value.trim()
-  }
-
   function reset_input(input) {
     input.value = ""
     input.is_error = false
@@ -346,55 +318,22 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
-  async function validateRecommenderCode() {
-    if (!r_form.recommender.value) {
-      LineLogin(true)
-      return
-    }
-
-    let query = {
-      storeid: commonStore.site.Name,
-      recommender: r_form.recommender.value
-    }
-
-    try {
-      const res = JSON.parse(await validateRecommenderCodeApi(query))
-      const isReqSuccess = commonStore.resHandler(res, validateRecommenderCode)
-      if (!isReqSuccess) return
-
-      alert(res.msg)
-      if (res.status) LineLogin(true)
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-  function LineLogin(isRegister) {
-    useUrlPush(
-      `${location.origin}/interface/webmember/LineLoginAuthorize?storeid=${
-        commonStore.site.Name
-      }&site=${commonStore.site.Site}${
-        isRegister
-          ? `&recommender=${r_form.recommender.value}&method=Register`
-          : ""
-      }`
-    )
-  }
-
+  //
   async function send_verify_code(form) {
     if (form.second > 0) return
 
     if (commonStore.store.NotificationSystem == 0) {
       if (!verify(form.mail)) return
     } else if (commonStore.store.NotificationSystem == 1) {
-      if (!verify(form.phone2)) return
+      if (!verify(form.phone)) return
     } else {
-      if (!verify(form.phone2) || !verify(form.mail)) return
+      if (!verify(form.phone) || !verify(form.mail)) return
     }
 
     let query = {
       storeid: commonStore.site.Name,
       storeName: commonStore.site.Store,
-      phone: form.phone2.value.trim(),
+      phone: form.phone.value.trim(),
       mail: form.mail.value.trim(),
       type: commonStore.store.NotificationSystem,
       notificationsystem: commonStore.store.NotificationSystem
@@ -442,7 +381,7 @@ export const useUserStore = defineStore("user", () => {
         r_form.mail,
         ...verify_code,
         r_form.birthday,
-        r_form.phone2,
+        r_form.phone,
         r_form.password,
         r_form.confirm_password
       )
@@ -457,7 +396,7 @@ export const useUserStore = defineStore("user", () => {
       email: r_form.mail.value,
       gender: r_form.sex == "male" ? 1 : 0,
       birthday: useFormatDate(r_form.birthday),
-      phone: r_form.phone2.value,
+      phone: r_form.phone.value,
       password: r_form.password.value
     }
     if (commonStore.store.NotificationSystem == 0)
@@ -486,6 +425,42 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
+  //
+  async function validateRecommenderCode() {
+    if (!r_form.recommender.value) {
+      LineLogin(true)
+      return
+    }
+
+    let query = {
+      storeid: commonStore.site.Name,
+      recommender: r_form.recommender.value
+    }
+
+    try {
+      const res = JSON.parse(await validateRecommenderCodeApi(query))
+      const isReqSuccess = commonStore.resHandler(res, validateRecommenderCode)
+      if (!isReqSuccess) return
+
+      if (res.status) {
+        commonStore.showMessage(res.msg, true)
+        LineLogin(true)
+      } else commonStore.showMessage(res.msg, false)
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+  function LineLogin(isRegister) {
+    useUrlPush(
+      `${location.origin}/interface/webmember/LineLoginAuthorize?storeid=${
+        commonStore.site.Name
+      }&site=${commonStore.site.Site}${
+        isRegister
+          ? `&recommender=${r_form.recommender.value}&method=Register`
+          : ""
+      }`
+    )
+  }
   async function user_login() {
     if (!verify(l_form.account, l_form.password)) return
 
@@ -504,7 +479,6 @@ export const useUserStore = defineStore("user", () => {
       if (!isReqSuccess) return
 
       if (res.status) {
-        localStorage.setItem("user_account", l_form.account.value)
         commonStore.user_account = l_form.account.value
         useUrlPush("/info")
       } else {
@@ -515,6 +489,17 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
+  // forget ----------
+  function getPhoneOrMail() {
+    if (commonStore.store.NotificationSystem == 0)
+      return f_form.mail.value.trim()
+    else if (commonStore.store.NotificationSystem == 1)
+      return f_form.account.value.trim()
+    else
+      return f_form.mailOrAccount == 0
+        ? f_form.mail.value.trim()
+        : f_form.account.value.trim()
+  }
   async function send_forget_verify_code() {
     if (f_form.second > 0) return
     if (
@@ -559,7 +544,6 @@ export const useUserStore = defineStore("user", () => {
       throw new Error(error)
     }
   }
-
   async function check_forget_verify_code() {
     if (!verify(f_form.verify_code)) return
 
@@ -587,7 +571,6 @@ export const useUserStore = defineStore("user", () => {
       throw new Error(error)
     }
   }
-
   async function edit_forget_pass() {
     if (!verify(f_form.password, f_form.confirm_password)) return
 
@@ -622,7 +605,7 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
-  // msg.indexOf('登入') > -1
+  // msg.indexOf('登入') > -1 ----------
   function check_logout(msg) {
     if (
       msg == "請先登入會員" ||
@@ -643,26 +626,20 @@ export const useUserStore = defineStore("user", () => {
 
     is_LineRegister,
 
-    getPhoneOrMail,
-
     reset_input,
 
     getLineProfile,
 
-    validateRecommenderCode,
-
-    LineLogin,
-
     send_verify_code,
-
     register,
 
+    validateRecommenderCode,
+    LineLogin,
     user_login,
 
+    getPhoneOrMail,
     send_forget_verify_code,
-
     check_forget_verify_code,
-
     edit_forget_pass,
 
     check_logout

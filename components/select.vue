@@ -11,7 +11,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="c_select">
+  <div class="c_select" v-if="select && select.activeOption">
     <div class="c_activeOption">
       {{ select.activeOption.Name }}
       <i class="fa fa-angle-down" aria-hidden="true"></i>

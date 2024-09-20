@@ -94,7 +94,7 @@
           class="a"
           @click="
             useUrlPush(
-              `/order?phone=${purchaseInfoStore.info.purchaser_number.value}&email=${purchaseInfoStore.info.purchaser_email.value}`,
+              `/order?phone=${purchaseInfoStore.info.purchaser_phone.value}&email=${purchaseInfoStore.info.purchaser_email.value}`,
               true
             )
           "
@@ -281,7 +281,7 @@ watch(
     if (v) {
       userStore.r_form.name.value = purchaseInfoStore.info.purchaser_name.value
       userStore.r_form.phone.value =
-        purchaseInfoStore.info.purchaser_number.value
+        purchaseInfoStore.info.purchaser_phone.value
       userStore.r_form.mail.value = purchaseInfoStore.info.purchaser_email.value
     }
   }

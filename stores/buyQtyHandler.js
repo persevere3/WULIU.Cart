@@ -7,17 +7,9 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
   let productStore = useProductStore()
   let cartStore = useCartStore()
 
-  // state ==============================
-  const flyItem = ref(null)
-  const flyImgTop = ref(100)
-  const flyImgLeft = ref(0)
-  const isShrink = ref(0)
-
   // methods ==============================
   // 改變 主商品數量
-  async function changeMainBuyQty(main, specIndex, qty, e) {
-    console.log(main, specIndex, qty)
-
+  async function changeMainBuyQty(main, specIndex, qty) {
     let spec = specIndex == null ? null : main.specArr[specIndex]
     let target = spec ? spec : main
 
@@ -26,16 +18,14 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
       let isMarket = await getAmount(main, null, spec)
       if (!isMarket) {
         commonStore.showMessage("抱歉，您選購的規格已下架", false)
-        await productStore.getProducts()
-        productStore.productsHandler()
+        await productStore.ajaxProducts()
         return
       }
     } else {
       let isMarket = await getAmount(main)
       if (!isMarket) {
         commonStore.showMessage("抱歉，您選購的商品已下架", false)
-        await productStore.getProducts()
-        productStore.productsHandler()
+        await productStore.ajaxProducts()
         return
       }
     }
@@ -50,12 +40,6 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
         `目前商品數量僅剩 ${target.Amount < 1 ? 0 : target.Amount} 組`,
         false
       )
-    }
-
-    // 動畫
-    if (e) {
-      let variation = qty - target.buyQty
-      if (variation) flyHandler(main, variation, e)
     }
 
     // 更新 產品列表
@@ -133,16 +117,14 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
       let isMarket = await getAmount(main, addProduct, target)
       if (!isMarket) {
         commonStore.showMessage("抱歉，您選購的規格已下架", false)
-        await productStore.getProducts()
-        productStore.productsHandler()
+        await productStore.ajaxProducts()
         return
       }
     } else {
       let isMarket = await getAmount(main, target)
       if (!isMarket) {
         commonStore.showMessage("抱歉，您選購的商品已下架", false)
-        await productStore.getProducts()
-        productStore.productsHandler()
+        await productStore.ajaxProducts()
         return
       }
     }
@@ -188,7 +170,7 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
     let productAddProduct = product.addProducts.find(
       (productAddProduct) => productAddProduct.ID == addProduct.ID
     )
-    if (productAddProduct.specArr) {
+    if (productAddProduct?.specArr) {
       let productAddProductSpec = productAddProduct.specArr.find(
         (productAddProductSpec) => productAddProductSpec.ID == addProductSpec.ID
       )
@@ -239,70 +221,6 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
     } catch (error) {
       throw new Error(error)
     }
-  }
-
-  // 改變 主商品數量 動畫
-  function flyHandler(product, variation, { pageX, pageY }) {
-    // click position
-    let clickPosition = {
-      pageX,
-      pageY
-    }
-
-    // cartIcon position
-    let scrollTop = document.querySelector("html").scrollTop || 0
-    let cartIcon = document.querySelector(".cartIcon")
-    let cartIconPosition = {
-      pageX: cartIcon.offsetLeft + 12.5,
-      pageY: cartIcon.offsetTop + scrollTop + 12.5
-    }
-
-    // set start, end
-    let start
-    let end
-    if (variation > 0) {
-      start = clickPosition
-      end = cartIconPosition
-    } else {
-      start = cartIconPosition
-      end = clickPosition
-    }
-
-    // img, position
-    flyItem = product
-    flyImgTop = start.pageY
-    flyImgLeft = start.pageX
-
-    // 設定 interval times, moveX, moveY
-    let intervalTimes = 50
-    let moveX = (end.pageX - start.pageX) / intervalTimes
-    let moveY = (end.pageY - start.pageY) / intervalTimes
-
-    //
-    if (variation < 0) {
-      shrinkHandler()
-    }
-    let interval = setInterval(function () {
-      intervalTimes -= 1
-
-      flyImgTop.value += moveY
-      flyImgLeft.value += moveX
-
-      if (intervalTimes < 1) {
-        clearInterval(interval)
-        flyItem.value = null
-
-        if (variation > 0) {
-          shrinkHandler()
-        }
-      }
-    }, 10)
-  }
-  function shrinkHandler() {
-    isShrink.value = 1
-    setTimeout(function () {
-      isShrink.value = 0
-    }, 200)
   }
 
   return {

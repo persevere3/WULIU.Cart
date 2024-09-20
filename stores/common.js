@@ -1,9 +1,4 @@
-import {
-  storeLoginApi,
-  initialWebApi,
-  initialCartApi,
-  ajaxStoreApi
-} from "@/apis/common"
+import { storeLoginApi, initialWebApi, ajaxStoreApi } from "@/apis/common"
 
 import bank_json from "@/json/bank"
 
@@ -17,34 +12,32 @@ export const useCommonStore = defineStore("common", () => {
   const purchaseInfoStore = usePurchaseInfoStore()
   const memberInfoStore = useMemberInfoStore()
 
-  // state ==============================
-  /*
-    site.MemberFuction: 會員系統
-  */
-  const site = ref({})
-  const searchObj = ref({})
-  const user_account = ref("")
   const bank = bank_json
 
+  // state ==============================
   const route = useRoute()
-  const componentKey = computed(() => route.query.id || "default-key")
-  watch(componentKey, (v) => {
-    console.log(v)
-  })
+  const fullPath = computed(() => route.fullPath || "default-fullPath")
+  const pathname = computed(() => route.name || "default-name")
+  const searchObj = ref({})
 
-  // cart ------------
-  const cartData = ref({})
+  // ----------
+  const webData = ref({})
+  /* site.MemberFuction: 會員系統 */
+  const site = ref({})
   const store = ref({})
-  const cartArrangement = ref("")
+  const all = ref({})
+  const footer_community = ref({})
+  const copyRight = ref({})
+  const customerService = ref({})
 
-  const totalpage_num = ref(0)
-  const perpage_num = ref(0)
+  const user_account = ref("")
 
+  const is_initial = ref(false)
+  const is_getAll = ref(false)
+  const is_logout = ref(null)
+
+  // ----------
   const messageArr = ref([])
-
-  const isShowFavorite = ref(false)
-
-  const showPage = ref("")
 
   const isConfirmToPay = ref(false)
   const isConfirmDiscountCodeUsed = ref(false)
@@ -55,26 +48,10 @@ export const useCommonStore = defineStore("common", () => {
   const is_payModal = ref(false)
   const payModal_message = ref("")
 
-  // web ------------
-  const webData = ref({})
-  const all = ref({})
-  const footer_community = ref({})
-  const copyRight = ref({})
-  const customerService = ref({})
-
-  const is_initial = ref(false)
-  const is_getAll = ref(false)
-
-  const category_product = ref({})
-
-  //
-  const is_logout = ref(null)
-
-  const pathname = ref(useRoute().name)
-
   // methods ==============================
   function storeLogin() {
     const site = JSON.parse(localStorage.getItem("site")) || {}
+
     let query = {
       site: site.Site,
       store: site.Name,
@@ -104,228 +81,23 @@ export const useCommonStore = defineStore("common", () => {
     } else return true
   }
 
-  async function initialCart() {
-    try {
-      const res = JSON.parse(await initialCartApi())
-      const isReqSuccess = resHandler(res, initialCart)
-      if (!isReqSuccess) return
-
-      site.value = res.GetSite.data[0]
-      localStorage.setItem("site", JSON.stringify(site.value))
-
-      if (site.value.WebEnable == 0) {
-        useUrlPush("/error.html")
-        return
-      }
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
-  async function ajaxStore() {
-    let query = {
-      Preview: site.value.Preview
-    }
-
-    try {
-      const res = JSON.parse(await ajaxStoreApi(query))
-      const isReqSuccess = resHandler(res, ajaxStore)
-      if (!isReqSuccess) return
-
-      storeHandler(res.data[0])
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  function cartStoreHandler(originStore, isGA) {
-    // originStore.OrderPaymethod => originStore.paymethodOrder
-    originStore.paymethodOrder = {}
-    if (originStore.OrderPaymethod) {
-      originStore.OrderPaymethod = JSON.parse(originStore.OrderPaymethod)
-      originStore.OrderPaymethod.forEach((item) => {
-        originStore.paymethodOrder[item.name] = parseInt(item.order)
-      })
-    }
-
-    //
-    /*
-      FAMI
-      FAMIC2C
-      FAMIC2CDelivery
-      FAMIDelivery
-      FAMIShipping
-
-      HILIFE
-      HILIFEC2C
-      HILIFEC2CDelivery
-      HILIFEDelivery
-      HILIFEShipping
-      
-      OKMARTC2C
-      OKMARTC2CDelivery
-      OKMARTShipping
-      
-      UNIMART
-      UNIMARTC2C
-      UNIMARTC2CDelivery
-      UNIMARTDelivery
-      UNIMARTFREEZE
-      UNIMARTFREEZEDelivery
-      UNIMARTShipping
-    */
-    let CVSSetting = JSON.parse(originStore.CVSSetting)
-    if (originStore.ECStatus == 0) {
-      for (let key in CVSSetting) {
-        if (key.indexOf("Shipping") > -1) {
-          CVSSetting[key] = false
-        }
-      }
-    }
-    for (let key in CVSSetting) {
-      if (key.indexOf("Shipping") > -1) continue
-      let mart = key
-        .replace("C2CC", "")
-        .replace("C2C", "")
-        .replace("FREEZE", "")
-        .replace("Delivery", "")
-      if (!CVSSetting[`${mart}Shipping`]) CVSSetting[key] = false
-      originStore[key] = CVSSetting[key]
-    }
-
-    //
-    store.value = originStore
-
-    //
-    !document.title && (document.title = store.value.Name)
-
-    //
-    cartArrangement.value = store.value.Sort || "0"
-
-    if (isGA && store.value.GA) {
-      let GAText = store.value.GA
-
-      if (GAText && GAText.indexOf("GTM-") > -1) {
-        let GTMID = GAText.split("GTM-")[1].split("')")[0]
-
-        let noscript = document.createElement("noscript")
-        noscript.setAttribute(
-          "src",
-          `https://www.googletagmanager.com/ns.html?id=GTM-${GTMID}`
-        )
-        noscript.setAttribute("height", "0")
-        noscript.setAttribute("width", "0")
-        noscript.setAttribute("style", "display:none; visibility:hidden")
-
-        document
-          .querySelector("body")
-          .insertBefore(noscript, document.querySelector("#app"))
-
-        useAppendScript(GAText, "head")
-      }
-    }
-  }
-
-  async function getCategoryPage() {
-    category_product.value = webData.value.GetWebSubCategory
-
-    category_product.value.Sort = {}
-    let sort = category_product.value.Sort
-
-    // origin data
-    let data = category_product.value.Data[0]
-    let category = category_product.value.Category
-    let product = category_product.value.Product
-
-    productStore.multiPriceHandler(product)
-
-    // category => sort[i]
-    for (let i = 0; i < category.length; i++) {
-      sort[category[i].ID] = {}
-      sort[category[i].ID].Products = {}
-      sort[category[i].ID].Name = category[i].Name
-    }
-
-    // product => sort[i].Products[j]
-    for (let i = 0; i < product.length; i++) {
-      if (process.env.NODE_ENV === "development")
-        product[i].Img1 = config.public.apiUrl + product[i].Img1
-
-      // Category1~5
-      for (let j = 1; j < 6; j++) {
-        let category_item = product[i][`Category${j}`]
-        if (category_item) {
-          if (sort[category_item]) {
-            sort[category_item].Products[product[i].ID] = product[i]
-          }
-        }
-      }
-    }
-
-    data.Img = []
-    for (let i = 1; i < 6; i++) {
-      if (data[`Img${i}`]) {
-        if (process.env.NODE_ENV === "development")
-          data[`Img${i}`] = config.public.apiUrl + data[`Img${i}`]
-
-        data.Img.push(data[`Img${i}`])
-      }
-    }
-
-    console.log(category_product.value)
-  }
-
-  async function showMessage(messageStr, isSuccess) {
-    let message = messageArr.value.find(
-      (message) => message.messageStr === messageStr
-    )
-    if (message) return
-
-    let id = new Date().getTime()
-    messageArr.value.push({
-      id,
-      messageStr,
-      isSuccess,
-      messageActive: false,
-      messagefadeout: false
-    })
-
-    await promiseSetTimeout(() => {
-      messageArr.value.find((item) => item.id === id).messageActive = true
-    }, 100)
-
-    await promiseSetTimeout(() => {
-      messageArr.value.find((item) => item.id === id).messagefadeout = true
-    }, 5000)
-
-    await promiseSetTimeout(() => {
-      let index = messageArr.value.findIndex((item) => item.id === id)
-      index > -1 && messageArr.value.splice(index, 1)
-    }, 500)
-  }
-  function promiseSetTimeout(func, ms) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        func()
-        resolve()
-      }, ms)
-    })
-  }
-
-  // web
+  // ---------------
   function getInitialWebQuery() {
-    // search
+    // searchObj
     let search = location.search.substring(1)
-    let searchObj = {
+    searchObj.value = {
       id: "0",
       store: "0"
     }
     if (search) {
       let searchArr = search.split("&")
       for (let item of searchArr) {
-        searchObj[item.split("=")[0]] = item.split("=")[1]
+        searchObj.value[item.split("=")[0]] = item.split("=")[1]
       }
     }
+
+    const router = useRouter()
+    router.replace(location.pathname)
 
     // pagetype
     let pagetype = 1
@@ -342,19 +114,20 @@ export const useCommonStore = defineStore("common", () => {
       pagetype = 3
     else if (location.pathname.indexOf("contact") > -1) pagetype = 5
     else if (location.pathname.indexOf("rich") > -1) {
-      if (searchObj["cid"] == 0) pagetype = 3
-      else if (searchObj["cid"] == 1 || searchObj["cid"] == 2) pagetype = 4
-      else if (searchObj["cid"] == 3) pagetype = 2
+      if (searchObj.value["cid"] == 0) pagetype = 3
+      else if (searchObj.value["cid"] == 1 || searchObj.value["cid"] == 2)
+        pagetype = 4
+      else if (searchObj.value["cid"] == 3) pagetype = 2
     }
 
-    return { searchObj, pagetype }
+    return { pagetype }
   }
   async function initialWeb() {
-    let { searchObj, pagetype } = getInitialWebQuery()
+    let { pagetype } = getInitialWebQuery()
     let query = {
-      webpreview: searchObj.webpreview || 1,
-      id: searchObj.id,
-      pagetype: pagetype
+      webpreview: searchObj.value.webpreview || 1,
+      id: searchObj.value.id,
+      pagetype
     }
     try {
       const res = JSON.parse(await initialWebApi(query))
@@ -362,31 +135,33 @@ export const useCommonStore = defineStore("common", () => {
       if (!isResSuccess) return
 
       webData.value = res
+
+      console.log(webData.value)
+
       site.value = webData.value.GetSite.data[0] || {}
-      localStorage.setItem("site", JSON.stringify(site.value))
 
       if (site.value.WebEnable == 0) useUrlPush("/error")
 
       is_initial.value = true
 
       allHandler()
-      storeHandler()
+      storeHandler(webData.value.GetStore.data[0])
 
       copyRightHandler()
       customerServiceHandler()
 
-      productStore.getCategories()
-      productStore.getProducts()
+      productStore.categoriesHandler()
+      productStore.productsHandler(webData.value.StoreLogin)
+
+      if (user_account.value) memberInfoStore.getMemberInfo()
     } catch (error) {
       console.log(error)
     }
   }
 
+  // ---------------
   async function allHandler() {
     all.value = webData.value.WebLogin || {}
-    productStore.multiPriceHandler(all.value.data)
-
-    totalpage_num.value = Math.ceil(all.value.data.length / perpage_num.value)
 
     // webcategory, websubcategory => navbar ------------
     let navbar = []
@@ -434,19 +209,10 @@ export const useCommonStore = defineStore("common", () => {
     all.value.about = about
     all.value.client = client
 
-    //
-    if (process.env.NODE_ENV === "development") {
-      all.value.data.forEach((item) => {
-        item.Img1 = config.public.apiUrl + item.Img1
-      })
-    }
-
     is_getAll.value = true
-    productStore.getFavorite()
   }
-
-  async function storeHandler() {
-    store.value = webData.value.GetStore.data[0] || {}
+  async function storeHandler(res) {
+    store.value = res
 
     let cartStore = webData.value.GetStoreFromStore.data[0]
     delete cartStore.Logo
@@ -457,10 +223,12 @@ export const useCommonStore = defineStore("common", () => {
       store.value.Logo = config.public.apiUrl + store.value.Logo
     }
 
+    console.log(store.value)
+
     footer_community.value = webData.value.GetStore.footer[0] || {}
 
     // title ------------
-    document.title ? "" : (document.title = store.value.Name)
+    !document.title && (document.title = store.value.Name)
     if (site.value.WebPreview == 2) document.title += " (預覽模式)"
 
     // GA ------------
@@ -484,63 +252,84 @@ export const useCommonStore = defineStore("common", () => {
     useAppendScript(GAText, "head")
 
     // user_account ----------
+    user_account.value = localStorage.getItem("user_account")
+
     // Line 登入
     let account = searchObj.value["account"]
-    if (account) localStorage.setItem("user_account", account)
+    if (account) user_account.value = account
 
     // Line 綁定
     let result = searchObj.value["result"]
     if (result) {
       result = JSON.parse(decodeURI(result))
-      if (!result.status) alert(result.msg)
-      else localStorage.setItem("user_account", result.account)
+      if (!result.status) showMessage(result.msg, false)
+      else user_account.value = result.account
     }
 
-    user_account.value = localStorage.getItem("user_account")
+    // store.value.OrderPaymethod => store.value.paymethodSort ----------
+    store.value.paymethodSort = {}
+    if (store.value.OrderPaymethod) {
+      store.value.OrderPaymethod = JSON.parse(store.value.OrderPaymethod)
+      store.value.OrderPaymethod.forEach((item) => {
+        store.value.paymethodSort[item.name] = parseInt(item.order)
+      })
+    }
 
-    // 超商取貨付款
+    /* CVSSetting
+      FAMI
+      FAMIC2C
+      FAMIC2CDelivery
+      FAMIDelivery
+      FAMIShipping
+
+      HILIFE
+      HILIFEC2C
+      HILIFEC2CDelivery
+      HILIFEDelivery
+      HILIFEShipping
+      
+      OKMARTC2C
+      OKMARTC2CDelivery
+      OKMARTShipping
+      
+      UNIMART
+      UNIMARTC2C
+      UNIMARTC2CDelivery
+      UNIMARTDelivery
+      UNIMARTFREEZE
+      UNIMARTFREEZEDelivery
+      UNIMARTShipping
+    */
+    let CVSSetting = JSON.parse(store.value.CVSSetting)
+    if (store.value.ECStatus == 0) {
+      for (let key in CVSSetting) {
+        if (key.indexOf("Shipping") > -1) {
+          CVSSetting[key] = false
+        }
+      }
+    }
+    for (let key in CVSSetting) {
+      if (key.indexOf("Shipping") > -1) continue
+      let mart = key
+        .replace("C2CC", "")
+        .replace("C2C", "")
+        .replace("FREEZE", "")
+        .replace("Delivery", "")
+      if (!CVSSetting[`${mart}Shipping`]) CVSSetting[key] = false
+      store.value[key] = CVSSetting[key]
+    }
+
+    // 超商取貨付款 ----------
     let storeid = searchObj.value["CVSStoreID"]
     let storename = searchObj.value["CVSStoreName"]
     let storeaddress = searchObj.value["CVSAddress"]
-    if (storeid || storename || storeaddress) {
-      // purchaseInfoStore.getConvenienceStore(storeid, storename, storeaddress)
-      // window.history.replaceState({}, document.title, location.pathname)
+    if (storeid && storename && storeaddress) {
+      purchaseInfoStore.getConvenienceStore(storeid, storename, storeaddress)
     }
 
-    //
+    // FeedbackFund => bonus_array ----------
     if (site.value.FeedbackFund)
       cartStore.bonus_array = JSON.parse(site.value.FeedbackFund)
-
-    cartStoreHandler(store.value, "GA")
-    // productsStore.getCategories()
-    // await productsStore.getProducts()
-    // productsStore.productsHandler()
-    // purchaseInfoStore.getMemberInfo()
-
-    // id 查看某商品
-    // let id = searchObj.value["id"]
-    // if (id) {
-    //   let product = productsStore.products.find((product) => product.ID == id)
-    //   if (product) productsStore.selectProduct(product)
-    // }
-
-    // spid singleProduct 一頁商品
-    // let spid = searchObj.value["spid"]
-    // if (spid) {
-    //   let product = productsStore.products.find(
-    //     (product) => product.ID == spid
-    //   )
-    //   if (product) {
-    //     productsStore.isSingleProduct = true
-    //     productsStore.selectProduct(product)
-    //   }
-    // }
-
-    // open_cart 查看購物車
-    // let open_cart = searchObj.value["open_cart"]
-    // if (open_cart) {
-    //   state.showPage = "cart"
-    // }
   }
 
   function copyRightHandler() {
@@ -555,13 +344,7 @@ export const useCommonStore = defineStore("common", () => {
     // if(customerService.value.FBText ) useAppendScript(customerService.value.FBText, 'body')
   }
 
-  //
-  function cartPush(id) {
-    if (id === undefined) useUrlPush(`/cart?open_cart=true`, true)
-    else useUrlPush(`/cart?id=${id}`, true)
-  }
-
-  // allProducts, category, rich, contact(map) , user ==============================
+  // allProducts, category, rich, contact(map) , user ---------------
   function imgHandler() {
     let editorWidth = 0
     let editor_input = document.querySelector("#EditerWidth")
@@ -617,13 +400,72 @@ export const useCommonStore = defineStore("common", () => {
     }
   }
 
+  // ---------------
+  async function showMessage(messageStr, isSuccess) {
+    let message = messageArr.value.find(
+      (message) => message.messageStr === messageStr
+    )
+    if (message) return
+
+    let id = new Date().getTime()
+    messageArr.value.push({
+      id,
+      messageStr,
+      isSuccess,
+      messageActive: false,
+      messagefadeout: false
+    })
+
+    await promiseSetTimeout(() => {
+      messageArr.value.find((item) => item.id === id).messageActive = true
+    }, 100)
+
+    await promiseSetTimeout(() => {
+      messageArr.value.find((item) => item.id === id).messagefadeout = true
+    }, 5000)
+
+    await promiseSetTimeout(() => {
+      let index = messageArr.value.findIndex((item) => item.id === id)
+      index > -1 && messageArr.value.splice(index, 1)
+    }, 500)
+  }
+  function promiseSetTimeout(func, ms) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        func()
+        resolve()
+      }, ms)
+    })
+  }
+
+  // ---------------
+  function cartPush(id) {
+    if (id === undefined) useUrlPush(`/cart`, true)
+    else useUrlPush(`/peoduct/${id}`, true)
+  }
+
+  // watch ==============================
+  watch(fullPath, async (v) => {
+    is_initial.value = false
+    is_getAll.value = false
+    await initialWeb()
+  })
+
+  watch(
+    () => site.Name,
+    () => {
+      localStorage.setItem("site", JSON.stringify(site.value))
+    }
+  )
+
   watch(user_account, (newV) => {
-    localStorage.setItem("user_account", newV)
+    if (newV) localStorage.setItem("user_account", newV)
+    else localStorage.removeItem("user_account")
 
     if (!newV) {
       purchaseInfoStore.info.purchaser_email.value = ""
       purchaseInfoStore.info.purchaser_name.value = ""
-      purchaseInfoStore.info.purchaser_number.value = ""
+      purchaseInfoStore.info.purchaser_phone.value = ""
       purchaseInfoStore.info.receiver_name.value = ""
       purchaseInfoStore.info.receiver_number.value = ""
 
@@ -632,25 +474,27 @@ export const useCommonStore = defineStore("common", () => {
   })
 
   return {
-    site,
-    searchObj,
-    user_account,
     bank,
 
-    componentKey,
+    route,
+    fullPath,
+    pathname,
+    searchObj,
 
-    cartData,
+    webData,
+    site,
     store,
-    cartArrangement,
+    all,
+    footer_community,
+    copyRight,
+    customerService,
+    user_account,
 
-    totalpage_num,
-    perpage_num,
+    is_initial,
+    is_getAll,
+    is_logout,
 
     messageArr,
-
-    isShowFavorite,
-
-    showPage,
 
     isConfirmToPay,
     isConfirmDiscountCodeUsed,
@@ -658,35 +502,26 @@ export const useCommonStore = defineStore("common", () => {
     isConfirmIsRegister,
     isConfirmRegister,
 
-    webData,
-    all,
-    category_product,
-    footer_community,
-    copyRight,
-    customerService,
-
-    is_initial,
-    is_getAll,
-
-    //
-    is_logout,
-
-    //
-    payModal_message,
     is_payModal,
-
-    pathname,
+    payModal_message,
 
     storeLogin,
     resHandler,
+
+    getInitialWebQuery,
     initialWeb,
-    initialCart,
-    ajaxStore,
-    getCategoryPage,
+
+    allHandler,
+    storeHandler,
+
+    copyRightHandler,
+    customerServiceHandler,
+
+    imgHandler,
+
     showMessage,
+    promiseSetTimeout,
 
-    cartPush,
-
-    imgHandler
+    cartPush
   }
 })

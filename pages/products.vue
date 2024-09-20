@@ -7,29 +7,8 @@ import Notice from "@/components/Notice.vue"
 const commonStore = useCommonStore()
 const productStore = useProductStore()
 
+const search = ref("")
 const categorySelect = ref({})
-const sortSelect = ref({
-  options: [
-    {
-      Name: "商品排序"
-    },
-    {
-      Name: "上架時間: 由新至舊"
-    },
-    {
-      Name: "上架時間: 由舊至新"
-    },
-    {
-      Name: "價格: 由高至低"
-    },
-    {
-      Name: "價格: 由低至高"
-    }
-  ],
-  activeOption: {
-    Name: "商品排序"
-  }
-})
 const perpageItemNumSelect = ref({
   options: [
     {
@@ -66,16 +45,34 @@ const pagination = ref({
 })
 
 const filterProducts = computed(() => {
-  if (categorySelect.value.activeOption?.ID == 0) {
-    return productStore.products
-  }
+  let searchFilterProducts = productStore.products.filter(
+    (p) => search.value == undefined || p.Name.indexOf(search.value) > -1
+  )
 
-  let products = productStore.products.filter((p) =>
-    p.categoryArr.includes(categorySelect.value.activeOption?.ID)
+  let products = searchFilterProducts.filter(
+    (p) =>
+      categorySelect.value.activeOption?.ID == 0 ||
+      p.categoryArr.includes(categorySelect.value.activeOption?.ID)
   )
 
   return products
 })
+
+onMounted(() => {
+  search.value = commonStore.searchObj.search
+})
+
+watch(
+  () => productStore.category_products,
+  (v) => {
+    if (Object.entries(v).length > 0) {
+      categorySelect.value = {
+        options: productStore.categories,
+        activeOption: productStore.categories[0]
+      }
+    }
+  }
+)
 
 watch(
   () => perpageItemNumSelect.value.activeOption.number,
@@ -97,19 +94,12 @@ watch(
   { immediate: true }
 )
 
-setTimeout(() => {
-  categorySelect.value = {
-    options: productStore.categories,
-    activeOption: productStore.categories[0]
+watch(
+  () => categorySelect.value.activeOption,
+  () => {
+    pagination.value.activePage = 1
   }
-
-  watch(
-    () => categorySelect.value.activeOption,
-    () => {
-      pagination.value.activePage = 1
-    }
-  )
-}, 3000)
+)
 </script>
 
 <template>
@@ -129,8 +119,8 @@ setTimeout(() => {
     -->
 
     <div class="selectContainer">
+      <input type="text" placeholder="請輸入產品名稱" v-model="search" />
       <Select v-if="categorySelect.options" :select="categorySelect" />
-      <!-- <Select :select="sortSelect" /> -->
       <Select :select="perpageItemNumSelect" />
     </div>
 
@@ -170,6 +160,16 @@ setTimeout(() => {
 .selectContainer {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   padding: 20px 40px;
+
+  input {
+    width: 150px;
+    height: 40px;
+    padding: 10px;
+    border: none;
+    outline: none;
+    border-bottom: 1px solid #aaa;
+  }
 }
 </style>

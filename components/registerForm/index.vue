@@ -46,14 +46,14 @@
     />
 
     <!-- phone -->
-    <c_input :input="userStore.r_form.phone2" />
-    <c_input
+    <c_input :input="userStore.r_form.phone" />
+    <!-- <c_input
       :input="userStore.r_form.phone_verify_code"
       v-if="
         commonStore.store.NotificationSystem == 1 ||
         commonStore.store.NotificationSystem == 2
       "
-    />
+    /> -->
 
     <!-- 驗證碼 -->
     <div

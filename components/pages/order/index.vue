@@ -21,16 +21,12 @@ if (RtnMsg) {
 // Line 登入
 if (account) {
   commonStore.user_account = account
-  localStorage.setItem("user_account", commonStore.user_account)
 }
 // Line 綁定
 if (result) {
   result = JSON.parse(decodeURI(result))
-  if (!result.status) alert(result.msg)
-  else {
-    commonStore.user_account = result.account
-    localStorage.setItem("user_account", commonStore.user_account)
-  }
+  if (!result.status) commonStore.showMessage(result.msg, false)
+  else commonStore.user_account = result.account
 }
 
 watch(

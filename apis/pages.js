@@ -1,40 +1,18 @@
 /* 頁面資訊 */
 
-/*
-  首頁
-  let params = return_formUrlencoded('WebPreview')
-*/
+/* 首頁 */
 export const getHomePageApi = (params) =>
   formRequest.post("/interface/web/GetHomePage", params)
 
-/*
-  分類商品
-  let obj = {
-    id,
-    WebPreview: site.value.WebPreview
-  }
-  let formData = return_formData(obj)
-*/
+/* 分類商品 */
 export const getCategoryApi = (formData) =>
   formDataRequest.post("/interface/web/GetWebSubCategory", formData)
 
-/* 
-  搜尋
-  getSearchApi
-  let obj = {
-    input: state.search_title,
-    type: state.sortBy_index,
-    WebPreview: site.value.WebPreview
-  }
-  let formData = return_formData(obj)
-*/
+/* 搜尋 */
 export const getSearchApi = (formData) =>
   formDataRequest.post("/interface/web/GetProductSearch", formData)
 
-/* 
-  聯絡
-  let params = return_formUrlencoded('WebPreview')
-*/
+/* 聯絡 */
 export const getContactApi = (formData) =>
   $fetch("/interface/web/GetWebContact", {
     method: "POST",

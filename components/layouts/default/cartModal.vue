@@ -158,7 +158,7 @@ onBeforeUnmount(() => {
         </template>
       </template>
     </ul>
-    <div class="pushTo_cart">
+    <div class="toCart">
       <nuxt-link to="/cart">
         <i class="fa fa-shopping-cart" aria-hidden="true"></i>
         前往購物車

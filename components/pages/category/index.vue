@@ -3,8 +3,28 @@ import ProductItem from "@/components/productItem.vue"
 
 import { useUnescapeHTML } from "@/composables/unescapeHTML"
 const commonStore = useCommonStore()
+const productStore = useProductStore()
 
-const { is_initial, category_product } = storeToRefs(commonStore)
+const { is_initial } = storeToRefs(commonStore)
+const { category_products } = storeToRefs(productStore)
+
+const category_content = ref({})
+const show_categories = ref([])
+
+function initCategory() {
+  category_content.value = commonStore.webData.GetWebSubCategory.Data[0]
+  category_content.value.Img = [
+    category_content.value.Img1,
+    category_content.value.Img2,
+    category_content.value.Img3,
+    category_content.value.Img4,
+    category_content.value.Img5
+  ].filter((i) => i)
+
+  show_categories.value = commonStore.webData.GetWebSubCategory.Category.map(
+    (c) => c.ID
+  )
+}
 
 // allProducts, category
 function videoHandler(url) {
@@ -37,9 +57,8 @@ function videoHandler(url) {
 watch(
   is_initial,
   async (value) => {
-    if (value) {
-      await commonStore.getCategoryPage()
-      await nextTick()
+    if (value && commonStore.webData.GetWebSubCategory.Data) {
+      await initCategory()
       commonStore.imgHandler()
     }
   },
@@ -49,53 +68,35 @@ watch(
 
 <template>
   <div class="allProductsAndCategory">
-    <template
-      v-if="
-        category_product &&
-        category_product.Data &&
-        category_product.Data[0].Img &&
-        category_product.Data[0].Img.length
-      "
-    >
+    <template v-if="category_content.Img && category_content.Img.length">
       <div
         class="img_container"
-        v-for="(item, index) in category_product.Data[0].Img"
+        v-for="(item, index) in category_content.Img"
         :key="index"
         :style="{ backgroundImage: `url(${item})` }"
       ></div>
     </template>
     <div class="content">
-      <div
-        class="rich_container"
-        v-if="
-          commonStore.category_product &&
-          commonStore.category_product.Data &&
-          commonStore.category_product.Data[0].Text
-        "
-      >
+      <div class="rich_container" v-if="category_content.Text">
         <div
           class="ql-editor"
-          v-html="useUnescapeHTML(commonStore.category_product.Data[0].Text)"
+          v-html="useUnescapeHTML(category_content.Text)"
         ></div>
       </div>
 
       <div
         class="video_container"
-        v-if="
-          category_product &&
-          category_product.Data &&
-          category_product.Data[0].Video
-        "
-        v-html="videoHandler(category_product.Data[0].Video)"
+        v-if="category_content.Video"
+        v-html="videoHandler(category_content.Video)"
       ></div>
     </div>
 
-    <template v-if="commonStore.category_product">
+    <template v-if="category_products">
       <div
         class="products"
-        v-for="(item, key) in category_product.Sort"
+        v-for="(item, key) in category_products"
         :key="`Sort${key}`"
-        v-show="Object.keys(item.Products).length"
+        v-show="show_categories.indexOf(item.ID) > -1"
       >
         <div class="title">
           {{ item.Name }}
@@ -103,9 +104,9 @@ watch(
         <div class="productList">
           <ul>
             <li
-              v-for="(item2, key2) in item.Products"
-              :key="`Products${key2}`"
-              @click="commonStore.pushTo_cart(item2.ID)"
+              v-for="(item2, key2) in item.products"
+              :key="`products${key2}`"
+              @click="commonStore.cartPush(item2.ID)"
             >
               <ProductItem :product="item2" />
             </li>

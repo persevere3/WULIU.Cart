@@ -16,15 +16,13 @@ export function useAuth() {
     if (account) {
       // Line 登入
       user_account.value = account
-      localStorage.setItem("user_account", user_account.value)
     }
     if (result) {
       // Line 綁定
       result = JSON.parse(decodeURI(result))
-      if (!result.status) alert(result.msg)
+      if (!result.status) commonStore.showMessage(result.msg, false)
       else {
         user_account.value = result.account
-        localStorage.setItem("user_account", user_account.value)
       }
     }
 

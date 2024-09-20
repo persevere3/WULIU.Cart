@@ -10,9 +10,6 @@ const purchaseInfoStore = usePurchaseInfoStore()
 
 const isDevelopment = process.env.NODE_ENV === "development" ? true : false
 
-// delete r_mail.value.rules["required"]
-// delete r_phone2.value.rules["required"]
-
 const { RtnMsg, page } = useRoute().query
 
 watch(
@@ -120,10 +117,10 @@ watch(
           <c_input :input="memberInfoStore.e_form.name" />
 
           <div class="title">手機</div>
-          <c_input :input="memberInfoStore.e_form.phone2" />
+          <c_input :input="memberInfoStore.e_form.phone" />
 
-          <!-- 手機驗證碼 -->
-          <template v-if="!memberInfoStore.memberInfo.Phone2">
+          <!-- 手機驗證碼 (目前系統沒有開放手機驗證) -->
+          <!-- <template v-if="!memberInfoStore.memberInfo.Phone2">
             <div class="title">手機驗證碼</div>
             <c_input :input="memberInfoStore.e_form.phone_verify_code" />
 
@@ -137,10 +134,10 @@ watch(
                 ( {{ memberInfoStore.e_form.second }}s )
               </span>
             </div>
-          </template>
+          </template> -->
 
           <div class="title">電子信箱</div>
-          <c_input :input="memberInfoStore.e_form.phone2" />
+          <c_input :input="memberInfoStore.e_form.mail" />
 
           <div
             class="password_container"

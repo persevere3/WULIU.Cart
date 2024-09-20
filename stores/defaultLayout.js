@@ -50,14 +50,13 @@ export const useDefaultLayoutStore = defineStore("defaultLayout", () => {
       state.searchStr = ""
     },
     searchHandler() {
-      if (state.searchStr) {
-        useUrlPush(`/search?query=${state.searchStr}&type=0`)
-      }
+      if (state.searchStr) useUrlPush(`/products?search=${state.searchStr}`)
     },
 
     // connect
     open_connect() {
-      if (commonStore.site.WebPreview == 2) alert("預覽模式下不開放")
+      if (commonStore.site.WebPreview == 2)
+        commonStore.showMessage("預覽模式下不開放", false)
       else {
         state.is_sidebar = false
         state.is_slideout = false
@@ -90,7 +89,7 @@ export const useDefaultLayoutStore = defineStore("defaultLayout", () => {
           useVerify.reset(state.connect_mail)
           useVerify.reset(state.connect_text)
 
-          alert("發送成功")
+          commonStore.showMessage("發送成功", true)
         } catch (error) {
           throw new Error(error)
         }

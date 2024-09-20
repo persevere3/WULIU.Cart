@@ -203,44 +203,11 @@ watch(is_initial, (value) => {
     <div class="products">
       <div class="productList">
         <ul>
-          <li v-for="(item, index) in commonStore.all.data" :key="item.ID">
+          <li v-for="(item, index) in productStore.products" :key="item.ID">
             <ProductItem :product="item" />
           </li>
         </ul>
       </div>
-      <!-- <div class="product_page">
-        <ul>
-          <li :class="{ opacity0: page_active == 1 }" @click="pagePush(1)">
-            <i class="fa fa-angle-double-left" aria-hidden="true"></i>
-          </li>
-          <li
-            :class="{ opacity0: page_active < 2 }"
-            @click="pagePush(page_active - 1)"
-          >
-            <i class="fa-solid fa-chevron-left"></i>
-          </li>
-          <li
-            v-for="item in totalpage_num"
-            v-show="is_show_page(item, totalpage_num)"
-            :class="{ li_active: page_active === item }"
-            @click="pagePush(item)"
-          >
-            {{ item }}
-          </li>
-          <li
-            :class="{ opacity0: page_active > totalpage_num - 1 }"
-            @click="pagePush(page_active + 1)"
-          >
-            <i class="fa-solid fa-chevron-right"></i>
-          </li>
-          <li
-            :class="{ opacity0: page_active == totalpage_num }"
-            @click="pagePush(totalpage_num)"
-          >
-            <i class="fa fa-angle-double-right" aria-hidden="true"></i>
-          </li>
-        </ul>
-      </div> -->
     </div>
 
     <!--  -->

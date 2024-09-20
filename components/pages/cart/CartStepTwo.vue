@@ -57,14 +57,14 @@
           placeholder="購買人手機號碼"
           :readonly="memberInfoStore.memberInfo.Phone2"
           :class="{
-            inputError: purchaseInfoStore.info.purchaser_number.is_error
+            inputError: purchaseInfoStore.info.purchaser_phone.is_error
           }"
-          v-model="purchaseInfoStore.info.purchaser_number.value"
-          @blur="verify(purchaseInfoStore.info.purchaser_number)"
+          v-model="purchaseInfoStore.info.purchaser_phone.value"
+          @blur="verify(purchaseInfoStore.info.purchaser_phone)"
           @change="input_purchaser"
         />
         <div class="errorMessage">
-          {{ purchaseInfoStore.info.purchaser_number.message }}
+          {{ purchaseInfoStore.info.purchaser_phone.message }}
         </div>
 
         <div class="custom_option isSame" @click="isSame = !isSame">
@@ -465,11 +465,11 @@
 
         <!-- 支付方式 -->
         <label for="pay_method">支付方式</label>
-        <div class="custom_select" v-if="commonStore.store.paymethodOrder">
+        <div class="custom_select" v-if="commonStore.store.paymethodSort">
           <div
             class="custom_option2"
             :class="{ active: purchaseInfoStore.pay_method === 'CreditCard' }"
-            :style="`order: ${commonStore.store.paymethodOrder['CreditCard']}`"
+            :style="`order: ${commonStore.store.paymethodSort['CreditCard']}`"
             @click="purchaseInfoStore.pay_method = 'CreditCard'"
             v-if="commonStore.store.CreditCard != 0 && !is_collection"
           >
@@ -478,7 +478,7 @@
           <div
             class="custom_option2"
             :class="{ active: purchaseInfoStore.pay_method === 'ATM' }"
-            :style="`order: ${commonStore.store.paymethodOrder['ATM']}`"
+            :style="`order: ${commonStore.store.paymethodSort['ATM']}`"
             @click="purchaseInfoStore.pay_method = 'ATM'"
             v-if="commonStore.store.ATM != 0 && !is_collection"
           >
@@ -487,7 +487,7 @@
           <div
             class="custom_option2"
             :class="{ active: purchaseInfoStore.pay_method === 'PayCode' }"
-            :style="`order: ${commonStore.store.paymethodOrder['PayCode']}`"
+            :style="`order: ${commonStore.store.paymethodSort['PayCode']}`"
             @click="purchaseInfoStore.pay_method = 'PayCode'"
             v-if="commonStore.store.PayCode != 0 && !is_collection"
           >
@@ -496,7 +496,7 @@
           <div
             class="custom_option2"
             :class="{ active: purchaseInfoStore.pay_method === 'PayBarCode' }"
-            :style="`order: ${commonStore.store.paymethodOrder['PayBarCode']}`"
+            :style="`order: ${commonStore.store.paymethodSort['PayBarCode']}`"
             @click="purchaseInfoStore.pay_method = 'PayBarCode'"
             v-if="commonStore.store.PayBarCode != 0 && !is_collection"
           >
@@ -507,7 +507,7 @@
             :class="{
               active: purchaseInfoStore.pay_method === 'PayOnDelivery'
             }"
-            :style="`order: ${commonStore.store.paymethodOrder['PayOnDelivery']}`"
+            :style="`order: ${commonStore.store.paymethodSort['PayOnDelivery']}`"
             @click="purchaseInfoStore.pay_method = 'PayOnDelivery'"
             v-if="
               commonStore.store.PayOnDelivery != 0 &&
@@ -519,7 +519,7 @@
           <div
             class="custom_option2"
             :class="{ active: purchaseInfoStore.pay_method === 'LinePay' }"
-            :style="`order: ${commonStore.store.paymethodOrder['LinePay']}`"
+            :style="`order: ${commonStore.store.paymethodSort['LinePay']}`"
             @click="purchaseInfoStore.pay_method = 'LinePay'"
             v-if="commonStore.store.LinePay == 1 && !is_collection"
           >
@@ -532,7 +532,7 @@
             :class="{
               active: purchaseInfoStore.pay_method === 'MartPayOnDelivery'
             }"
-            :style="`order: ${commonStore.store.paymethodOrder['PayOnDelivery']}`"
+            :style="`order: ${commonStore.store.paymethodSort['PayOnDelivery']}`"
             @click="purchaseInfoStore.pay_method = 'MartPayOnDelivery'"
             v-if="is_collection"
           >
@@ -1049,7 +1049,7 @@ watch(isSame, (v) => {
     purchaseInfoStore.info.receiver_name.value =
       purchaseInfoStore.info.purchaser_name.value
     purchaseInfoStore.info.receiver_number.value =
-      purchaseInfoStore.info.purchaser_number.value
+      purchaseInfoStore.info.purchaser_phone.value
   }
   verify(
     purchaseInfoStore.info.receiver_name,
@@ -1110,7 +1110,7 @@ function input_purchaser() {
     purchaseInfoStore.info.receiver_name.value =
       purchaseInfoStore.info.purchaser_name.value
     purchaseInfoStore.info.receiver_number.value =
-      purchaseInfoStore.info.purchaser_number.value
+      purchaseInfoStore.info.purchaser_phone.value
     verify(
       purchaseInfoStore.info.receiver_name,
       purchaseInfoStore.info.receiver_number

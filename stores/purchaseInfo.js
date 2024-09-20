@@ -3,7 +3,6 @@ import city_district_json from "@/json/city_district.json"
 
 export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
   let commonStore = useCommonStore()
-  let productStore = useProductStore()
   let cartStore = useCartStore()
   let memberInfoStore = useMemberInfoStore()
   let orderStore = useOrderStore()
@@ -40,7 +39,7 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
       is_error: false,
       message: ""
     },
-    purchaser_number: {
+    purchaser_phone: {
       value: "",
       rules: {
         required: {
@@ -126,7 +125,6 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
   const invoice_uniNumber = ref("")
 
   // 運送方式
-  const transport = ref("0")
   const transport_obj = ref({
     0: "",
     1: "一般宅配",
@@ -151,6 +149,7 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     OKMARTC2CDelivery: "OK超商 取貨付款",
     OKMARTC2C: "OK超商 取貨不付款"
   })
+  const transport = ref("0")
   const is_show_transport_options = ref(false)
 
   // 支付方式
@@ -183,12 +182,12 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
 
   // methods ==============================
   // 選擇超商
-  function pickConvenienceStore() {
+  async function pickConvenienceStore() {
     let order_info = {
       info: {
         purchaser_email: info.value.purchaser_email.value,
         purchaser_name: info.value.purchaser_name.value,
-        purchaser_number: info.value.purchaser_number.value,
+        purchaser_phone: info.value.purchaser_phone.value,
         receiver_name: info.value.receiver_name.value,
         receiver_number: info.value.receiver_number.value
       },
@@ -229,11 +228,7 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
       LogisticsType: "CVS",
       LogisticsSubType,
       IsCollection,
-      ServerReplyURL: `${location.origin}/interface/store/SpmarketAddress${
-        productStore.isSingleProduct
-          ? "?spid=" + productsStore.selectedProduct.ID
-          : ""
-      }`,
+      ServerReplyURL: `${location.origin}/interface/store/SpmarketAddress}`,
       ExtraData: "",
       Device: ""
     }
@@ -245,10 +240,9 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     }
     orderStore.ECPay_store_form_value += `</form>`
 
-    setTimeout(() => {
-      let ECPay_store_form = document.querySelector("#ECPay_store_form")
-      ECPay_store_form && ECPay_store_form.submit()
-    }, 1000)
+    await nextTick()
+    let ECPay_store_form = document.querySelector("#ECPay_store_form")
+    ECPay_store_form && ECPay_store_form.submit()
   }
   function getConvenienceStore(id, name, address) {
     if (!id || !name || !address) return
@@ -260,8 +254,7 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     purchaseInfoStore.storeaddress = decodeURI(address)
 
     if (!productsStore.isSingleProduct) {
-      cartStore.showPage = "cart"
-      cartStore.stepIndex = 2
+      cartStore.step = 2
     }
   }
   function returnInfo() {
@@ -327,8 +320,8 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     invoice_title,
     invoice_uniNumber,
 
-    transport,
     transport_obj,
+    transport,
     is_show_transport_options,
 
     pay_method,

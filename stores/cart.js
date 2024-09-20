@@ -14,6 +14,7 @@ export const useCartStore = defineStore("cart", () => {
 
   // state ==============================
   const is_cart_modal = ref(false)
+
   const cart = ref([])
   // 取得購物車後的商品數量
   const cartOriginLength = ref(0)
@@ -84,16 +85,11 @@ export const useCartStore = defineStore("cart", () => {
   // methods ==============================
   function getCart() {
     let key = ""
-    if (productStore.isSingleProduct) {
-      key = `${commonStore.site.Name}@${productStore.selectedProduct.ID}@cart`
-    } else {
-      if (commonStore.user_account)
-        key = `${commonStore.site.Name}@${commonStore.user_account}@cart`
-      else key = `${commonStore.site.Name}@cart`
-    }
+    if (commonStore.user_account)
+      key = `${commonStore.site.Name}@${commonStore.user_account}@cart`
+    else key = `${commonStore.site.Name}@cart`
 
     cart.value = JSON.parse(localStorage.getItem(key)) || []
-
     cartOriginLength.value = cartLength.value
   }
   async function cartHandler() {
@@ -204,7 +200,6 @@ export const useCartStore = defineStore("cart", () => {
     }
   }
   function asyncCart() {
-    console.log("asyncCart")
     cart.value.forEach((cartItem, cartIndex) => {
       let product = productStore.products.find(
         (product) => product.ID == cartItem.ID
@@ -257,13 +252,9 @@ export const useCartStore = defineStore("cart", () => {
 
   function setCart() {
     let key = ""
-    if (productStore.isSingleProduct)
-      key = `${commonStore.site.Name}@${productStore.selectedProduct.ID}@cart`
-    else {
-      if (commonStore.user_account)
-        key = `${commonStore.site.Name}@${commonStore.user_account}@cart`
-      else key = `${commonStore.site.Name}@cart`
-    }
+    if (commonStore.user_account)
+      key = `${commonStore.site.Name}@${commonStore.user_account}@cart`
+    else key = `${commonStore.site.Name}@cart`
 
     localStorage.setItem(key, JSON.stringify(cart.value))
   }
@@ -277,12 +268,10 @@ export const useCartStore = defineStore("cart", () => {
     use_bonus.value = 0
 
     // if (!productStore.isSingleProduct) {
-    //   commonStore.showPage = "main"
     //   productStore.getCategories()
     // } else cartStore.step = 1
 
-    // await productStore.getProducts()
-    // productStore.productsHandler()
+    // await productStore.ajaxProducts()
   }
 
   async function discount() {
@@ -329,8 +318,6 @@ export const useCartStore = defineStore("cart", () => {
 
   // 查 金額, 折扣, 運費, 總計
   async function getTotal(isStepTwo) {
-    console.log("getTotal")
-
     let {
       id,
       qry,

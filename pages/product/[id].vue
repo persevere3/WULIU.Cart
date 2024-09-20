@@ -8,13 +8,17 @@ const productId = route.params.id
 
 const product = ref({})
 
-setTimeout(() => {
-  let selectProduct = productStore.products.find(
-    (selectProduct) => selectProduct.ID === productId
-  )
-
-  if (selectProduct) product.value = selectProduct
-}, 3000)
+watch(
+  () => productStore.products,
+  (v) => {
+    if (v.length > 0) {
+      let selectProduct = productStore.products.find(
+        (selectProduct) => selectProduct.ID === productId
+      )
+      if (selectProduct) product.value = selectProduct
+    }
+  }
+)
 </script>
 
 <template>

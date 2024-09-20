@@ -14,7 +14,7 @@ const activeUserNav = ref("login")
 async function user_register() {
   const res = await userStore.register()
   if (res) {
-    userStore.l_form.account.value = userStore.r_form.phone2.value
+    userStore.l_form.account.value = userStore.r_form.phone.value
     userStore.l_form.password.value = userStore.r_form.password.value
     userStore.user_login()
   }

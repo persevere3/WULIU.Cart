@@ -1,9 +1,4 @@
-import {
-  getCategoriesApi,
-  getProductsApi,
-  getAddProductsApi
-} from "@/apis/product"
-
+import { getProductsApi, getAddProductsApi } from "@/apis/product"
 import {
   getFavoriteApi,
   deleteFavoriteApi,
@@ -23,19 +18,15 @@ export const useProductStore = defineStore("product", () => {
   // state ==============================
   const category_products = ref({})
 
-  const is_getCategories = ref(false)
   const categories = ref([])
   // category ID
   const category = ref("")
 
-  const is_getProducts = ref(false)
   const products = ref([])
   const productsRendered = ref(false)
 
   // 是否為一頁式商品頁面
   const isSingleProduct = ref(false)
-  // 選中的商品
-  const selectedProduct = ref({})
   // 是否顯示加價購商品
   const isAddProducts = ref(true)
   // 是否顯示商品詳情
@@ -45,64 +36,42 @@ export const useProductStore = defineStore("product", () => {
   const is_favorite_modal = ref(false)
   const favorite = ref({})
 
-  watch(
-    [is_getCategories, is_getProducts],
-    () => {
-      if (is_getCategories.value && is_getProducts.value) {
-        categories.value.forEach((c) => {
-          if (c.Show) category_products.value[c.ID] = c
-        })
-
-        products.value.forEach((product) => {
-          product.categories = [
-            product.Category1,
-            product.Category2,
-            product.Category3,
-            product.Category4,
-            product.Category5
-          ].filter((c) => c)
-
-          product.categories.forEach((c) => {
-            if (category_products.value[c]) {
-              if (!category_products.value[c].products) {
-                category_products.value[c].products = []
-              }
-              category_products.value[c].products.push(product)
-            }
-          })
-        })
-
-        category_products.value[0].products = products.value
-      }
-    },
-    { deep: true }
-  )
-
-  watch(is_getProducts, () => {
-    if (is_getProducts.value) productsHandler()
-  })
-
   // methods ==============================
-  async function getCategories() {
-    let query = {
-      Preview: commonStore.site.Preview
-    }
+  async function categoriesHandler() {
+    let data = commonStore.webData.GetCategory.data
+    categories.value = [{ ID: "0", Name: "所有分類商品", Show: "1" }, ...data]
+    category.value = "0"
+  }
 
-    try {
-      let res = JSON.parse(await getCategoriesApi(query))
-      const isReqSuccess = commonStore.resHandler(res, getCategories)
-      if (!isReqSuccess) return
+  function category_productsHandler() {
+    let originCategory_products = {}
 
-      categories.value = [
-        { ID: "0", Name: "所有分類商品", Show: "1" },
-        ...res.data
-      ]
-      category.value = "0"
+    categories.value.forEach((c) => {
+      if (c.Show) originCategory_products[c.ID] = c
+    })
 
-      is_getCategories.value = true
-    } catch (error) {
-      throw new Error(error)
-    }
+    products.value.forEach((product) => {
+      product.categories = [
+        product.Category1,
+        product.Category2,
+        product.Category3,
+        product.Category4,
+        product.Category5
+      ].filter((c) => c)
+
+      product.categories.forEach((c) => {
+        if (originCategory_products[c]) {
+          if (!originCategory_products[c].products) {
+            originCategory_products[c].products = []
+          }
+          originCategory_products[c].products.push(product)
+        }
+      })
+    })
+
+    originCategory_products[0].products = products.value
+
+    category_products.value = originCategory_products
   }
 
   function returnPriceRange(product, priceKey) {
@@ -116,92 +85,87 @@ export const useProductStore = defineStore("product", () => {
         highestPrice
       )}`
   }
-  async function getProducts() {
-    let query = {
-      Preview: commonStore.site.Preview
-    }
+
+  async function ajaxProducts() {
+    let query = { Preview: commonStore.site.Preview }
 
     try {
-      let res = JSON.parse(await getProductsApi(query))
-      const isReqSuccess = commonStore.resHandler(res, getProducts)
-      if (!isReqSuccess) return
+      const res = JSON.parse(await getProductsApi(query))
+      const isResSuccess = commonStore.resHandler(res, ajaxProducts)
+      if (!isResSuccess) return
 
-      let originProducts = res.data
-      let specs = res.data2 // 規格
-      originProducts.forEach((product) => {
-        // 規格 + buyQty ----------
-        let productSpecArr = specs.filter(
-          (spec) => spec.ProductID == product.ID
-        )
-        if (productSpecArr.length > 0) {
-          productSpecArr.forEach((spec) => {
-            spec.buyQty = 0
-          })
-
-          product.specArr = productSpecArr
-          product.selectSpecItem = {}
-          product.isShowSpec = false
-        } else product.buyQty = 0
-
-        // 多價格 ----------
-        product.PriceType && (product.priceType = product.PriceType)
-        if (product.priceType === "multiPrice") {
-          // 建議售價
-          product.priceRange = returnPriceRange(product, "ItemPrice")
-
-          // 售價
-          product.nowPriceRange = returnPriceRange(product, "ItemNowPrice")
-        }
-
-        // categoryArr -----------
-        let categoryArr = [
-          product.Category1,
-          product.Category2,
-          product.Category3,
-          product.Category4,
-          product.Category5
-        ]
-        categoryArr = categoryArr.filter((category) => category)
-        product.categoryArr = categoryArr
-
-        // imgArr, mainImgIndex, Img1 ----------
-        let imgArr = [
-          product.Img1,
-          product.Img2,
-          product.Img3,
-          product.Img4,
-          product.Img5
-        ]
-        imgArr = imgArr.filter((img) => img)
-
-        if (process.env.NODE_ENV === "development") {
-          // 圖片列表
-          imgArr = imgArr.map((img) => config.public.apiUrl + img)
-          // 主要圖片
-          product.Img1 = config.public.apiUrl + product.Img1
-        }
-
-        product.imgArr = imgArr
-        product.mainImgIndex = 0
-
-        // addProducts ----------
-        product.addProducts = null
-      })
-
-      //
-      products.value = originProducts
-
-      is_getProducts.value = true
-
-      // nextTick
-      setTimeout(() => {
-        productsRendered.value = true
-      }, 1000)
+      productsHandler(res)
     } catch (error) {
-      throw new Error(error)
+      console.log(error)
     }
   }
-  async function productsHandler() {
+  async function productsHandler(res) {
+    let originProducts = res.data
+    let specs = res.data2 // 規格
+    originProducts.forEach((product) => {
+      // 規格 + buyQty ----------
+      let productSpecArr = specs.filter((spec) => spec.ProductID == product.ID)
+      if (productSpecArr.length > 0) {
+        productSpecArr.forEach((spec) => {
+          spec.buyQty = 0
+        })
+
+        product.specArr = productSpecArr
+        product.selectSpecItem = {}
+        product.isShowSpec = false
+      } else product.buyQty = 0
+
+      // 多價格 ----------
+      product.PriceType && (product.priceType = product.PriceType)
+      if (product.priceType === "multiPrice") {
+        // 建議售價
+        product.priceRange = returnPriceRange(product, "ItemPrice")
+
+        // 售價
+        product.nowPriceRange = returnPriceRange(product, "ItemNowPrice")
+      }
+
+      // categoryArr -----------
+      let categoryArr = [
+        product.Category1,
+        product.Category2,
+        product.Category3,
+        product.Category4,
+        product.Category5
+      ]
+      categoryArr = categoryArr.filter((category) => category)
+      product.categoryArr = categoryArr
+
+      // imgArr, mainImgIndex, Img1 ----------
+      let imgArr = [
+        product.Img1,
+        product.Img2,
+        product.Img3,
+        product.Img4,
+        product.Img5
+      ]
+      imgArr = imgArr.filter((img) => img)
+
+      if (process.env.NODE_ENV === "development") {
+        // 圖片列表
+        imgArr = imgArr.map((img) => config.public.apiUrl + img)
+        // 主要圖片
+        product.Img1 = config.public.apiUrl + product.Img1
+      }
+
+      product.imgArr = imgArr
+      product.mainImgIndex = 0
+
+      // addProducts ----------
+      product.addProducts = null
+    })
+
+    //
+    products.value = originProducts
+
+    //
+    category_productsHandler()
+
     category.value = "0"
 
     getFavorite()
@@ -209,7 +173,8 @@ export const useProductStore = defineStore("product", () => {
     cartStore.getCart()
     cartStore.cartHandler()
 
-    // if (cartCommonStore.showPage == "") cartCommonStore.showPage = "main"
+    await nextTick()
+    productsRendered.value = true
   }
 
   async function getAddProducts(ids) {
@@ -287,37 +252,6 @@ export const useProductStore = defineStore("product", () => {
     }
   }
 
-  function multiPriceHandler(data) {
-    data.forEach((item) => {
-      item.PriceType && (item.priceType = item.PriceType)
-    })
-
-    data.forEach((item) => {
-      if (item.priceType === "multiPrice") {
-        // 建議售價
-        // 所有規格都有填建議售價
-        if (item.MinPrice > 0 && item.MaxPrice > 0) {
-          // 建議售價都一樣
-          if (item.MinPrice === item.MaxPrice)
-            item.priceRange = useNumberThousands(item.MinPrice)
-          else
-            item.priceRange = `${useNumberThousands(
-              item.MinPrice
-            )} - ${useNumberThousands(item.MaxPrice)}`
-        }
-
-        // 售價
-        // 售價都一樣
-        if (item.NowMinPrice === item.NowMaxPrice)
-          item.nowPriceRange = useNumberThousands(item.NowMinPrice)
-        else
-          item.nowPriceRange = `${useNumberThousands(
-            item.NowMinPrice
-          )} - ${useNumberThousands(item.NowMaxPrice)}`
-      }
-    })
-  }
-
   // favorite
   async function getFavorite() {
     // 登入狀態
@@ -344,7 +278,6 @@ export const useProductStore = defineStore("product", () => {
         } else {
           if (res.msg.indexOf("登入") > -1) {
             commonStore.user_account = ""
-            localStorage.removeItem("user_account")
             getFavorite()
           }
         }
@@ -387,7 +320,6 @@ export const useProductStore = defineStore("product", () => {
         if (!res.status) {
           if (res.msg.indexOf("登入") > -1) {
             commonStore.user_account = ""
-            localStorage.removeItem("user_account")
           }
         }
 
@@ -408,27 +340,26 @@ export const useProductStore = defineStore("product", () => {
   }
 
   return {
+    category_products,
+
     categories,
     category,
 
-    category_products,
     products,
     productsRendered,
 
     isSingleProduct,
-    selectedProduct,
     isAddProducts,
     isDetail,
 
     is_favorite_modal,
     favorite,
 
-    getCategories,
-    getProducts,
+    categoriesHandler,
+    category_productsHandler,
+    ajaxProducts,
     productsHandler,
     getAddProducts,
-
-    multiPriceHandler,
 
     getFavorite,
     toggleFavorite
