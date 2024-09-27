@@ -3,21 +3,18 @@ import Product from "~/components/pages/product/index.vue"
 
 const productStore = useProductStore()
 
-const route = useRoute()
-const productId = route.params.id
-
+const productId = useRoute().params.id
 const product = ref({})
 
 watch(
   () => productStore.products,
   (v) => {
     if (v.length > 0) {
-      let selectProduct = productStore.products.find(
-        (selectProduct) => selectProduct.ID === productId
-      )
+      let selectProduct = v.find((product) => product.ID === productId)
       if (selectProduct) product.value = selectProduct
     }
-  }
+  },
+  { immediate: true }
 )
 </script>
 

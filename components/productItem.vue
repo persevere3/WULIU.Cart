@@ -27,10 +27,7 @@ const props = defineProps({
 
           <div class="addToCartBtn">
             加入購物車
-            <i
-              class="fa fa-shopping-cart"
-              :class="{ is_favorite: productStore.favorite[product.ID] }"
-            ></i>
+            <i class="fa fa-shopping-cart"></i>
           </div>
         </div>
       </div>
@@ -88,6 +85,7 @@ const props = defineProps({
   a {
     display: block;
     text-decoration: none;
+
     padding: 0px 5px;
     cursor: pointer;
 

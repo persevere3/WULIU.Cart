@@ -7,13 +7,13 @@
           NT$ {{ useNumberThousands(cartStore.total.Total) }}
         </div>
       </li>
-      <li>
+      <li v-if="cartStore.total.Discount > 0">
         <div class="before">- 折扣</div>
         <div class="after">
           NT$ {{ useNumberThousands(cartStore.total.Discount) }}
         </div>
       </li>
-      <li>
+      <li v-if="cartStore.total.DiscountCode > 0">
         <div class="before">- 折扣碼優惠</div>
         <div class="after">
           NT$ {{ useNumberThousands(cartStore.total.DiscountCode) }}
@@ -51,8 +51,8 @@
           NT$ {{ useNumberThousands(cartStore.total.Sum) }}
         </div>
       </li>
-      <template v-if="cartStore.step === 2 && commonStore.user_account">
-        <hr />
+      <template v-if="commonStore.user_account">
+        <li class="line"></li>
         <li>
           訂單完成後獲得 NT${{ useNumberThousands(cartStore.member_bonus) }}
           購物金
@@ -77,7 +77,15 @@ let subtotal = computed(() => {
   )
 })
 
-onMounted(() => {
+watch(
+  () => commonStore.is_initial,
+  (v) => {
+    if (v) cartStore.getTotal(cartStore.step - 1)
+  }
+)
+
+const { successUsedDiscountCode } = storeToRefs(cartStore)
+watch(successUsedDiscountCode, () => {
   cartStore.getTotal(cartStore.step - 1)
 })
 </script>

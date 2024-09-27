@@ -16,9 +16,6 @@ export const useCommonStore = defineStore("common", () => {
 
   // state ==============================
   const route = useRoute()
-  const fullPath = computed(() => route.fullPath || "default-fullPath")
-  const pathname = computed(() => route.name || "default-name")
-  const searchObj = ref({})
 
   // ----------
   const webData = ref({})
@@ -74,50 +71,32 @@ export const useCommonStore = defineStore("common", () => {
         } else {
           console.log(storeLoginRes)
         }
+
+        return false
       } catch (error) {
         throw new Error(error)
       }
-      return false
     } else return true
   }
 
   // ---------------
   function getInitialWebQuery() {
-    // searchObj
-    let search = location.search.substring(1)
-    searchObj.value = {
-      id: "0",
-      store: "0"
-    }
-    if (search) {
-      let searchArr = search.split("&")
-      for (let item of searchArr) {
-        searchObj.value[item.split("=")[0]] = item.split("=")[1]
-      }
-    }
-
-    const router = useRouter()
-    router.replace(location.pathname)
-
     // pagetype
     let pagetype = 1
-    if (location.pathname.indexOf("cart") > -1) pagetype = 0
-    else if (
-      location.pathname === "/" ||
-      location.pathname.indexOf("index") > -1
-    )
+    if (useRoute().name.indexOf("cart") > -1) pagetype = 0
+    else if (useRoute().name === "/" || useRoute().name.indexOf("index") > -1)
       pagetype = 1
     else if (
-      location.pathname.indexOf("allProducts") > -1 ||
-      location.pathname.indexOf("category") > -1
+      useRoute().name.indexOf("allProducts") > -1 ||
+      useRoute().name.indexOf("category") > -1
     )
       pagetype = 3
-    else if (location.pathname.indexOf("contact") > -1) pagetype = 5
-    else if (location.pathname.indexOf("rich") > -1) {
-      if (searchObj.value["cid"] == 0) pagetype = 3
-      else if (searchObj.value["cid"] == 1 || searchObj.value["cid"] == 2)
+    else if (useRoute().name.indexOf("contact") > -1) pagetype = 5
+    else if (useRoute().name.indexOf("rich") > -1) {
+      if (useRoute().query["cid"] == 0) pagetype = 3
+      else if (useRoute().query["cid"] == 1 || useRoute().query["cid"] == 2)
         pagetype = 4
-      else if (searchObj.value["cid"] == 3) pagetype = 2
+      else if (useRoute().query["cid"] == 3) pagetype = 2
     }
 
     return { pagetype }
@@ -125,8 +104,8 @@ export const useCommonStore = defineStore("common", () => {
   async function initialWeb() {
     let { pagetype } = getInitialWebQuery()
     let query = {
-      webpreview: searchObj.value.webpreview || 1,
-      id: searchObj.value.id,
+      webpreview: site.value.webpreview || 1,
+      id: useRoute().query.id,
       pagetype
     }
     try {
@@ -139,6 +118,11 @@ export const useCommonStore = defineStore("common", () => {
       console.log(webData.value)
 
       site.value = webData.value.GetSite.data[0] || {}
+
+      // FeedbackFund => bonus_array ----------
+      if (site.value.FeedbackFund) {
+        cartStore.bonus_array = JSON.parse(site.value.FeedbackFund)
+      }
 
       if (site.value.WebEnable == 0) useUrlPush("/error")
 
@@ -223,8 +207,6 @@ export const useCommonStore = defineStore("common", () => {
       store.value.Logo = config.public.apiUrl + store.value.Logo
     }
 
-    console.log(store.value)
-
     footer_community.value = webData.value.GetStore.footer[0] || {}
 
     // title ------------
@@ -255,11 +237,11 @@ export const useCommonStore = defineStore("common", () => {
     user_account.value = localStorage.getItem("user_account")
 
     // Line 登入
-    let account = searchObj.value["account"]
+    let account = useRoute().query["account"]
     if (account) user_account.value = account
 
     // Line 綁定
-    let result = searchObj.value["result"]
+    let result = useRoute().query["result"]
     if (result) {
       result = JSON.parse(decodeURI(result))
       if (!result.status) showMessage(result.msg, false)
@@ -320,16 +302,12 @@ export const useCommonStore = defineStore("common", () => {
     }
 
     // 超商取貨付款 ----------
-    let storeid = searchObj.value["CVSStoreID"]
-    let storename = searchObj.value["CVSStoreName"]
-    let storeaddress = searchObj.value["CVSAddress"]
+    let storeid = useRoute().query["CVSStoreID"]
+    let storename = useRoute().query["CVSStoreName"]
+    let storeaddress = useRoute().query["CVSAddress"]
     if (storeid && storename && storeaddress) {
       purchaseInfoStore.getConvenienceStore(storeid, storename, storeaddress)
     }
-
-    // FeedbackFund => bonus_array ----------
-    if (site.value.FeedbackFund)
-      cartStore.bonus_array = JSON.parse(site.value.FeedbackFund)
   }
 
   function copyRightHandler() {
@@ -344,68 +322,12 @@ export const useCommonStore = defineStore("common", () => {
     // if(customerService.value.FBText ) useAppendScript(customerService.value.FBText, 'body')
   }
 
-  // allProducts, category, rich, contact(map) , user ---------------
-  function imgHandler() {
-    let editorWidth = 0
-    let editor_input = document.querySelector("#EditerWidth")
-    if (editor_input) {
-      editorWidth = editor_input.value * 1
-    }
-
-    let ql_editor = document.querySelector(".ql-editor")
-
-    let rich_container = document.querySelector(".rich_container")
-
-    if (!ql_editor || !rich_container) return
-
-    let rich_container_width = parseFloat(
-      window.getComputedStyle(rich_container).width
-    )
-    let rich_container_padding = parseFloat(
-      window.getComputedStyle(rich_container).padding
-    )
-    if (rich_container_padding) {
-      rich_container_width -= rich_container_padding * 2
-    }
-
-    if (editorWidth < rich_container_width) {
-      ql_editor.style.width = editorWidth + "px"
-    } else {
-      ql_editor.style.width = rich_container_width + "px"
-    }
-
-    let imgs = document.querySelectorAll(".ql-editor img")
-    for (let i = 0; i < imgs.length; i++) {
-      if (process.env.NODE_ENV === "development") {
-        imgs[i].src = imgs[i].src.replace(
-          "http://localhost:3000",
-          config.public.apiUrl
-        )
-      }
-
-      let imgWidth = window.getComputedStyle(imgs[i]).width.split("px")[0] * 1
-
-      if (imgWidth > editorWidth) {
-        imgs[i].style.width = editorWidth + "px"
-      }
-    }
-
-    let videos = document.querySelectorAll(".ql-editor .ql-video")
-    for (let i = 0; i < videos.length; i++) {
-      let videosWidth =
-        window.getComputedStyle(videos[i]).width.split("px")[0] * 1
-      if (videosWidth > editorWidth) {
-        videos[i].style.width = editorWidth + "px"
-      }
-    }
-  }
-
   // ---------------
   async function showMessage(messageStr, isSuccess) {
-    let message = messageArr.value.find(
-      (message) => message.messageStr === messageStr
-    )
-    if (message) return
+    // let message = messageArr.value.find(
+    //   (message) => message.messageStr === messageStr
+    // )
+    // if (message) return
 
     let id = new Date().getTime()
     messageArr.value.push({
@@ -441,16 +363,11 @@ export const useCommonStore = defineStore("common", () => {
   // ---------------
   function cartPush(id) {
     if (id === undefined) useUrlPush(`/cart`, true)
-    else useUrlPush(`/peoduct/${id}`, true)
+    else useUrlPush(`/product/${id}`, true)
   }
 
   // watch ==============================
-  watch(fullPath, async (v) => {
-    is_initial.value = false
-    is_getAll.value = false
-    await initialWeb()
-  })
-
+  // site localStorage
   watch(
     () => site.Name,
     () => {
@@ -458,6 +375,7 @@ export const useCommonStore = defineStore("common", () => {
     }
   )
 
+  // user_account localStorage，purchaseInfoStore, memberInfoStore
   watch(user_account, (newV) => {
     if (newV) localStorage.setItem("user_account", newV)
     else localStorage.removeItem("user_account")
@@ -475,11 +393,6 @@ export const useCommonStore = defineStore("common", () => {
 
   return {
     bank,
-
-    route,
-    fullPath,
-    pathname,
-    searchObj,
 
     webData,
     site,
@@ -516,8 +429,6 @@ export const useCommonStore = defineStore("common", () => {
 
     copyRightHandler,
     customerServiceHandler,
-
-    imgHandler,
 
     showMessage,
     promiseSetTimeout,

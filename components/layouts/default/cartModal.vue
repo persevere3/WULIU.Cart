@@ -1,5 +1,6 @@
 <script setup>
 import { useNumberThousands } from "@/composables/numberThousands"
+
 const cartStore = useCartStore()
 const buyQtyHandlerStore = useBuyQtyHandlerStore()
 
@@ -37,7 +38,7 @@ onBeforeUnmount(() => {
         <!-- 有規格 -->
         <template v-if="item.specArr">
           <template v-for="(spec, specIndex) in item.specArr" :key="spec.ID">
-            <li v-if="spec.buyQty != 0 || spec.buyQty === ''">
+            <li v-if="spec.buyQty > 0">
               <nuxt-link :to="`/product/${item.ID}`">
                 <div class="img_and_name">
                   <div
@@ -73,7 +74,7 @@ onBeforeUnmount(() => {
 
         <!-- 沒有規格 -->
         <template v-if="!item.specArr">
-          <li>
+          <li v-if="item.buyQty > 0">
             <nuxt-link :to="`/product/${item.ID}`">
               <div class="img_and_name">
                 <div
@@ -108,7 +109,7 @@ onBeforeUnmount(() => {
                 v-for="(spec2, specIndex2) in item2.specArr"
                 :key="spec2.ID"
               >
-                <li v-if="spec2.buyQty != 0 || spec2.buyQty === ''">
+                <li v-if="spec2.buyQty > 0">
                   <nuxt-link :to="`/product/${item.ID}`">
                     <div class="img_and_name">
                       <div
@@ -134,10 +135,11 @@ onBeforeUnmount(() => {
                 </li>
               </template>
             </template>
+
             <!-- 沒有規格 -->
             <template v-if="!item2.specArr">
-              <li v-if="item2.buyQty != 0 || item2.buyQty === ''">
-                <nuxt-link :to="`/product/${item2.ID}`">
+              <li v-if="item2.buyQty > 0">
+                <nuxt-link :to="`/product/${item.ID}`">
                   <div class="img_and_name">
                     <div
                       class="img"

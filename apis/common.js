@@ -12,10 +12,10 @@ export const initialWebApi = (query) =>
   })
 
 /*  */
-export const connectHandlerApi = (query) =>
+export const connectHandlerApi = (formData) =>
   $fetch("/interface/web/PostFeedback", {
     method: "POST",
-    query
+    body: formData
   })
 
 /* 查 cart store 資訊 */

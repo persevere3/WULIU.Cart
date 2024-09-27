@@ -3,31 +3,33 @@ import Order from "@/components/pages/order/index.vue"
 import c_input from "@/components/registerForm/Input.vue"
 
 const commonStore = useCommonStore()
-const memberInfoStore = useMemberInfoStore()
 const orderStore = useOrderStore()
 const userStore = useUserStore()
+const memberInfoStore = useMemberInfoStore()
 const purchaseInfoStore = usePurchaseInfoStore()
 
 const isDevelopment = process.env.NODE_ENV === "development" ? true : false
 
 const { RtnMsg, page } = useRoute().query
 
-watch(
-  () => commonStore.is_initial,
-  async () => {
-    await memberInfoStore.getMemberInfo()
+onMounted(() => {
+  watch(
+    () => commonStore.is_initial,
+    async () => {
+      await memberInfoStore.getMemberInfo()
 
-    if (RtnMsg) {
-      commonStore.showMessage("已收到您的付款", true)
-    }
-    if (page === "order") {
-      memberInfoStore.member_info_nav_active = "order"
-      orderStore.getMemberOrder()
-    }
+      if (RtnMsg) {
+        commonStore.showMessage("已收到您的付款", true)
+      }
+      if (page === "order") {
+        memberInfoStore.member_info_nav_active = "order"
+        orderStore.getMemberOrder()
+      }
 
-    // useRouter().replace({ path: "/info" })
-  }
-)
+      useRouter().replace({ path: useRoute().name })
+    }
+  )
+})
 </script>
 
 <template>
@@ -102,6 +104,7 @@ watch(
         訂單列表
       </div>
     </div>
+
     <form class="forms">
       <div
         class="form"

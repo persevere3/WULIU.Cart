@@ -223,8 +223,8 @@ export const useOrderStore = defineStore("order", () => {
       )
     else query["Address"] = encodeURI(purchaseInfoStore.receiver_address)
     if (
-      memberInfoStore.memberInfo.value.address_obj &&
-      Object.keys(memberInfoStore.memberInfo.value.address_obj).length < 3 &&
+      memberInfoStore.memberInfo.address_obj &&
+      Object.keys(memberInfoStore.memberInfo.address_obj).length < 3 &&
       !purchaseInfoStore.has_address &&
       purchaseInfoStore.is_save_address
     ) {

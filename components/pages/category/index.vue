@@ -1,7 +1,14 @@
 <script setup>
+import { getCategoryApi } from "@/apis/pages"
+
 import ProductItem from "@/components/productItem.vue"
 
 import { useUnescapeHTML } from "@/composables/unescapeHTML"
+import { useRequest } from "@/composables/request"
+
+let { return_formData } = useRequest()
+
+const config = useRuntimeConfig()
 const commonStore = useCommonStore()
 const productStore = useProductStore()
 
@@ -11,8 +18,29 @@ const { category_products } = storeToRefs(productStore)
 const category_content = ref({})
 const show_categories = ref([])
 
-function initCategory() {
-  category_content.value = commonStore.webData.GetWebSubCategory.Data[0]
+async function ajaxCategory() {
+  let query = {
+    WebPreview: commonStore.site.WebPreview || 1,
+    id: useRoute().query.id
+  }
+
+  let formData = return_formData(query)
+
+  try {
+    const res = JSON.parse(await getCategoryApi(formData))
+    const isResSuccess = commonStore.resHandler(res, ajaxCategory)
+    if (!isResSuccess) return
+
+    return res
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+function initCategory(resData) {
+  console.log("initCategory")
+
+  category_content.value = resData.Data[0]
   category_content.value.Img = [
     category_content.value.Img1,
     category_content.value.Img2,
@@ -21,12 +49,15 @@ function initCategory() {
     category_content.value.Img5
   ].filter((i) => i)
 
-  show_categories.value = commonStore.webData.GetWebSubCategory.Category.map(
-    (c) => c.ID
-  )
+  if (process.env.NODE_ENV === "development") {
+    category_content.value.Img.forEach((item, index) => {
+      category_content.value.Img[index] = config.public.apiUrl + item
+    })
+  }
+
+  show_categories.value = resData.Category.map((c) => c.ID)
 }
 
-// allProducts, category
 function videoHandler(url) {
   let code = ""
   if (url.indexOf("youtu.be") != -1) {
@@ -54,21 +85,24 @@ function videoHandler(url) {
   return iframe
 }
 
-watch(
-  is_initial,
-  async (value) => {
-    if (value && commonStore.webData.GetWebSubCategory.Data) {
-      await initCategory()
-      commonStore.imgHandler()
-    }
-  },
-  { immediate: true }
-)
+onMounted(async () => {
+  let data = await ajaxCategory()
+  initCategory(data)
+})
+
+const fullPath = computed(() => useRoute().fullPath)
+watch(fullPath, async () => {
+  let data = await ajaxCategory()
+  initCategory(data)
+})
 </script>
 
 <template>
-  <div class="allProductsAndCategory">
-    <template v-if="category_content.Img && category_content.Img.length">
+  <div
+    class="allProductsAndCategory"
+    v-if="Object.entries(category_content).length > 0"
+  >
+    <template v-if="category_content.Img.length > 0">
       <div
         class="img_container"
         v-for="(item, index) in category_content.Img"
@@ -103,11 +137,7 @@ watch(
         </div>
         <div class="productList">
           <ul>
-            <li
-              v-for="(item2, key2) in item.products"
-              :key="`products${key2}`"
-              @click="commonStore.cartPush(item2.ID)"
-            >
+            <li v-for="(item2, key2) in item.products" :key="`products${key2}`">
               <ProductItem :product="item2" />
             </li>
           </ul>

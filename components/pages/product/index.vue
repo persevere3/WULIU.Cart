@@ -25,36 +25,20 @@ const props = defineProps({
 const isShowAddProduct = ref(true)
 const isShowDetail = ref(true)
 
-const isShowGoToCart = computed(() => {
-  if (props.product.specArr) {
-    let specBuyQty = props.product.selectSpecItem.buyQty
-    return specBuyQty && specBuyQty != 0
-  } else {
-    return props.product.buyQty != 0
-  }
-})
-
 let useSwiper = ref({})
 function onSwiper(swiper) {
   useSwiper.value = swiper
 }
 
 function click_share_link() {
-  if (!props.isSingle) {
-    useCopy(
-      `${location.origin}${location.pathname}?id=${props.product.ID}`,
-      ".copy_input"
-    )
-  } else {
-    useCopy(
-      `${location.origin}${location.pathname}?spid=${props.product.ID}`,
-      ".copy_input"
-    )
-  }
+  useCopy(
+    `${location.origin}${location.pathname}/${props.product.ID}`,
+    ".copy_input"
+  )
+
   commonStore.showMessage("複製分享連結", true)
 }
 
-await nextTick()
 productStore.getAddProducts([props.product.ID])
 </script>
 

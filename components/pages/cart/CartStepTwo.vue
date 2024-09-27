@@ -42,7 +42,7 @@
           <span
             v-if="
               commonStore.user_account &&
-              purchaseInfoStore.info.purchaser_name_error
+              purchaseInfoStore.info.purchaser_name.is_error
             "
             @click="useUrlPush('/info')"
           >
@@ -141,6 +141,7 @@
           >
             到店自取
           </div>
+
           <!-- 7-11 -->
           <div
             class="custom_option2"
@@ -709,7 +710,7 @@
                 {{ item.address }}
                 <i
                   class="fa-regular fa-square-check"
-                  v-if="item.address == receiver_address"
+                  v-if="item.address == purchaseInfoStore.receiver_address"
                 ></i>
                 <i class="fa-regular fa-square" v-else></i>
               </div>
@@ -721,14 +722,17 @@
         <template v-if="purchaseInfoStore.is_store">
           <label v-if="!purchaseInfoStore.storeid"> 請選擇門市 </label>
           <div class="storeInfo" v-else>
-            <div v-if="storeid">門市店號: {{ purchaseInfoStore.storeid }}</div>
-            <div v-if="storename">
+            <div v-if="purchaseInfoStore.storeid">
+              門市店號: {{ purchaseInfoStore.storeid }}
+            </div>
+            <div v-if="purchaseInfoStore.storename">
               門市名稱: {{ purchaseInfoStore.storename }}
             </div>
-            <div v-if="storeaddress">
+            <div v-if="purchaseInfoStore.storeaddress">
               門市地址: {{ purchaseInfoStore.storeaddress }}
             </div>
           </div>
+
           <div
             class="button2"
             v-if="
@@ -747,11 +751,14 @@
           >
             更改門市
           </div>
+
           <div
             class="errorMessage"
             v-if="
               orderStore.is_click_finish_order &&
-              purchaseInfoStore.storeaddress == ''
+              (!purchaseInfoStore.storeid ||
+                !purchaseInfoStore.storename ||
+                !purchaseInfoStore.storeaddress)
             "
           >
             請選擇門市
@@ -803,9 +810,10 @@
             >
               個人紙本發票
             </div>
+
             <div
               class="custom_option2"
-              v-if="commonStore.store.NatureCode === '1'"
+              v-if="commonStore.store.PhoneCode === '1'"
               :class="{ active: purchaseInfoStore.invoice_type === '3' }"
               @click="purchaseInfoStore.invoice_type = '3'"
             >
@@ -827,6 +835,7 @@
                 請填寫手機條碼載具
               </div>
             </div>
+
             <div
               class="custom_option2"
               v-if="commonStore.store.NatureCode === '1'"
@@ -852,16 +861,6 @@
               </div>
             </div>
           </template>
-
-          <div
-            class="prompt"
-            v-if="
-              orderStore.is_click_finish_order &&
-              purchaseInfoStore.invoice_type === '0'
-            "
-          >
-            請選擇發票類型
-          </div>
 
           <template v-if="purchaseInfoStore.invoice_type === '2'">
             <div>
@@ -901,15 +900,25 @@
               </div>
             </div>
           </template>
+
+          <div
+            class="prompt"
+            v-if="
+              orderStore.is_click_finish_order &&
+              purchaseInfoStore.invoice_type === '0'
+            "
+          >
+            請選擇發票類型
+          </div>
         </template>
       </div>
     </form>
 
-    <!--  有點數 或 有設定回饋% -->
+    <!-- 有點數 或 有設定回饋% -->
     <template
       v-if="
-        memberInfoStore.memberInfo.total_bonus * 1 ||
-        cartStore.bonus_array.length
+        cartStore.bonus_array.length ||
+        memberInfoStore.memberInfo.total_bonus * 1
       "
     >
       <div class="title">
@@ -930,6 +939,7 @@
           >)
         </span>
       </div>
+
       <div class="bonus" v-if="commonStore.user_account">
         <div class="leftBonus">
           購物金餘額 :
@@ -945,7 +955,10 @@
 
         <div
           class="custom_option"
-          @click="cartStore.is_use_bonus = !cartStore.is_use_bonus"
+          @click="
+            ;(cartStore.is_use_bonus = !cartStore.is_use_bonus),
+              purchaseInfoStore.filter_use_bonus(1)
+          "
           v-if="memberInfoStore.memberInfo.total_bonus * 1"
         >
           <i
@@ -954,6 +967,7 @@
           ></i>
           <i class="fa-regular fa-square" v-else></i>
           使用購物金
+
           <input
             type="number"
             placeholder="購物金"
@@ -1146,4 +1160,8 @@ function changeAddress(city, district, detail) {
   purchaseInfoStore.info.address.district_active = district
   purchaseInfoStore.info.address.detail_address = detail
 }
+
+onMounted(() => {
+  if (commonStore.user_account) memberInfoStore.getMemberInfo()
+})
 </script>

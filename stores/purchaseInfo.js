@@ -162,10 +162,10 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
   // `${city} ${district} ${detail}`
   const receiver_address = computed(() => {
     let address = `${info.value.address.city_active} ${info.value.address.district_active} ${info.value.address.detail_address}`
-    if (memberInfoStore.memberInfo.value.address_obj) {
+    if (memberInfoStore.memberInfo.address_obj) {
       has_address.value = false
-      for (let key in memberInfoStore.memberInfo.value.address_obj) {
-        let item = memberInfoStore.memberInfo.value.address_obj[key]
+      for (let key in memberInfoStore.memberInfo.address_obj) {
+        let item = memberInfoStore.memberInfo.address_obj[key]
         if (item.address == address) {
           has_address.value = true
         }
@@ -289,7 +289,7 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
 
     if (cartStore.use_bonus > 0) {
       let use_bonus_max = Math.min(
-        memberInfoStore.memberInfo.value.total_bonus * 1,
+        memberInfoStore.memberInfo.total_bonus * 1,
         cartStore.total.Total * 1 -
           cartStore.total.Discount * 1 -
           cartStore.total.DiscountCode * 1

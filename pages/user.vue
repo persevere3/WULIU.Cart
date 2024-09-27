@@ -2,12 +2,8 @@
 import RegisterForm from "@/components/registerForm/index.vue"
 import c_input from "@/components/registerForm/Input.vue"
 
-import { useVerify } from "@/composables/verify"
-
 const commonStore = useCommonStore()
 const userStore = useUserStore()
-
-let { verify } = useVerify()
 
 const activeUserNav = ref("login")
 
@@ -20,26 +16,21 @@ async function user_register() {
   }
 }
 
-watch(
-  () => commonStore.is_initial,
-  async () => {
-    await nextTick()
-    commonStore.imgHandler()
-  }
-)
-
 const { term, code } = useRoute().query
 
-if (commonStore.site.TermsNotices && term) {
-  activeUserNav.value = "register"
-  userStore.r_form.is_member_and_privacy = true
-}
+onMounted(() => {
+  if (commonStore.site.TermsNotices && term) {
+    activeUserNav.value = "register"
+    userStore.r_form.is_member_and_privacy = true
+  }
 
-// Line token
-if (code) {
-  useRouter().replace({ path: "/user" })
-  userStore.getLineProfile()
-}
+  // Line token
+  if (code) {
+    userStore.getLineProfile()
+  }
+
+  useRouter().replace({ path: useRoute().name })
+})
 </script>
 
 <template>

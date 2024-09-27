@@ -2,8 +2,8 @@
   <header
     class="header"
     :class="{
-      index: commonStore.pathname === 'index',
-      other: commonStore.pathname !== 'index',
+      index: useRoute().name === 'index',
+      other: useRoute().name !== 'index',
       is_scrollTop: defaultLayoutStore.window_scrollTop > 100
     }"
   >
@@ -91,15 +91,7 @@
             <nuxt-link to="/cart"> 購物車列表 </nuxt-link>
           </li>
 
-          <li
-            v-for="(item, key) in commonStore.all.Navbar"
-            :key="key"
-            @click="
-              item.Class == 2
-                ? useUrlPush(item.Link, true)
-                : useUrlPush(item.Link)
-            "
-          >
+          <li v-for="(item, key) in commonStore.all.Navbar" :key="key">
             <nuxt-link :to="`${item.Link ? item.Link : ''}`">
               {{ item.Name }}
               <template v-if="item.subNavbar">
@@ -140,6 +132,6 @@ function resizeHandler() {
 
 onMounted(() => {
   resizeHandler()
-  window.addEventListener("scroll", resizeHandler)
+  window.addEventListener("resize", resizeHandler)
 })
 </script>

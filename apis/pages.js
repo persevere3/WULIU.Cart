@@ -6,7 +6,10 @@ export const getHomePageApi = (params) =>
 
 /* 分類商品 */
 export const getCategoryApi = (formData) =>
-  formDataRequest.post("/interface/web/GetWebSubCategory", formData)
+  $fetch("/interface/web/GetWebSubCategory", {
+    method: "POST",
+    body: formData
+  })
 
 /* 搜尋 */
 export const getSearchApi = (formData) =>

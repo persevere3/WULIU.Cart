@@ -3,7 +3,7 @@ const commonStore = useCommonStore()
 const orderStore = useOrderStore()
 const memberInfoStore = useMemberInfoStore()
 
-// useRouter().replace({ path: commonStore.pathname })
+const { RtnMsg, account, result, phone, email } = useRoute().query
 
 let getOrderHandler = computed(() => {
   return commonStore.user_account
@@ -11,39 +11,41 @@ let getOrderHandler = computed(() => {
     : orderStore.getOrder
 })
 
-const { RtnMsg, account, result, phone, email } = useRoute().query
+onMounted(() => {
+  // 付款成功
+  if (RtnMsg) {
+    commonStore.showMessage("已收到您的付款", true)
+  }
 
-// 付款成功
-if (RtnMsg) {
-  commonStore.showMessage("已收到您的付款", true)
-}
+  // Line 登入
+  if (account) {
+    commonStore.user_account = account
+  }
+  // Line 綁定
+  if (result) {
+    result = JSON.parse(decodeURI(result))
+    if (!result.status) commonStore.showMessage(result.msg, false)
+    else commonStore.user_account = result.account
+  }
 
-// Line 登入
-if (account) {
-  commonStore.user_account = account
-}
-// Line 綁定
-if (result) {
-  result = JSON.parse(decodeURI(result))
-  if (!result.status) commonStore.showMessage(result.msg, false)
-  else commonStore.user_account = result.account
-}
-
-watch(
-  () => commonStore.is_initial,
-  async () => {
-    if (commonStore.user_account) {
-      await memberInfoStore.getMemberInfo()
-      orderStore.getMemberOrder()
-    } else {
-      if (phone && email) {
-        orderStore.search_phone = phone
-        orderStore.search_mail = email
-        orderStore.getOrder()
+  watch(
+    () => commonStore.is_initial,
+    async () => {
+      if (commonStore.user_account) {
+        await memberInfoStore.getMemberInfo()
+        orderStore.getMemberOrder()
+      } else {
+        if (phone && email) {
+          orderStore.search_phone = phone
+          orderStore.search_mail = email
+          orderStore.getOrder()
+        }
       }
     }
-  }
-)
+  )
+
+  useRouter().replace({ path: useRoute().name })
+})
 </script>
 
 <template>
@@ -117,7 +119,7 @@ watch(
     </div>
 
     <div
-      :class="{ box: commonStore.pathname.indexOf('order') > -1 }"
+      :class="{ box: useRoute().name.indexOf('order') > -1 }"
       v-if="orderStore.order"
     >
       <div class="table">
@@ -277,9 +279,7 @@ watch(
               >
                 <div
                   class="button"
-                  v-if="
-                    commonStore.pathname.toLowerCase().indexOf('order') > -1
-                  "
+                  v-if="useRoute().name.toLowerCase().indexOf('order') > -1"
                   @click="
                     ;(purchaseInfoStore.pay_method = item.PayMethod),
                       rePay(
@@ -294,7 +294,7 @@ watch(
                 </div>
                 <div
                   class="button"
-                  v-if="commonStore.pathname.toLowerCase().indexOf('info') > -1"
+                  v-if="useRoute().name.toLowerCase().indexOf('info') > -1"
                   @click="
                     ;(purchaseInfoStore.pay_method = item.PayMethod),
                       rePay(

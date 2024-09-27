@@ -1,8 +1,12 @@
 import { connectHandlerApi } from "@/apis/common"
 
 import { useVerify } from "@/composables/verify"
+import { useRequest } from "@/composables/request"
 
 export const useDefaultLayoutStore = defineStore("defaultLayout", () => {
+  const { verify, reset } = useVerify()
+  const { return_formData } = useRequest()
+
   const commonStore = useCommonStore()
 
   // state ==============================
@@ -72,27 +76,30 @@ export const useDefaultLayoutStore = defineStore("defaultLayout", () => {
     async connectHandler() {
       let isValid = verify(state.connect_mail, state.connect_text)
       if (!isValid) return
-      else {
-        let query = {
-          title: state.connect_mail.value,
-          text: state.connect_text.value,
-          WebPreview: commonStore.site.WebPreview
-        }
 
-        try {
-          const res = JSON.parse(await connectHandlerApi())
-          const isReqSuccess = commonStore.resHandler(res, connectHandler)
-          if (!isReqSuccess) return
+      let query = {
+        title: state.connect_mail.value,
+        text: state.connect_text.value,
+        WebPreview: commonStore.site.WebPreview
+      }
 
-          state.is_connect = false
+      let formData = return_formData(query)
 
-          useVerify.reset(state.connect_mail)
-          useVerify.reset(state.connect_text)
+      try {
+        const res = JSON.parse(await connectHandlerApi(formData))
+        const isReqSuccess = commonStore.resHandler(res, methods.connectHandler)
+        if (!isReqSuccess) return
 
-          commonStore.showMessage("發送成功", true)
-        } catch (error) {
-          throw new Error(error)
-        }
+        console.log(1)
+
+        state.is_connect = false
+
+        reset(state.connect_mail)
+        reset(state.connect_text)
+
+        commonStore.showMessage("發送成功", true)
+      } catch (error) {
+        throw new Error(error)
       }
     },
 

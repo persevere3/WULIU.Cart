@@ -90,8 +90,6 @@
         </li>
       </ul>
     </div>
-
-    <!-- <Cookie /> -->
   </footer>
 </template>
 

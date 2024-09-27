@@ -1,40 +1,46 @@
 <script setup>
 import { getContactApi } from "@/apis/pages"
 
-const { return_formData } = useRequest()
+import { useUnescapeHTML } from "@/composables/unescapeHTML"
+
+import { useRequest } from "@/composables/request"
+
+let { return_formData } = useRequest()
 
 const commonStore = useCommonStore()
 
 const contact = ref({})
 
-// watch ========== ========== ========== ========== ==========
-watch(
-  () => commonStore.is_initial,
-  async () => {
-    await getContact()
-    await nextTick()
-    // imgHandler()
-  }
-)
-
-// methods ========== ========== ========== ========== ==========
-async function getContact() {
+async function ajaxContact() {
   let query = {
-    WebPreview: commonStore.site.WebPreview
+    WebPreview: commonStore.site.WebPreview || 1
   }
 
   let formData = return_formData(query)
 
   try {
     const res = JSON.parse(await getContactApi(formData))
-    const isReqSuccess = commonStore.resHandler(res, getContact)
-    if (!isReqSuccess) return
+    const isResSuccess = commonStore.resHandler(res, ajaxContact)
+    if (!isResSuccess) return
 
-    contact.value = res.data[0]
+    return res.data[0]
   } catch (error) {
-    throw new Error(error)
+    console.log(error)
   }
 }
+
+onMounted(async () => {
+  let resData = await ajaxContact()
+  contact.value = resData
+})
+
+// watch ========== ========== ========== ========== ==========
+watch(
+  () => commonStore.is_initial,
+  () => {
+    contact.value = commonStore.webData.GetWebContact.data[0]
+  }
+)
 </script>
 
 <template>
@@ -102,4 +108,12 @@ async function getContact() {
 
 <style lang="scss" scoped>
 @import "@/styles/pages/contact.scss";
+</style>
+
+<style lang="scss">
+.contact {
+  iframe {
+    width: 100%;
+  }
+}
 </style>

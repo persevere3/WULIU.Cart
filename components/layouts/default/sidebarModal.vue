@@ -15,6 +15,14 @@
             <div class="text">首頁</div>
           </li>
 
+          <li @click="useUrlPush('/products')">
+            <div class="text">商品列表</div>
+          </li>
+
+          <li @click="useUrlPush('/cart')">
+            <div class="text">購物車列表</div>
+          </li>
+
           <li
             v-for="item in commonStore.all.Navbar"
             :key="item.ID"
@@ -75,9 +83,8 @@
           </li>
           <li
             @click.stop="
-              cart.length
-                ? (cartStore.is_cart_active = !cartStore.is_cart_active)
-                : commonStore.cartPush()
+              cartStore.cart.length &&
+                (cartStore.is_cart_modal = !cartStore.is_cart_modal)
             "
           >
             購物車

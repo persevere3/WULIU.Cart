@@ -6,7 +6,6 @@ import "swiper/css/pagination"
 
 import ProductItem from "@/components/productItem.vue"
 
-import { useNumberThousands } from "@/composables/numberThousands"
 import { useUrlPush } from "@/composables/urlPush"
 
 const config = useRuntimeConfig()
@@ -51,11 +50,16 @@ async function getHomePage() {
   /* commonStore.webData.GetHomePage
     Advertise, Category, data
   */
+  if (!commonStore.webData.GetHomePage) return
+
+  let webDataHomePage = JSON.parse(
+    JSON.stringify(commonStore.webData.GetHomePage)
+  )
 
   // 輪播
-  let Ads = commonStore.webData.GetHomePage.Advertise.filter((ad) => ad.URL)
+  let Ads = webDataHomePage.Advertise.filter((ad) => ad.URL)
 
-  let originData = commonStore.webData.GetHomePage.data[0]
+  let originData = webDataHomePage.data[0]
 
   // Ex[i].Link: data.Type1 > 0 ? data.Type1 : data.OutUrl1
   let sortedData = {
@@ -133,10 +137,13 @@ async function getHomePage() {
   homePage.value = sortedData
 }
 
-const { is_initial } = storeToRefs(commonStore)
-watch(is_initial, (value) => {
-  if (value) getHomePage()
-})
+watch(
+  () => commonStore.is_initial,
+  (value) => {
+    if (value && Object.entries(homePage.value).length < 1) getHomePage()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -199,18 +206,18 @@ watch(is_initial, (value) => {
       </ul>
     </div>
 
-    <!--  -->
+    <!-- products -->
     <div class="products">
       <div class="productList">
         <ul>
-          <li v-for="(item, index) in productStore.products" :key="item.ID">
+          <li v-for="item in productStore.products" :key="item.ID">
             <ProductItem :product="item" />
           </li>
         </ul>
       </div>
     </div>
 
-    <!--  -->
+    <!-- community-->
     <div class="community_category_container" v-if="homePage.Community">
       <ul>
         <li

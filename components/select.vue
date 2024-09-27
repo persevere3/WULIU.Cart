@@ -32,6 +32,8 @@ const props = defineProps({
 </template>
 
 <style lang="scss" scoped>
+@import "@/styles/mixin/_ellipsis.scss";
+
 .c_select {
   width: 150px;
   min-height: 35px;
@@ -57,6 +59,7 @@ const props = defineProps({
     padding: 10px 20px 10px 10px;
     border-bottom: 1px solid #aaa;
     position: relative;
+    @include single_ellipsis;
 
     i {
       position: absolute;

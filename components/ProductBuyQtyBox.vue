@@ -7,11 +7,19 @@ const buyQtyHandlerStore = useBuyQtyHandlerStore()
 // 沒指定的話顯示Select => 商品列表
 // 指定的話不會顯示Select => 購物車列表
 let props = defineProps(["main", "addProduct", "assignIndex"])
+console.log(props.main, props.addProduct, props.assignIndex)
 
 // computed ========== ========== ========== ========== ==========
 // 主商品 或 加購商品
 const product = computed(() => {
-  return props.addProduct ? props.addProduct : props.main
+  let p = props.addProduct ? props.addProduct : props.main
+
+  if (props.assignIndex !== null) {
+    p.selectSpecItem = p.specArr[props.assignIndex]
+    // console.log(p.selectSpecItem)
+  }
+
+  return p
 })
 
 // 商品 或 商品的規格
@@ -22,9 +30,6 @@ const target = computed(() => {
   }
   // 有規格
   else {
-    if (props.assignIndex !== undefined)
-      product.value.selectSpecItem = product.value.specArr[props.assignIndex]
-
     // 沒選
     if (!product.value.selectSpecItem.ID) {
       return -1
@@ -47,6 +52,9 @@ const addProductIndex = computed(() => {
 })
 const specIndex = computed(() => {
   if (product.value.specArr) {
+    // console.log(product.value.specArr)
+    // console.log(product.value.selectSpecItem.ID)
+
     return product.value.specArr
       .map((item) => item.ID)
       .indexOf(product.value.selectSpecItem.ID)
@@ -85,6 +93,7 @@ function selectSpec(item, spec) {
 
 <template>
   <div class="ProductBuyQtyBox">
+    {{ assignIndex }}
     <!-- 規格 -->
     <template v-if="assignIndex === undefined">
       <div class="spec" v-if="product.specArr">
@@ -187,12 +196,7 @@ function selectSpec(item, spec) {
             class="reduce"
             :class="{ qtyDisabled: buyQty < 1 }"
             @click="
-              buyQtyHandlerStore.changeMainBuyQty(
-                main,
-                specIndex,
-                buyQty - 1,
-                event ? $event : null
-              )
+              buyQtyHandlerStore.changeMainBuyQty(main, specIndex, buyQty - 1)
             "
           >
             <i class="fa fa-minus"></i>
@@ -219,8 +223,7 @@ function selectSpec(item, spec) {
               buyQtyHandlerStore.changeMainBuyQty(
                 main,
                 specIndex,
-                buyQty * 1 + 1,
-                event ? $event : null
+                buyQty * 1 + 1
               )
             "
           >

@@ -43,6 +43,7 @@ const activeNotice = ref("")
 function computeVideoSize() {
   let content = document.querySelector(".content.ql-editor")
   if (!content) return
+
   let contentWidth = content.offsetWidth
   let videos = content.querySelectorAll("iframe")
   videos.forEach((video) => {
@@ -63,7 +64,6 @@ onMounted(() => {
 
 .notice_list {
   width: 100%;
-  // width: 960px;
   height: 50px;
   margin: 0 auto;
   margin-top: 30px;

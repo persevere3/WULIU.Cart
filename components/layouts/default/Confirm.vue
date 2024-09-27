@@ -330,7 +330,7 @@ async function checkPay() {
       commonStore.is_payModal = false
     } else commonStore.showMessage("抱歉，請重新輸入帳號末6碼", false)
 
-    if (commonStore.pathname.indexOf("order") > -1 && !user_account.value)
+    if (useRoute().name.indexOf("order") > -1 && !user_account.value)
       orderStore.getOrder("page", true)
     else orderStore.getMemberOrder("page", true)
   } catch (error) {

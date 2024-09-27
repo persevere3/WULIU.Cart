@@ -19,19 +19,20 @@
         <div
           class="specButton"
           @click="
-            cartSpecCheckedId = cartSpecCheckedId == spec.ID ? -1 : spec.ID
+            activeCartSpecId.value =
+              activeCartSpecId.value == spec.ID ? -1 : spec.ID
           "
         >
           規格
           <i
-            :class="{ iActive: cartSpecCheckedId == spec.ID }"
+            :class="{ iActive: activeCartSpecId.value == spec.ID }"
             class="fa fa-caret-down"
             aria-hidden="true"
           ></i>
         </div>
         <div
           class="specText"
-          :class="{ specTextShow: cartSpecCheckedId == spec.ID }"
+          :class="{ specTextShow: activeCartSpecId.value == spec.ID }"
         >
           {{ spec.Name }}
         </div>
@@ -39,12 +40,7 @@
     </div>
 
     <!-- 多價格 cart table 單價 -->
-    <div
-      class="td price"
-      v-if="
-        product.priceType === 'onePrice' || product.priceType === 'onePrice'
-      "
-    >
+    <div class="td price" v-if="product.priceType === 'onePrice'">
       NT$ {{ useNumberThousands(product[addProduct ? "Price" : "NowPrice"]) }}
     </div>
     <div class="td price" v-else>
@@ -53,22 +49,19 @@
 
     <div class="td qty">
       <ProductBuyQtyBox
+        v-if="addProduct"
         :main="main"
         :addProduct="addProduct"
         :assignIndex="specIndex"
       />
+      <ProductBuyQtyBox v-else :main="main" :assignIndex="specIndex" />
     </div>
 
     <div class="td subtotal">
       <div class="subtotalTitle">小計</div>
 
       <!-- 多價格 cart table 小計 -->
-      <div
-        class="subtotalText"
-        v-if="
-          product.priceType === 'onePrice' || product.priceType === 'onePrice'
-        "
-      >
+      <div class="subtotalText" v-if="product.priceType === 'onePrice'">
         NT$
         {{
           useNumberThousands(
@@ -112,12 +105,10 @@ import ProductBuyQtyBox from "@/components/ProductBuyQtyBox.vue"
 
 import { useNumberThousands } from "@/composables/numberThousands"
 
-const commonStore = useCommonStore()
-const cartStore = useCartStore()
 const buyQtyHandlerStore = useBuyQtyHandlerStore()
 
 // props ========== ========== ========== ========== ==========
-const props = defineProps(["main", "addProduct", "spec", "cartSpecCheckedId"])
+const props = defineProps(["main", "addProduct", "spec", "activeCartSpecId"])
 
 // computed ========== ========== ========== ========== ==========
 const product = computed(() => {

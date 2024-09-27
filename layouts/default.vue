@@ -37,8 +37,6 @@ import Third from "@/components/layouts/default/third"
 import Message from "@/components/layouts/default/Message.vue"
 import Confirm from "@/components/layouts/default/Confirm.vue"
 
-const commonStore = useCommonStore()
-
 useHead({
   link: [
     {
@@ -50,6 +48,8 @@ useHead({
     }
   ]
 })
+
+const commonStore = useCommonStore()
 
 commonStore.initialWeb()
 </script>

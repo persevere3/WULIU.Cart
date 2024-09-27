@@ -41,5 +41,6 @@
 import { useVerify } from "@/composables/verify"
 
 const defaultLayoutStore = useDefaultLayoutStore()
+
 let { verify } = useVerify()
 </script>

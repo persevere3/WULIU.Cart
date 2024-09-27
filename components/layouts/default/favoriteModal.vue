@@ -1,5 +1,6 @@
 <script setup>
 import { useNumberThousands } from "@/composables/numberThousands"
+
 const productStore = useProductStore()
 
 const modal = ref(null)

@@ -5,7 +5,9 @@ import CartStepTotal from "./CartStepTotal.vue"
 const commonStore = useCommonStore()
 const cartStore = useCartStore()
 
-const cartSpecCheckedId = ref(-1)
+const activeCartSpecId = ref({
+  value: -1
+})
 </script>
 
 <template>
@@ -24,7 +26,12 @@ const cartSpecCheckedId = ref(-1)
           <!-- 有規格 -->
           <template v-if="item.specArr">
             <template v-for="spec in item.specArr" :key="spec.ID">
-              <CartStepOneTr v-if="spec.buyQty > 0" :main="item" :spec="spec" />
+              <CartStepOneTr
+                v-if="spec.buyQty > 0"
+                :main="item"
+                :spec="spec"
+                :activeCartSpecId="activeCartSpecId"
+              />
             </template>
           </template>
           <!-- 沒有規格 -->
@@ -43,7 +50,7 @@ const cartSpecCheckedId = ref(-1)
                     :main="item"
                     :addProduct="item2"
                     :spec="spec2"
-                    :cartSpecCheckedId="cartSpecCheckedId"
+                    :activeCartSpecId="activeCartSpecId"
                   />
                 </template>
               </template>
@@ -53,7 +60,6 @@ const cartSpecCheckedId = ref(-1)
                   v-if="item2.buyQty > 0"
                   :main="item"
                   :addProduct="item2"
-                  :cartSpecCheckedId="cartSpecCheckedId"
                 />
               </template>
             </div>
