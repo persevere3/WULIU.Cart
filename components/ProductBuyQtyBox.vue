@@ -7,16 +7,14 @@ const buyQtyHandlerStore = useBuyQtyHandlerStore()
 // 沒指定的話顯示Select => 商品列表
 // 指定的話不會顯示Select => 購物車列表
 let props = defineProps(["main", "addProduct", "assignIndex"])
-console.log(props.main, props.addProduct, props.assignIndex)
 
 // computed ========== ========== ========== ========== ==========
 // 主商品 或 加購商品
 const product = computed(() => {
   let p = props.addProduct ? props.addProduct : props.main
 
-  if (props.assignIndex !== null) {
+  if (props.assignIndex || props.assignIndex === 0) {
     p.selectSpecItem = p.specArr[props.assignIndex]
-    // console.log(p.selectSpecItem)
   }
 
   return p
