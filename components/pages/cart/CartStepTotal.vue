@@ -81,7 +81,8 @@ watch(
   () => commonStore.is_initial,
   (v) => {
     if (v) cartStore.getTotal(cartStore.step - 1)
-  }
+  },
+  { immediate: true }
 )
 
 const { successUsedDiscountCode } = storeToRefs(cartStore)
