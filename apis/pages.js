@@ -14,10 +14,6 @@ export const getCategoryApi = (formData) =>
     body: formData
   })
 
-/* 搜尋 */
-export const getSearchApi = (formData) =>
-  formDataRequest.post("/interface/web/GetProductSearch", formData)
-
 /* 聯絡 */
 export const getContactApi = (formData) =>
   $fetch("/interface/web/GetWebContact", {
