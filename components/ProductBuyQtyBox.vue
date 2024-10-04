@@ -50,8 +50,9 @@ const addProductIndex = computed(() => {
 })
 const specIndex = computed(() => {
   if (product.value.specArr) {
-    // console.log(product.value.specArr)
-    // console.log(product.value.selectSpecItem.ID)
+    if (props.assignIndex || props.assignIndex === 0) {
+      return props.assignIndex
+    }
 
     return product.value.specArr
       .map((item) => item.ID)
@@ -62,6 +63,7 @@ const specIndex = computed(() => {
 
 const buyQty = computed({
   get() {
+    console.log(target.value)
     return target.value["buyQty"]
   },
   set(newBuyQty) {
@@ -91,7 +93,7 @@ function selectSpec(item, spec) {
 
 <template>
   <div class="ProductBuyQtyBox">
-    {{ assignIndex }}
+    {{ assignIndex }} {{ specIndex }}
     <!-- 規格 -->
     <template v-if="assignIndex === undefined">
       <div class="spec" v-if="product.specArr">

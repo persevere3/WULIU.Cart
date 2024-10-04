@@ -4,9 +4,12 @@ import { Autoplay, Pagination } from "swiper/modules"
 import "swiper/css"
 import "swiper/css/pagination"
 
+import { getHomePageApi } from "@/apis/pages"
+
 import ProductItem from "@/components/productItem.vue"
 
 import { useUrlPush } from "@/composables/urlPush"
+import { useRequest } from "@/composables/request"
 
 const config = useRuntimeConfig()
 
@@ -14,6 +17,8 @@ const modules = reactive([Autoplay, Pagination])
 
 const commonStore = useCommonStore()
 const productStore = useProductStore()
+
+let { return_formData } = useRequest()
 
 const homePage = ref({})
 
@@ -46,15 +51,29 @@ function direct_link_handler(originData) {
   return arr
 }
 
-async function getHomePage() {
+async function ajaxHomePage() {
+  let query = {
+    WebPreview: commonStore.site.WebPreview || 1
+  }
+
+  let formData = return_formData(query)
+
+  try {
+    const res = JSON.parse(await getHomePageApi(formData))
+    const isResSuccess = commonStore.resHandler(res, ajaxHomePage)
+    if (!isResSuccess) return
+    return res
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+async function homePageHandler(data) {
   /* commonStore.webData.GetHomePage
     Advertise, Category, data
   */
-  if (!commonStore.webData.GetHomePage) return
 
-  let webDataHomePage = JSON.parse(
-    JSON.stringify(commonStore.webData.GetHomePage)
-  )
+  let webDataHomePage = data
 
   // 輪播
   let Ads = webDataHomePage.Advertise.filter((ad) => ad.URL)
@@ -139,8 +158,11 @@ async function getHomePage() {
 
 watch(
   () => commonStore.is_initial,
-  (value) => {
-    if (value && Object.entries(homePage.value).length < 1) getHomePage()
+  async (value) => {
+    if (value && Object.entries(homePage.value).length < 1) {
+      let data = await ajaxHomePage()
+      homePageHandler(data)
+    }
   },
   { immediate: true }
 )

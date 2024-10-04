@@ -1,8 +1,11 @@
 /* 頁面資訊 */
 
 /* 首頁 */
-export const getHomePageApi = (params) =>
-  formRequest.post("/interface/web/GetHomePage", params)
+export const getHomePageApi = (formData) =>
+  $fetch("/interface/web/GetHomePage", {
+    method: "POST",
+    body: formData
+  })
 
 /* 分類商品 */
 export const getCategoryApi = (formData) =>
