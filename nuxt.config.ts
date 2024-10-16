@@ -38,20 +38,20 @@ export default defineNuxtConfig({
   // https://nuxt.com/docs/api/configuration/nuxt-config#head
   app: {
     head: {
-      viewport: "width=500, initial-scale=1",
-      title: "Nuxt3 高效入門全攻略",
-      meta: [
-        {
-          name: "description",
-          content: "這是 Mike 的 Nuxt3 高效入門全攻略課程"
-        },
-        { property: "og:title", content: "Nuxt3 高效入門全攻略" },
-        { property: "og:url", content: "http://localhost:3000/" },
-        {
-          property: "og:description",
-          content: "這是 Mike 的 Nuxt3 高效入門全攻略課程"
-        }
-      ]
+      viewport: "width=500, initial-scale=1"
+      // title: "Nuxt3 高效入門全攻略",
+      // meta: [
+      //   {
+      //     name: "description",
+      //     content: "這是 Mike 的 Nuxt3 高效入門全攻略課程"
+      //   },
+      //   { property: "og:title", content: "Nuxt3 高效入門全攻略" },
+      //   { property: "og:url", content: "http://localhost:3000/" },
+      //   {
+      //     property: "og:description",
+      //     content: "這是 Mike 的 Nuxt3 高效入門全攻略課程"
+      //   }
+      // ]
     }
   },
 
@@ -72,6 +72,10 @@ export default defineNuxtConfig({
     server: {
       proxy: {
         "/interface": {
+          target: "https://demo.uniqcarttest.com",
+          changeOrigin: true
+        },
+        "/LineMK": {
           target: "https://demo.uniqcarttest.com",
           changeOrigin: true
         }

@@ -1,24 +1,26 @@
 <template>
-  <SidebarModal />
+  <template v-if="isShow">
+    <SidebarModal />
 
-  <SearchModal />
-  <ConnectModal />
+    <SearchModal />
+    <ConnectModal />
 
-  <CartModal />
-  <FavoriteModal />
+    <CartModal />
+    <FavoriteModal />
 
-  <!-- content start -->
-  <Header />
-  <slot />
-  <Footer />
-  <!-- content end -->
+    <!-- content start -->
+    <Header />
+    <slot />
+    <Footer />
+    <!-- content end -->
 
-  <ToTopIcon />
+    <ToTopIcon />
 
-  <Third />
+    <Third />
 
-  <Message />
-  <Confirm />
+    <Message />
+    <Confirm />
+  </template>
 </template>
 
 <script setup>
@@ -51,7 +53,12 @@ useHead({
 
 const commonStore = useCommonStore()
 
-commonStore.initialWeb()
+await commonStore.initialWeb()
+
+const isShow = ref(false)
+setTimeout(() => {
+  isShow.value = true
+}, 0)
 </script>
 
 <style lang="scss">

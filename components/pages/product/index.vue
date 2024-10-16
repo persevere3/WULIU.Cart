@@ -1,5 +1,6 @@
 <script setup>
 import ProductBuyQtyBox from "@/components/ProductBuyQtyBox.vue"
+import Cart from "~/components/pages/cart/index.vue"
 
 import { Swiper, SwiperSlide } from "swiper/vue"
 import "swiper/css"
@@ -15,13 +16,13 @@ const cartStore = useCartStore()
 const props = defineProps({
   product: {
     type: Object
-  },
-  isSingle: {
-    type: Boolean,
-    default: false
   }
 })
 
+const mainRef = ref(null)
+const addProductsRef = ref(null)
+
+const isShow = ref(false)
 const isShowAddProduct = ref(true)
 const isShowDetail = ref(true)
 
@@ -31,10 +32,7 @@ function onSwiper(swiper) {
 }
 
 function click_share_link() {
-  useCopy(
-    `${location.origin}${location.pathname}/${props.product.ID}`,
-    ".copy_input"
-  )
+  useCopy(useRoute().name, ".copy_input")
 
   commonStore.showMessage("複製分享連結", true)
 }
@@ -86,17 +84,19 @@ productStore.getAddProducts([props.product.ID])
           </div>
         </template>
         <template v-else>
-          <template v-if="product.selectSpecItem && product.selectSpecItem.ID">
+          <template
+            v-if="mainRef && mainRef.selectedSpec && mainRef.selectedSpec.ID"
+          >
             <div class="price">
               NT$
-              {{ useNumberThousands(product.selectSpecItem.ItemNowPrice) }}
+              {{ useNumberThousands(mainRef.selectedSpec.ItemNowPrice) }}
             </div>
             <div
               class="price origin"
-              v-if="parseInt(product.selectSpecItem.ItemPrice) > -1"
+              v-if="parseInt(mainRef.selectedSpec.ItemPrice) > -1"
             >
               NT$
-              {{ useNumberThousands(product.selectSpecItem.ItemPrice) }}
+              {{ useNumberThousands(mainRef.selectedSpec.ItemPrice) }}
             </div>
           </template>
           <template v-else>
@@ -111,12 +111,12 @@ productStore.getAddProducts([props.product.ID])
           <div v-html="useUnescapeHTML(product.Content)"></div>
         </div>
 
-        <ProductBuyQtyBox :main="product" />
+        <ProductBuyQtyBox ref="mainRef" :main="product" />
 
         <div class="controller">
           <div
             class="addTo_favorite_btn"
-            v-if="!props.isSingle"
+            v-if="!productStore.isSingleProduct"
             @click.stop="productStore.toggleFavorite(product.ID)"
           >
             加入我的最愛
@@ -153,7 +153,7 @@ productStore.getAddProducts([props.product.ID])
       </div>
       <ul v-show="isShowAddProduct">
         <div class="ulMask" v-if="!cartStore.getMainTotalQty(product)"></div>
-        <li v-for="item in product.addProducts" :key="item.ID">
+        <li v-for="(item, index) in product.addProducts" :key="item.ID">
           <div class="pic_div">
             <div
               class="pic"
@@ -168,10 +168,12 @@ productStore.getAddProducts([props.product.ID])
               <div class="price">NT$ {{ useNumberThousands(item.Price) }}</div>
             </template>
             <template v-else>
-              <template v-if="item.selectSpecItem && item.selectSpecItem.ID">
+              <template
+                v-if="addProductsRef[index] && addProductsRef[index].ID"
+              >
                 <div class="price">
                   NT$
-                  {{ useNumberThousands(item.selectSpecItem.ItemNowPrice) }}
+                  {{ useNumberThousands(addProductsRef[index].ItemNowPrice) }}
                 </div>
               </template>
               <template v-else>
@@ -179,7 +181,11 @@ productStore.getAddProducts([props.product.ID])
               </template>
             </template>
 
-            <ProductBuyQtyBox :main="product" :addProduct="item" />
+            <ProductBuyQtyBox
+              ref="addProductsRef"
+              :main="product"
+              :addProduct="item"
+            />
           </div>
         </li>
       </ul>
@@ -206,10 +212,13 @@ productStore.getAddProducts([props.product.ID])
       ></div>
     </div>
 
-    <div class="buyNow" v-if="isSingle && cartStore.getMainTotalQty(product)">
+    <div
+      class="buyNow"
+      v-if="productStore.isSingleProduct && cartStore.getMainTotalQty(product)"
+    >
       <div class="title">立即購買</div>
 
-      <!-- <CartContent /> -->
+      <Cart v-if="cartStore.cart.length" />
     </div>
   </div>
 </template>
@@ -470,6 +479,10 @@ productStore.getAddProducts([props.product.ID])
         vertical-align: bottom;
       }
     }
+  }
+
+  .cartContent {
+    width: 100%;
   }
 }
 </style>

@@ -1,10 +1,10 @@
 /* 訂單 */
 
 /* 增 */
-export const createOrderApi = (query) =>
+export const createOrderApi = (formData) =>
   $fetch("/LineMK/Line/OrderPayRequest", {
     method: "POST",
-    query
+    body: formData
   })
 
 /* 查(一般) */

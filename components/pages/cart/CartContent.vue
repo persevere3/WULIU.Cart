@@ -29,8 +29,8 @@ const cartStore = useCartStore()
         <p>完成訂單</p>
       </div>
     </div>
-    <cartStepOne v-show="cartStore.cartLength !== 0 && cartStore.step === 1" />
-    <cartStepTwo v-show="cartStore.cartLength !== 0 && cartStore.step === 2" />
+    <cartStepOne v-if="cartStore.cartLength !== 0 && cartStore.step === 1" />
+    <cartStepTwo v-if="cartStore.cartLength !== 0 && cartStore.step === 2" />
 
     <div class="noItem" v-if="cartStore.cartLength === 0">
       <p>購物車是空的??</p>

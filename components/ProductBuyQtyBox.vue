@@ -8,35 +8,28 @@ const buyQtyHandlerStore = useBuyQtyHandlerStore()
 // 指定的話不會顯示Select => 購物車列表
 let props = defineProps(["main", "addProduct", "assignIndex"])
 
-// computed ========== ========== ========== ========== ==========
-// 主商品 或 加購商品
+// 主商品 or 加購商品
 const product = computed(() => {
-  let p = props.addProduct ? props.addProduct : props.main
-
-  if (props.assignIndex || props.assignIndex === 0) {
-    p.selectSpecItem = p.specArr[props.assignIndex]
-  }
-
-  return p
+  return props.addProduct ? props.addProduct : props.main
 })
 
-// 商品 或 商品的規格
-const target = computed(() => {
-  // 沒規格
-  if (!product.value.selectSpecItem) {
-    return product.value
+const selectedIndex = ref()
+const selectedSpec = computed({
+  get() {
+    if (props.assignIndex || props.assignIndex === 0) {
+      return product.value.specArr[props.assignIndex]
+    } else if (selectedIndex.value || selectedIndex.value === 0) {
+      return product.value.specArr[selectedIndex.value]
+    } else return null
+  },
+  set(v) {
+    selectedIndex.value = v
   }
-  // 有規格
-  else {
-    // 沒選
-    if (!product.value.selectSpecItem.ID) {
-      return -1
-    }
-    // 有選
-    else {
-      return product.value.selectSpecItem
-    }
-  }
+})
+
+const isSelect = computed(() => {
+  if (!product.value.specArr || !selectedSpec.value) return false
+  return selectedSpec.value.ID || selectedSpec.value.ID === 0
 })
 
 // addProductIndex, specIndex => changeButQty
@@ -56,44 +49,45 @@ const specIndex = computed(() => {
 
     return product.value.specArr
       .map((item) => item.ID)
-      .indexOf(product.value.selectSpecItem.ID)
+      .indexOf(selectedSpec.value.ID)
   }
   return null
 })
 
-const buyQty = computed({
-  get() {
-    console.log(target.value)
-    return target.value["buyQty"]
-  },
-  set(newBuyQty) {
-    target.value["buyQty"] = newBuyQty
-  }
-})
-
 const productSpecStatus = computed(() => {
+  let target = product.value.specArr ? product.value.specArr : product.value
+
   // 停售中 -1
   if (commonStore.store?.Enable == 0) return -1
   // 暫無庫存 0
-  if (
-    target.value !== -1 &&
-    target.value.Enable == 1 &&
-    target.value.Amount == 0
-  )
-    return 0
+  if (isSelect && target.Enable == 1 && target.Amount == 0) return 0
 
   return 1
 })
 
-function selectSpec(item, spec) {
+function selectSpec(item, index) {
   item.isShowOption = false
-  item.selectSpecItem = spec
+  selectedIndex.value = index
 }
+
+defineExpose({
+  selectedSpec
+})
 </script>
 
 <template>
   <div class="ProductBuyQtyBox">
-    {{ assignIndex }} {{ specIndex }}
+    <!-- test -->
+    <!-- <template v-if="addProduct && addProduct.specArr">
+      {{ addProduct.specArr[assignIndex] === selectedSpec }}
+    </template>
+
+    <template v-else-if="main.specArr">
+      {{ main.specArr[assignIndex] === selectedSpec }}
+    </template>
+    <div>==========</div>
+    {{ selectedSpec }} -->
+
     <!-- 規格 -->
     <template v-if="assignIndex === undefined">
       <div class="spec" v-if="product.specArr">
@@ -105,16 +99,16 @@ function selectSpec(item, spec) {
           @blur="product.isShowOption = false"
         >
           <div class="text">
-            {{ target === -1 ? "請選擇規格" : target.Name }}
+            {{ !isSelect ? "請選擇規格" : selectedSpec.Name }}
           </div>
           <div class="icon" :class="{ iconActive: product.isShowOption }">
             <i class="fa fa-caret-down" aria-hidden="true"></i>
           </div>
           <ul class="option" :class="{ showOption: product.isShowOption }">
             <li
-              v-for="spec in product.specArr"
+              v-for="(spec, index) in product.specArr"
               :key="spec.ID"
-              @click.stop="selectSpec(product, spec)"
+              @click.stop="selectSpec(product, index)"
             >
               {{ spec.Name }}
             </li>
@@ -127,110 +121,259 @@ function selectSpec(item, spec) {
     <!-- 數量 -->
     <div class="discontinued" v-if="productSpecStatus === -1">停售中</div>
     <div class="discontinued" v-else-if="productSpecStatus === 0">暫無庫存</div>
-    <div class="qtyBox" :class="{ noSelect: target === -1 }" v-else>
+    <div
+      class="qtyBox"
+      :class="{ noSelect: product.specArr && !isSelect }"
+      v-else
+    >
       <!-- 沒有規格 or 有規格且有選規格  -->
-      <template v-if="target !== -1">
+      <template v-if="!product.specArr || isSelect">
         <!-- 加購商品 -->
-        <template v-if="addProduct">
-          <div
-            class="reduce"
-            :class="{ qtyDisabled: buyQty < 1 }"
-            @click="
-              buyQtyHandlerStore.changeAddProductBuyQty(
-                main,
-                addProductIndex,
-                specIndex,
-                buyQty - 1
-              )
-            "
-          >
-            <i class="fa fa-minus"></i>
-          </div>
-          <input
-            class="number"
-            type="text"
-            size="3"
-            maxlength="3"
-            :disabled="cartStore.getMainTotalQty(main) < 1"
-            v-model="buyQty"
-            @blur="
-              buyQtyHandlerStore.changeAddProductBuyQty(
-                main,
-                addProductIndex,
-                specIndex,
-                buyQty
-              )
-            "
-            @keyup.enter="
-              buyQtyHandlerStore.changeAddProductBuyQty(
-                main,
-                addProductIndex,
-                specIndex,
-                buyQty
-              )
-            "
-          />
-          <div
-            class="add"
-            :class="{
-              qtyDisabled:
-                buyQty > cartStore.getMainTotalQty(main) - 1 ||
-                (target.Enable == 1 && buyQty > target.Amount - 1) ||
-                buyQty > 998
-            }"
-            @click="
-              buyQtyHandlerStore.changeAddProductBuyQty(
-                main,
-                addProductIndex,
-                specIndex,
-                buyQty * 1 + 1
-              )
-            "
-          >
-            <i class="fa fa-plus"></i>
-          </div>
+        <template v-if="addProduct && (addProduct.ID || addProduct.ID === 0)">
+          <!-- 加購商品 規格 -->
+          <template v-if="addProduct.specArr">
+            <div
+              class="reduce"
+              :class="{
+                qtyDisabled: selectedSpec.buyQty < 1
+              }"
+              @click="
+                buyQtyHandlerStore.changeAddProductBuyQty(
+                  main,
+                  addProductIndex,
+                  specIndex,
+                  selectedSpec.buyQty - 1
+                )
+              "
+            >
+              <i class="fa fa-minus"></i>
+            </div>
+            <input
+              class="number"
+              type="text"
+              size="3"
+              maxlength="3"
+              :disabled="cartStore.getMainTotalQty(main) < 1"
+              v-model="selectedSpec.buyQty"
+              @blur="
+                buyQtyHandlerStore.changeAddProductBuyQty(
+                  main,
+                  addProductIndex,
+                  specIndex,
+                  selectedSpec.buyQty
+                )
+              "
+              @keyup.enter="
+                buyQtyHandlerStore.changeAddProductBuyQty(
+                  main,
+                  addProductIndex,
+                  specIndex,
+                  selectedSpec.buyQty
+                )
+              "
+            />
+            <div
+              class="add"
+              :class="{
+                qtyDisabled:
+                  selectedSpec.buyQty > cartStore.getMainTotalQty(main) - 1 ||
+                  (selectedSpec.Enable == 1 &&
+                    selectedSpec.buyQty > selectedSpec.Amount - 1) ||
+                  selectedSpec.buyQty > 998
+              }"
+              @click="
+                buyQtyHandlerStore.changeAddProductBuyQty(
+                  main,
+                  addProductIndex,
+                  specIndex,
+                  selectedSpec.buyQty + 1
+                )
+              "
+            >
+              <i class="fa fa-plus"></i>
+            </div>
+          </template>
+
+          <!-- 加購商品 沒有規格 -->
+          <template v-else>
+            <div
+              class="reduce"
+              :class="{
+                qtyDisabled: addProduct.buyQty < 1
+              }"
+              @click="
+                buyQtyHandlerStore.changeAddProductBuyQty(
+                  main,
+                  addProductIndex,
+                  specIndex,
+                  addProduct.buyQty - 1
+                )
+              "
+            >
+              <i class="fa fa-minus"></i>
+            </div>
+            <input
+              class="number"
+              type="text"
+              size="3"
+              maxlength="3"
+              :disabled="cartStore.getMainTotalQty(main) < 1"
+              v-model="addProduct.buyQty"
+              @blur="
+                buyQtyHandlerStore.changeAddProductBuyQty(
+                  main,
+                  addProductIndex,
+                  specIndex,
+                  addProduct.buyQty
+                )
+              "
+              @keyup.enter="
+                buyQtyHandlerStore.changeAddProductBuyQty(
+                  main,
+                  addProductIndex,
+                  specIndex,
+                  addProduct.buyQty
+                )
+              "
+            />
+            <div
+              class="add"
+              :class="{
+                qtyDisabled:
+                  addProduct.buyQty > cartStore.getMainTotalQty(main) - 1 ||
+                  (addProduct.Enable == 1 &&
+                    addProduct.buyQty > addProduct.Amount - 1) ||
+                  addProduct.buyQty > 998
+              }"
+              @click="
+                buyQtyHandlerStore.changeAddProductBuyQty(
+                  main,
+                  addProductIndex,
+                  specIndex,
+                  addProduct.buyQty + 1
+                )
+              "
+            >
+              <i class="fa fa-plus"></i>
+            </div>
+          </template>
         </template>
+
         <!-- 主商品 -->
         <template v-else>
-          <div
-            class="reduce"
-            :class="{ qtyDisabled: buyQty < 1 }"
-            @click="
-              buyQtyHandlerStore.changeMainBuyQty(main, specIndex, buyQty - 1)
-            "
-          >
-            <i class="fa fa-minus"></i>
-          </div>
-          <input
-            class="number"
-            type="text"
-            size="3"
-            maxlength="3"
-            v-model="buyQty"
-            @blur="buyQtyHandlerStore.changeMainBuyQty(main, specIndex, buyQty)"
-            @keyup.enter="
-              buyQtyHandlerStore.changeMainBuyQty(main, specIndex, buyQty)
-            "
-          />
-          <div
-            class="add"
-            :class="{
-              qtyDisabled:
-                (target.Enable == 1 && buyQty > target.Amount - 1) ||
-                buyQty > 998
-            }"
-            @click="
-              buyQtyHandlerStore.changeMainBuyQty(
-                main,
-                specIndex,
-                buyQty * 1 + 1
-              )
-            "
-          >
-            <i class="fa fa-plus"></i>
-          </div>
+          <!-- 主商品 規格 -->
+          <template v-if="main.specArr">
+            <div
+              class="reduce"
+              :class="{ qtyDisabled: selectedSpec.buyQty < 1 }"
+              @click="
+                buyQtyHandlerStore.changeMainBuyQty(
+                  main,
+                  specIndex,
+                  selectedSpec.buyQty - 1
+                )
+              "
+            >
+              <i class="fa fa-minus"></i>
+            </div>
+            <input
+              class="number"
+              type="text"
+              size="3"
+              maxlength="3"
+              v-model="selectedSpec.buyQty"
+              @blur="
+                buyQtyHandlerStore.changeMainBuyQty(
+                  main,
+                  specIndex,
+                  selectedSpec.buyQty
+                )
+              "
+              @keyup.enter="
+                buyQtyHandlerStore.changeMainBuyQty(
+                  main,
+                  specIndex,
+                  selectedSpec.buyQty
+                )
+              "
+            />
+            <div
+              class="add"
+              :class="{
+                qtyDisabled:
+                  (selectedSpec.Enable == 1 &&
+                    selectedSpec.buyQty > selectedSpec.Amount - 1) ||
+                  selectedSpec.buyQty > 998
+              }"
+              @click="
+                buyQtyHandlerStore.changeMainBuyQty(
+                  main,
+                  specIndex,
+                  selectedSpec.buyQty + 1
+                )
+              "
+            >
+              <i class="fa fa-plus"></i>
+            </div>
+          </template>
+
+          <!-- 主商品 沒有規格 -->
+          <template v-else>
+            <div
+              class="reduce"
+              :class="{ qtyDisabled: main.buyQty < 1 }"
+              @click="
+                buyQtyHandlerStore.changeMainBuyQty(
+                  main,
+                  specIndex,
+                  main.buyQty - 1
+                )
+              "
+            >
+              <i class="fa fa-minus"></i>
+            </div>
+            <input
+              class="number"
+              type="text"
+              size="3"
+              maxlength="3"
+              v-model="main.buyQty"
+              @blur="
+                buyQtyHandlerStore.changeMainBuyQty(
+                  main,
+                  specIndex,
+                  main.buyQty
+                )
+              "
+              @keyup.enter="
+                buyQtyHandlerStore.changeMainBuyQty(
+                  main,
+                  specIndex,
+                  main.buyQty
+                )
+              "
+            />
+            <div
+              class="add"
+              :class="{
+                qtyDisabled:
+                  (main.Enable == 1 && main.buyQty > main.Amount - 1) ||
+                  main.buyQty > 998
+              }"
+              @click="
+                buyQtyHandlerStore.changeMainBuyQty(
+                  main,
+                  specIndex,
+                  main.buyQty + 1
+                )
+              "
+            >
+              <i class="fa fa-plus"></i>
+            </div>
+          </template>
         </template>
       </template>
+
       <!-- 有規格且沒選規格 -->
       <template v-else>
         <div class="reduce"><i class="fa fa-minus"></i></div>

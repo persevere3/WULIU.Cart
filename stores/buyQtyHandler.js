@@ -106,9 +106,14 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
         }
       })
     }
+
+    if (useRoute().fullPath.indexOf("cart") > -1)
+      cartStore.getTotal(cartStore.step - 1)
   }
   // 改變 加價購數量
   async function changeAddProductBuyQty(main, addProductIndex, specIndex, qty) {
+    console.log(main, addProductIndex, specIndex, qty)
+
     let addProduct = main.addProducts[addProductIndex]
     let addProductSpec =
       specIndex == null ? null : addProduct.specArr[specIndex]
@@ -185,6 +190,9 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
       cartItem.addProducts = JSON.parse(JSON.stringify(product.addProducts))
 
     cartStore.setCart()
+
+    if (useRoute().fullPath.indexOf("cart") > -1)
+      cartStore.getTotal(cartStore.step - 1)
   }
 
   // ---------------
@@ -209,12 +217,8 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
 
     try {
       let res = JSON.parse(await getAmountApi(query))
-      const isReqSuccess = commonStore.resHandler(res, getAmount, [
-        main,
-        addProduct,
-        spec
-      ])
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return getAmount(main, addProduct, spec)
 
       let { Enable, Amount } = res.data[0]
       target.Enable = Enable

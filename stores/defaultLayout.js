@@ -87,8 +87,8 @@ export const useDefaultLayoutStore = defineStore("defaultLayout", () => {
 
       try {
         const res = JSON.parse(await connectHandlerApi(formData))
-        const isReqSuccess = commonStore.resHandler(res, methods.connectHandler)
-        if (!isReqSuccess) return
+        const isReqSuccess = commonStore.resHandler(res)
+        if (!isReqSuccess) return methods.connectHandler()
 
         console.log(1)
 

@@ -60,8 +60,9 @@ async function ajaxHomePage() {
 
   try {
     const res = JSON.parse(await getHomePageApi(formData))
-    const isResSuccess = commonStore.resHandler(res, ajaxHomePage)
-    if (!isResSuccess) return
+    const isResSuccess = await commonStore.resHandler(res)
+    if (!isResSuccess) return ajaxHomePage()
+
     return res
   } catch (error) {
     console.log(error)
@@ -72,7 +73,6 @@ async function homePageHandler(data) {
   /* commonStore.webData.GetHomePage
     Advertise, Category, data
   */
-
   let webDataHomePage = data
 
   // 輪播

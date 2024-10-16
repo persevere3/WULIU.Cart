@@ -91,8 +91,8 @@ export const useProductStore = defineStore("product", () => {
 
     try {
       const res = JSON.parse(await getProductsApi(query))
-      const isResSuccess = commonStore.resHandler(res, ajaxProducts)
-      if (!isResSuccess) return
+      const isResSuccess = commonStore.resHandler(res)
+      if (!isResSuccess) return ajaxProducts()
 
       productsHandler(res)
     } catch (error) {
@@ -111,8 +111,6 @@ export const useProductStore = defineStore("product", () => {
         })
 
         product.specArr = productSpecArr
-        product.selectSpecItem = {}
-        product.isShowSpec = false
       } else product.buyQty = 0
 
       // 多價格 ----------
@@ -194,8 +192,8 @@ export const useProductStore = defineStore("product", () => {
 
     try {
       let res = JSON.parse(await getAddProductsApi(query))
-      const isReqSuccess = commonStore.resHandler(res, getAddProducts, [ids])
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return getAddProducts(ids)
 
       let addProducts = res.data
       let originSpecs = res.data2 // 規格
@@ -215,8 +213,6 @@ export const useProductStore = defineStore("product", () => {
           })
 
           addProduct.specArr = addProductSpecArr
-          addProduct.selectSpecItem = {}
-          addProduct.isShowOption = false
         } else addProduct.buyQty = 0
 
         // 多價格 ----------
@@ -264,8 +260,8 @@ export const useProductStore = defineStore("product", () => {
 
       try {
         let res = JSON.parse(await getFavoriteApi(formData))
-        const isReqSuccess = commonStore.resHandler(res, getFavorite)
-        if (!isReqSuccess) return
+        const isReqSuccess = commonStore.resHandler(res)
+        if (!isReqSuccess) return getFavorite()
 
         favorite.value = {}
         if (res.status) {
@@ -287,9 +283,15 @@ export const useProductStore = defineStore("product", () => {
     }
     // 登出狀態
     else {
-      let favoriteObj =
-        JSON.parse(localStorage.getItem(`${commonStore.site.Name}@favorite`)) ||
-        {}
+      let localFavorite = localStorage.getItem(
+        `${commonStore.site.Name}@favorite`
+      )
+      let favoriteObj
+      if (localFavorite) {
+        favoriteObj = JSON.parse(localFavorite)
+      } else {
+        favoriteObj = {}
+      }
 
       for (let key in favoriteObj) {
         let product = products.value.find(
@@ -314,8 +316,8 @@ export const useProductStore = defineStore("product", () => {
       try {
         let api = favorite.value[id] ? deleteFavoriteApi : addFavoriteApi
         let res = JSON.parse(await api(formData))
-        const isReqSuccess = commonStore.resHandler(res, toggleFavorite, [id])
-        if (!isReqSuccess) return
+        const isReqSuccess = commonStore.resHandler(res)
+        if (!isReqSuccess) return toggleFavorite(id)
 
         if (!res.status) {
           if (res.msg.indexOf("登入") > -1) {

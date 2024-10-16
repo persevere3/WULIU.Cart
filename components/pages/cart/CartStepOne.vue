@@ -67,6 +67,7 @@ const activeCartSpecId = ref({
         </div>
       </div>
     </div>
+
     <div class="discount" v-if="commonStore.store">
       <p v-show="commonStore.store.Discount == 1" class="notice">
         消費滿{{ commonStore.store.Price }}元 ，折扣{{
@@ -93,6 +94,18 @@ const activeCartSpecId = ref({
       <div class="discountErrorMessage" v-if="cartStore.discountErrorMessage">
         {{ cartStore.discountErrorMessage }}
       </div>
+    </div>
+
+    <div
+      class="productDiscountList"
+      v-if="cartStore.productDiscountList && cartStore.productDiscountList.length"
+    >
+      <ul>
+        <li v-for="product in cartStore.productDiscountList" :key="product.ID">
+          <div class="before">{{ product.Name }} ({{ product.FreeInfo }})</div>
+          <div class="after">{{ product.productDiscountText }}</div>
+        </li>
+      </ul>
     </div>
 
     <CartStepTotal />

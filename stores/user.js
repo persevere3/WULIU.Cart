@@ -16,11 +16,14 @@ import { useRequest } from "@/composables/request"
 
 export const useUserStore = defineStore("user", () => {
   const commonStore = useCommonStore()
+  const memberInfoStore = useMemberInfoStore()
 
   const { verify } = useVerify()
   const { return_formData } = useRequest()
 
   // state ==============================
+  const activeUserNav = ref("login")
+
   const r_form = reactive({
     recommender: {
       value: "",
@@ -311,8 +314,8 @@ export const useUserStore = defineStore("user", () => {
   async function getLineProfile() {
     try {
       const res = JSON.parse(await getLineProfileApi(LineToken.value))
-      const isReqSuccess = commonStore.resHandler(res, getLineProfile)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return getLineProfile()
     } catch (error) {
       throw new Error(error)
     }
@@ -343,8 +346,8 @@ export const useUserStore = defineStore("user", () => {
 
     try {
       const res = JSON.parse(await send_verify_codeApi(formData))
-      const isReqSuccess = commonStore.resHandler(res, send_verify_code)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return send_verify_code()
 
       if (res.status) {
         form.second = 300
@@ -395,7 +398,7 @@ export const useUserStore = defineStore("user", () => {
       name: r_form.name.value,
       email: r_form.mail.value,
       gender: r_form.sex == "male" ? 1 : 0,
-      birthday: useFormatDate(r_form.birthday),
+      birthday: useFormatDate(r_form.birthday.value),
       phone: r_form.phone.value,
       password: r_form.password.value
     }
@@ -410,8 +413,8 @@ export const useUserStore = defineStore("user", () => {
 
     try {
       const res = JSON.parse(await registerApi(query))
-      const isReqSuccess = commonStore.resHandler(res, register)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return register()
 
       if (res.status) {
         commonStore.showMessage(res.msg, true)
@@ -439,8 +442,8 @@ export const useUserStore = defineStore("user", () => {
 
     try {
       const res = JSON.parse(await validateRecommenderCodeApi(query))
-      const isReqSuccess = commonStore.resHandler(res, validateRecommenderCode)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return validateRecommenderCode()
 
       if (res.status) {
         commonStore.showMessage(res.msg, true)
@@ -452,7 +455,7 @@ export const useUserStore = defineStore("user", () => {
   }
   function LineLogin(isRegister) {
     useUrlPush(
-      `${location.origin}/interface/webmember/LineLoginAuthorize?storeid=${
+      `${useRoute().path}/interface/webmember/LineLoginAuthorize?storeid=${
         commonStore.site.Name
       }&site=${commonStore.site.Site}${
         isRegister
@@ -475,11 +478,12 @@ export const useUserStore = defineStore("user", () => {
 
     try {
       const res = JSON.parse(await userLoginApi(formData))
-      const isReqSuccess = commonStore.resHandler(res, user_login)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return user_login()
 
       if (res.status) {
         commonStore.user_account = l_form.account.value
+        memberInfoStore.login_handle_cart()
         useUrlPush("/info")
       } else {
         commonStore.showMessage("請確認您的帳號密碼後重新登入", false)
@@ -521,10 +525,12 @@ export const useUserStore = defineStore("user", () => {
       phoneormail: getPhoneOrMail()
     }
 
+    let formData = return_formData(query)
+
     try {
-      const res = JSON.parse(await send_forget_verify_codeApi(query))
-      const isReqSuccess = commonStore.resHandler(res, send_forget_verify_code)
-      if (!isReqSuccess) return
+      const res = JSON.parse(await send_forget_verify_codeApi(formData))
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return send_forget_verify_code()
 
       if (res.status) {
         reset_input(f_form.verify_code)
@@ -553,10 +559,12 @@ export const useUserStore = defineStore("user", () => {
       validate: f_form.verify_code.value
     }
 
+    let formData = return_formData(query)
+
     try {
-      const res = JSON.parse(await check_forget_verify_codeApi(query))
-      const isReqSuccess = commonStore.resHandler(res, check_forget_verify_code)
-      if (!isReqSuccess) return
+      const res = JSON.parse(await check_forget_verify_codeApi(formData))
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return check_forget_verify_code()
 
       if (res.status) {
         reset_input(f_form.password)
@@ -581,10 +589,12 @@ export const useUserStore = defineStore("user", () => {
       newpassword: f_form.password.value
     }
 
+    let formData = return_formData(query)
+
     try {
-      const res = JSON.parse(await edit_forget_passApi(query))
-      const isReqSuccess = commonStore.resHandler(res, edit_forget_pass)
-      if (!isReqSuccess) return
+      const res = JSON.parse(await edit_forget_passApi(formData))
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return edit_forget_pass()
 
       if (res.status) {
         reset_input(f_form.account)
@@ -616,6 +626,7 @@ export const useUserStore = defineStore("user", () => {
   }
 
   return {
+    activeUserNav,
     r_form,
     l_form,
     f_form,

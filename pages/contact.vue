@@ -20,8 +20,8 @@ async function ajaxContact() {
 
   try {
     const res = JSON.parse(await getContactApi(formData))
-    const isResSuccess = commonStore.resHandler(res, ajaxContact)
-    if (!isResSuccess) return
+    const isResSuccess = commonStore.resHandler(res)
+    if (!isResSuccess) return ajaxContact()
 
     return res.data[0]
   } catch (error) {

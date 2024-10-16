@@ -14,6 +14,14 @@
       <div class="name">{{ product.Name }}</div>
     </div>
     <div class="td spec">
+      <!-- test -->
+      <!-- <template v-if="addProduct && addProduct.specArr">
+        {{ addProduct.specArr[specIndex] }}
+      </template>
+      <template v-else-if="main.specArr">
+        {{ main.specArr[specIndex] }}
+      </template> -->
+
       <template v-if="spec">
         <!-- rwd -->
         <div

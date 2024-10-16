@@ -59,7 +59,7 @@
     <div
       class="button"
       style="margin-bottom: 20px"
-      @click="send_verify_code(userStore.r_form)"
+      @click="userStore.send_verify_code(userStore.r_form)"
     >
       獲取驗證碼
       <span v-if="userStore.r_form.second > 0">

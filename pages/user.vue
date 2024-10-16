@@ -5,8 +5,6 @@ import c_input from "@/components/registerForm/Input.vue"
 const commonStore = useCommonStore()
 const userStore = useUserStore()
 
-const activeUserNav = ref("login")
-
 async function user_register() {
   const res = await userStore.register()
   if (res) {
@@ -20,7 +18,7 @@ const { term, code } = useRoute().query
 
 onMounted(() => {
   if (commonStore.site.TermsNotices && term) {
-    activeUserNav.value = "register"
+    userStore.activeUserNav = "register"
     userStore.r_form.is_member_and_privacy = true
   }
 
@@ -34,33 +32,33 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="user" :class="activeUserNav" v-if="commonStore.is_initial">
+  <div class="user" v-if="commonStore.is_initial">
     <div class="navs">
       <div
         class="nav"
-        :class="{ active: activeUserNav === 'register' }"
-        @click="activeUserNav = 'register'"
+        :class="{ active: userStore.activeUserNav === 'register' }"
+        @click="userStore.activeUserNav = 'register'"
       >
         註冊會員
       </div>
       <div
         class="nav"
-        :class="{ active: activeUserNav === 'login' }"
-        @click="activeUserNav = 'login'"
+        :class="{ active: userStore.activeUserNav === 'login' }"
+        @click="userStore.activeUserNav = 'login'"
       >
         會員登入
       </div>
       <div
         class="nav"
-        :class="{ active: activeUserNav === 'forget' }"
-        @click="activeUserNav = 'forget'"
+        :class="{ active: userStore.activeUserNav === 'forget' }"
+        @click="userStore.activeUserNav = 'forget'"
       >
         忘記密碼
       </div>
     </div>
 
     <div class="forms">
-      <div class="form" v-show="activeUserNav === 'register'">
+      <div class="form" v-show="userStore.activeUserNav === 'register'">
         <RegisterForm />
 
         <div
@@ -72,14 +70,14 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="form" v-show="activeUserNav === 'login'">
+      <div class="form" v-show="userStore.activeUserNav === 'login'">
         <c_input :input="userStore.l_form.account" />
         <c_input :input="userStore.l_form.password" />
 
         <div class="button" @click="userStore.user_login">登入</div>
       </div>
 
-      <div class="form" v-show="activeUserNav === 'forget'">
+      <div class="form" v-show="userStore.activeUserNav === 'forget'">
         <template v-if="userStore.f_form.step == 1">
           <select
             v-if="commonStore.store.NotificationSystem == 2"
@@ -192,35 +190,20 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="third_login" v-if="activeUserNav != 'forget'">
+    <div class="third_login" v-if="userStore.activeUserNav != 'forget'">
       <div
         class="button"
         style="background-color: #00c300"
         @click="
-          activeUserNav === 'login'
+          userStore.activeUserNav === 'login'
             ? userStore.LineLogin()
             : (userStore.is_LineRegister = true)
         "
       >
         <i class="fa-brands fa-line"></i>
         使用Line
-        <span v-if="activeUserNav === 'register'">註冊</span>
-        <span v-if="activeUserNav === 'login'">登入</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="user_modal_container" v-if="userStore.is_LineRegister">
-    <div class="close" @click="userStore.is_LineRegister = false">
-      <i class="fas fa-times"></i>
-    </div>
-    <div class="user_modal">
-      <div class="content">
-        <c_input :input="userStore.r_form.recommender" />
-
-        <div class="button" @click="userStore.validateRecommenderCode">
-          Line註冊
-        </div>
+        <span v-if="userStore.activeUserNav === 'register'">註冊</span>
+        <span v-if="userStore.activeUserNav === 'login'">登入</span>
       </div>
     </div>
   </div>

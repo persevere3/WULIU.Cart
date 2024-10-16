@@ -28,8 +28,8 @@ async function ajaxCategory() {
 
   try {
     const res = JSON.parse(await getCategoryApi(formData))
-    const isResSuccess = commonStore.resHandler(res, ajaxCategory)
-    if (!isResSuccess) return
+    const isResSuccess = commonStore.resHandler(res)
+    if (!isResSuccess) return ajaxCategory()
 
     return res
   } catch (error) {

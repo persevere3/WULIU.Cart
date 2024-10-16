@@ -228,7 +228,7 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
       LogisticsType: "CVS",
       LogisticsSubType,
       IsCollection,
-      ServerReplyURL: `${location.origin}/interface/store/SpmarketAddress}`,
+      ServerReplyURL: `${useRoute().path}/interface/store/SpmarketAddress}`,
       ExtraData: "",
       Device: ""
     }
@@ -253,7 +253,7 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     purchaseInfoStore.storename = decodeURI(name)
     purchaseInfoStore.storeaddress = decodeURI(address)
 
-    if (!productsStore.isSingleProduct) {
+    if (!productStore.isSingleProduct) {
       cartStore.step = 2
     }
   }

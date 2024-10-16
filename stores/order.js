@@ -6,6 +6,10 @@ import {
   searchMartDeliveryApi
 } from "@/apis/order"
 
+import { rePayApi } from "@/apis/pay"
+
+import { registerApi } from "@/apis/user"
+
 import { useVerify } from "@/composables/verify"
 import { useRequest } from "@/composables/request"
 import { useUrlPush } from "@/composables/urlPush"
@@ -79,10 +83,13 @@ export const useOrderStore = defineStore("order", () => {
     OKMART: "OK超商"
   })
 
-  const order_page_number = ref(0)
-  const order_page_index = ref(1)
-  const order_page_size = ref(10)
-  const select_active = ref(false)
+  const order_pagination = reactive({
+    perpageItemNum: 10,
+    totalPageNum: 0,
+    activePage: 1,
+    is_show_options: false,
+    options_arr: [10, 20, 30, 40, 50]
+  })
 
   // 確認付款參數
   const order_number = ref("")
@@ -154,7 +161,7 @@ export const useOrderStore = defineStore("order", () => {
       Site: commonStore.site.Site,
       StoreName: commonStore.site.Name,
       productName: commonStore.store.Name,
-      LogoUrl: location.origin + commonStore.store.PayLogo,
+      LogoUrl: useRoute().path + commonStore.store.PayLogo,
       Preview: commonStore.site.Preview,
 
       // 商品
@@ -236,13 +243,13 @@ export const useOrderStore = defineStore("order", () => {
 
     // 郵遞區號
     if (
-      memberInfoStore.memberInfo.value.city_active &&
-      memberInfoStore.memberInfo.value.district_active
+      memberInfoStore.memberInfo.city_active &&
+      memberInfoStore.memberInfo.district_active
     ) {
       query["ZipCode"] =
-        purchaseInfoStore.city_district[
-          memberInfoStore.memberInfo.value.city_active
-        ][memberInfoStore.memberInfo.value.district_active]
+        purchaseInfoStore.city_district[memberInfoStore.memberInfo.city_active][
+          memberInfoStore.memberInfo.district_active
+        ]
     } else {
       query["ZipCode"] = ""
     }
@@ -263,10 +270,21 @@ export const useOrderStore = defineStore("order", () => {
       query["saveNatureCode"] = purchaseInfoStore.natural_barCode
     } else query["UniNumber"] = purchaseInfoStore.invoice_uniNumber
 
+    let FreeItem = JSON.parse(JSON.stringify(cartStore.total.FreeItem))
+    FreeItem.forEach((item) => {
+      delete item.Name
+      delete item.productDiscountText
+    })
+
+    query["FreeItem"] = JSON.stringify(FreeItem)
+    query["TradeDataCheckInfo"] = cartStore.total.tradeDataCheckInfo
+
+    let formData = return_formData(query)
+
     try {
-      const res = JSON.parse(await createOrderApi(query))
-      const isReqSuccess = commonStore.resHandler(res, createOrder)
-      if (!isReqSuccess) return
+      const res = JSON.parse(await createOrderApi(formData))
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return createOrder()
 
       if (res.success) {
         payResult.value = res
@@ -276,7 +294,8 @@ export const useOrderStore = defineStore("order", () => {
         else {
           // 沒有登入
           if (!commonStore.user_account) {
-            let hasAcount = await checkAccount()
+            let hasAcount = await hasAccount()
+            console.log(hasAcount)
             if (hasAcount) commonStore.isConfirmToPay = true
             else commonStore.isConfirmIsRegister = true
           }
@@ -313,7 +332,7 @@ export const useOrderStore = defineStore("order", () => {
     }
   }
 
-  async function checkAccount() {
+  async function hasAccount() {
     let query = {
       storeid: commonStore.site.Name,
       type: commonStore.store.NotificationSystem,
@@ -330,8 +349,8 @@ export const useOrderStore = defineStore("order", () => {
 
     try {
       const res = JSON.parse(await registerApi(query))
-      const isReqSuccess = commonStore.resHandler(res, checkAccount)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return hasAccount()
 
       return res.msg.indexOf("已註冊") > -1
     } catch (error) {
@@ -407,7 +426,7 @@ export const useOrderStore = defineStore("order", () => {
       return
     }
 
-    if (!type) order_page_index.value = 1
+    if (!type) order_pagination.activePage = 1
     if (!is_filter) {
       filter_number.value = ""
       filter_pay.value = "0"
@@ -420,8 +439,8 @@ export const useOrderStore = defineStore("order", () => {
       phone: search_phone.value.trim(),
       email: search_mail.value.trim(),
 
-      pagesize: order_page_size.value,
-      pageindex: order_page_index.value,
+      pagesize: order_pagination.perpageItemNum,
+      pageindex: order_pagination.activePage,
 
       filter_number: filter_number.value,
       filter_pay: filter_pay.value,
@@ -432,11 +451,11 @@ export const useOrderStore = defineStore("order", () => {
 
     try {
       const res = JSON.parse(await getOrderApi(formData))
-      const isReqSuccess = commonStore.resHandler(res, getOrder)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return getOrder()
 
       let orders = res.Orders
-      let totalPage = Math.ceil(res.Count / order_page_size.value)
+      let totalPage = Math.ceil(res.Count / order_pagination.perpageItemNum)
       if (totalPage == 0) {
         commonStore.showMessage("沒有您查詢的訂單資料", false)
 
@@ -447,7 +466,7 @@ export const useOrderStore = defineStore("order", () => {
         return
       } else {
         order.value = orders
-        order_page_number.value = totalPage
+        order_pagination.totalPageNum = totalPage
         noOrder.value = false
       }
 
@@ -469,7 +488,7 @@ export const useOrderStore = defineStore("order", () => {
   function getMemberOrder(type, is_filter) {
     console.log("getMemberOrder")
     return new Promise(async (resolve) => {
-      if (!type) order_page_index.value = 1
+      if (!type) order_pagination.activePage = 1
       if (!is_filter) {
         filter_number.value = ""
         filter_pay.value = "0"
@@ -483,8 +502,8 @@ export const useOrderStore = defineStore("order", () => {
         phone: search_phone.value,
         email: search_mail.value,
 
-        pageindex: order_page_index.value,
-        pagesize: order_page_size.value,
+        pageindex: order_pagination.activePage,
+        pagesize: order_pagination.perpageItemNum,
 
         filter_number: filter_number.value,
         filter_pay: filter_pay.value,
@@ -495,16 +514,16 @@ export const useOrderStore = defineStore("order", () => {
 
       try {
         const res = JSON.parse(await getMemberOrderApi(formData))
-        const isReqSuccess = commonStore.resHandler(res, getMemberOrder)
-        if (!isReqSuccess) return
+        const isReqSuccess = commonStore.resHandler(res)
+        if (!isReqSuccess) return getMemberOrder()
 
         if (res.status) {
           let data = res.datas[0] || {}
 
-          order_page_number.value = Math.ceil(
-            data.Count / order_page_size.value
+          order_pagination.totalPageNum = Math.ceil(
+            data.Count / order_pagination.perpageItemNum
           )
-          if (order_page_number.value == 0) {
+          if (order_pagination.totalPageNum == 0) {
             commonStore.showMessage("沒有您查詢的訂單資料", false)
             order.value = {}
             return
@@ -535,15 +554,15 @@ export const useOrderStore = defineStore("order", () => {
 
   async function rePay(flino, url) {
     let query = {
-      StoreId: useCommonStore.site.Name,
+      StoreId: commonStore.site.Name,
       flino,
       url
     }
 
     try {
       const res = JSON.parse(await rePayApi(query))
-      const isReqSuccess = commonStore.resHandler(res, rePay, [flino, url])
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return rePay(flino, url)
 
       if ("status" in res) {
         commonStore.showMessage(res.msg, true)
@@ -573,10 +592,8 @@ export const useOrderStore = defineStore("order", () => {
 
     try {
       const res = JSON.parse(await searchMartDeliveryApi(formData))
-      const isReqSuccess = commonStore.resHandler(res, searchMartDelivery, [
-        item
-      ])
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return searchMartDelivery(item)
 
       let martName = decodeURI(item.Address).split(" - ")[1] || ""
       let deliveryMsg = res.split("|")[0] || ""
@@ -615,10 +632,7 @@ export const useOrderStore = defineStore("order", () => {
 
     mart_obj,
 
-    order_page_number,
-    order_page_index,
-    order_page_size,
-    select_active,
+    order_pagination,
 
     order_number,
     account_number,
@@ -628,7 +642,7 @@ export const useOrderStore = defineStore("order", () => {
     checkOrder,
     cancelDiscountCodeCreateOrder,
     createOrder,
-    checkAccount,
+    hasAccount,
     toPay,
 
     getOrder,

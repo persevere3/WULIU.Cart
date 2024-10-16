@@ -176,91 +176,6 @@
     }
   }
 
-  //
-  .qtyBox {
-    width: 100%;
-    margin-bottom: 5px;
-    display: flex;
-
-    &.noSelect {
-      opacity: 0.5;
-
-      .reduce,
-      .add {
-        transition: 0s;
-        cursor: default;
-
-        &:hover {
-          background-color: $white;
-          i {
-            color: $secondColor;
-          }
-        }
-
-        i {
-          transition: 0s;
-        }
-      }
-      .number {
-        cursor: default;
-      }
-    }
-
-    .reduce,
-    .add {
-      padding: 3px 6px;
-      border: 1px solid $secondColor;
-      flex-grow: 0;
-      flex-shrink: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: 0.3s;
-      cursor: pointer;
-
-      &:hover {
-        background-color: $secondColor;
-
-        i {
-          color: $white;
-        }
-      }
-
-      i {
-        color: $secondColor;
-        transition: 0.3s;
-      }
-    }
-    .reduce {
-      border-radius: 5px 0px 0px 5px;
-      border-right: 1px solid transparent;
-    }
-    .add {
-      border-radius: 0px 5px 5px 0px;
-      border-left: 1px solid transparent;
-    }
-
-    .number {
-      width: 100%;
-      min-width: 0;
-      height: 33px;
-      padding: 0px 5px 0px 5px;
-      text-align: center;
-      font-size: 16px;
-      border: 1px solid $secondColor;
-      cursor: pointer;
-    }
-    .qtyDisabled {
-      opacity: 0.3;
-    }
-  }
-  // 停售 無庫存
-  .discontinued {
-    height: 33px;
-    line-height: 33px;
-    color: $dangerColor;
-  }
-
   // ********************************************************************************
   .cart {
     .select {
@@ -362,7 +277,8 @@
     border-radius: 5px;
     border: 1px solid $secondColor_a;
 
-    .total {
+    .total,
+    .productDiscountList {
       padding: 20px;
       margin-bottom: 20px;
       border-radius: 5px;
@@ -537,6 +453,7 @@
 
         input {
           flex: 1 1;
+          padding: 0 10px;
           border-radius: 5px 0px 0px 5px;
           border: 1px solid $secondColor;
           border-right: 0px solid $secondColor;

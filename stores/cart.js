@@ -82,12 +82,47 @@ export const useCartStore = defineStore("cart", () => {
     )
   })
 
+  const productDiscountList = computed(() => {
+    let list = []
+    if (!total.value.FreeItem) return list
+    for (let freeItem of total.value.FreeItem) {
+      let productsItem = productStore.products.find(
+        (item) => item.ID == freeItem.ProductID
+      )
+      if (productsItem) {
+        freeItem.Name = productsItem.Name
+        let discountAmount =
+          Math.floor((productsItem.buyQty / productsItem.fullAmount) * 1) *
+          (productsItem.fullRatio * 1)
+        if (
+          Number(productsItem.Enable) &&
+          discountAmount + productsItem.buyQty > Number(productsItem.Amount)
+        ) {
+          freeItem.productDiscountText = `庫存不足，送${
+            Number(productsItem.Amount) - productsItem.buyQty
+          }`
+        } else {
+          freeItem.productDiscountText = `送 ${freeItem.FreeAmount}`
+        }
+
+        list.push(freeItem)
+      }
+    }
+    return list
+  })
+
   // methods ==============================
   function getCart() {
     let key = ""
-    if (commonStore.user_account)
-      key = `${commonStore.site.Name}@${commonStore.user_account}@cart`
-    else key = `${commonStore.site.Name}@cart`
+    if (productStore.isSingleProduct) {
+      key = `${commonStore.site.Name}@${useRoute().params.id}@cart`
+    } else {
+      if (commonStore.user_account) {
+        key = `${commonStore.site.Name}@${commonStore.user_account}@cart`
+      } else {
+        key = `${commonStore.site.Name}@cart`
+      }
+    }
 
     cart.value = JSON.parse(localStorage.getItem(key)) || []
     cartOriginLength.value = cartLength.value
@@ -252,9 +287,13 @@ export const useCartStore = defineStore("cart", () => {
 
   function setCart() {
     let key = ""
-    if (commonStore.user_account)
-      key = `${commonStore.site.Name}@${commonStore.user_account}@cart`
-    else key = `${commonStore.site.Name}@cart`
+    if (productStore.isSingleProduct) {
+      key = `${commonStore.site.Name}@${useRoute().params.id}@cart`
+    } else {
+      if (commonStore.user_account)
+        key = `${commonStore.site.Name}@${commonStore.user_account}@cart`
+      else key = `${commonStore.site.Name}@cart`
+    }
 
     localStorage.setItem(key, JSON.stringify(cart.value))
   }
@@ -267,11 +306,9 @@ export const useCartStore = defineStore("cart", () => {
     is_use_bonus.value = false
     use_bonus.value = 0
 
-    // if (!productStore.isSingleProduct) {
-    //   productStore.getCategories()
-    // } else cartStore.step = 1
+    step.value = 1
 
-    // await productStore.ajaxProducts()
+    productStore.ajaxProducts()
   }
 
   async function discount() {
@@ -287,8 +324,8 @@ export const useCartStore = defineStore("cart", () => {
 
     try {
       let res = JSON.parse(await discountApi(query))
-      const isReqSuccess = commonStore.resHandler(res, discount)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return discount()
 
       let status = res.data[0].status
       if (status === "1") {
@@ -357,11 +394,12 @@ export const useCartStore = defineStore("cart", () => {
 
     try {
       let res = JSON.parse(await getTotalApi(return_formData(query)))
-      const isReqSuccess = commonStore.resHandler(res, getTotal, [isStepTwo])
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return getTotal(isStepTwo)
 
       let originTotal = res.data[0]
       originTotal.FreeItem = JSON.parse(originTotal.FreeItem)
+      originTotal.tradeDataCheckInfo = res.tradeDataCheckInfo
 
       total.value = originTotal
     } catch (error) {
@@ -403,12 +441,19 @@ export const useCartStore = defineStore("cart", () => {
       }
       // 沒規格
       else {
+        let productDiscountItem = productDiscountList.value.find(
+          (item) => item.ProductID === cartItem.ID
+        )
+
         cartStrObj.id += (cartStrObj.id ? "," : "") + cartItem.ID
         cartStrObj.price += (cartStrObj.price ? "," : "") + cartItem.NowPrice
         cartStrObj.qry += (cartStrObj.qry ? "," : "") + cartItem.buyQty
+
         cartStrObj.ItemName +=
           (cartStrObj.ItemName ? "#" : "") +
-          `${cartItem.Name} NT$${nowPriceStr} x ${cartItem.buyQty}`
+          `${cartItem.Name}${
+            productDiscountItem && `( ${productDiscountItem.FreeInfo} )`
+          } NT$${nowPriceStr} x ${cartItem.buyQty}`
       }
 
       // 加價購
@@ -504,6 +549,7 @@ export const useCartStore = defineStore("cart", () => {
 
     cartLength,
     member_bonus,
+    productDiscountList,
 
     getCart,
     cartHandler,

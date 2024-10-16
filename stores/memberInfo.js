@@ -221,10 +221,14 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
 
   // bonus ---------------
   const bonus = ref([])
-  const bonus_page_number = ref(0)
-  const bonus_page_size = ref(10)
-  const bonus_page_index = ref(1)
-  const select_active = ref(false)
+
+  const bonus_pagination = reactive({
+    perpageItemNum: 10,
+    totalPageNum: 0,
+    activePage: 1,
+    is_show_options: false,
+    options_arr: [10, 20, 30, 40, 50]
+  })
 
   // methods ==============================
   // info ---------------
@@ -237,8 +241,8 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
 
     try {
       const res = JSON.parse(await getMemberInfoApi(formData))
-      const isReqSuccess = commonStore.resHandler(res, getMemberInfo)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return getMemberInfo()
 
       if (res.status) {
         const originInfo = res.datas[0][0] || {}
@@ -350,9 +354,6 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
         // 回饋金 ---------------
         originInfo.total_bonus = originInfo.Wallet * 1
 
-        // cart ---------------
-        login_handle_cart()
-
         //
         memberInfo.value = originInfo
       } else {
@@ -364,32 +365,16 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
     }
   }
   function login_handle_cart() {
-    let userCart =
-      JSON.parse(
-        localStorage.getItem(
-          `${commonStore.site.Name}@${commonStore.user_account}@cart`
-        )
-      ) || []
-    let localCart =
-      JSON.parse(localStorage.getItem(`${commonStore.site.Name}@cart`)) || []
-    for (let localIndex in localCart) {
-      let f = false
-      for (let userIndex in userCart) {
-        if (localCart[localIndex].ID === userCart[userIndex].ID) {
-          userCart[userIndex] = localCart[localIndex]
-          f = true
-        }
-      }
-      if (!f) {
-        userCart[userCart.length] = localCart[localIndex]
-      }
+    let localKey = `${commonStore.site.Name}@cart`
+    let localCart
+    if (localStorage.getItem(localKey)) {
+      localCart = JSON.parse(localStorage.getItem(localKey))
+    } else {
+      localCart = []
     }
-    cartStore.cart = []
-    userCart.forEach((item, index) => (cartStore.cart[index] = item))
-    localStorage.setItem(
-      `${commonStore.site.Name}@${commonStore.user_account}@cart`,
-      JSON.stringify(cartStore.cart)
-    )
+
+    cartStore.cart = localCart
+    cartStore.setCart()
   }
 
   async function edit_info() {
@@ -451,8 +436,8 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
 
     try {
       const res = JSON.parse(await updateMemberInfoApi(formData))
-      const isReqSuccess = commonStore.resHandler(res, edit_info)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return edit_info()
 
       if (res.status) {
         getMemberInfo()
@@ -477,13 +462,12 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
 
     try {
       const res = JSON.parse(await updateMemberPassApi(query))
-      const isReqSuccess = commonStore.resHandler(res, edit_pass)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return edit_pass()
 
       if (res.status) {
         commonStore.showMessage(res.msg, true)
-        commonStore.payModal_message = ""
-        commonStore.is_payModal = false
+        commonStore.isConfirmEditPass = false
       } else {
         commonStore.showMessage(res.msg, false)
         userStore.check_logout(res.msg)
@@ -534,7 +518,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
 
   // bonus ---------------
   async function getBonus(type) {
-    if (!type) bonus_page_index.value = 1
+    if (!type) bonus_pagination.activePage = 1
 
     let query = {
       storeid: commonStore.site.Name,
@@ -543,21 +527,23 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
 
       recommander: memberInfo.value.recommend_code,
 
-      pageindex: bonus_page_index.value,
-      pagesize: bonus_page_size.value
+      pageindex: bonus_pagination.activePage,
+      pagesize: bonus_pagination.perpageItemNum
     }
     let formData = return_formData(query)
 
     try {
       const res = JSON.parse(await getBonusApi(formData))
-      const isReqSuccess = commonStore.resHandler(res, getBonus)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return getBonus()
 
       if (res.status) {
         let data = res.datas[0] || {}
 
-        bonus_page_number.value = Math.ceil(data.Count / bonus_page_size.value)
-        if (bonus_page_number.value == 0) {
+        bonus_pagination.totalPageNum = Math.ceil(
+          data.Count / bonus_pagination.perpageItemNum
+        )
+        if (bonus_pagination.totalPageNum == 0) {
           commonStore.showMessage("沒有您的購物金紀錄", false)
           bonus.value = null
           return
@@ -581,14 +567,14 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
 
   // ---------------
   async function logoutHandler() {
-    user_account.value = ""
-    useUrlPush("/user.html")
+    commonStore.user_account = ""
+    useUrlPush("/user")
   }
   async function ajaxLogout() {
     try {
       const res = JSON.parse(await logoutApi())
-      const isReqSuccess = commonStore.resHandler(res, ajaxLogout)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return ajaxLogout()
 
       logoutHandler()
     } catch (error) {
@@ -599,7 +585,11 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
   // ---------------
   function bindLine() {
     useUrlPush(
-      `${location.origin}/interface/webmember/LineLoginAuthorize?storeid=${commonStore.site.Name}&site=${commonStore.site.Site}&phone=${user_account.value}&method=LineRegister`
+      `${useRoute().path}/interface/webmember/LineLoginAuthorize?storeid=${
+        commonStore.site.Name
+      }&site=${commonStore.site.Site}&phone=${
+        commonStore.user_account
+      }&method=LineRegister`
     )
   }
 
@@ -615,8 +605,8 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
 
     try {
       const res = JSON.parse(await unbindLine_testApi(query))
-      const isReqSuccess = commonStore.resHandler(res, unbindLine_test)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return unbindLine_test()
 
       getMemberInfo()
     } catch (error) {
@@ -634,8 +624,8 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
 
     try {
       const res = JSON.parse(await deleteAccount_testApi(query))
-      const isReqSuccess = commonStore.resHandler(res, deleteAccount_test)
-      if (!isReqSuccess) return
+      const isReqSuccess = commonStore.resHandler(res)
+      if (!isReqSuccess) return deleteAccount_test()
 
       logoutHandler()
     } catch (error) {
@@ -661,10 +651,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
     e_form,
 
     bonus,
-    bonus_page_index,
-    bonus_page_number,
-    bonus_page_size,
-    select_active,
+    bonus_pagination,
 
     getMemberInfo,
     login_handle_cart,

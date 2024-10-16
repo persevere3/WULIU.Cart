@@ -15,9 +15,6 @@ export const useCommonStore = defineStore("common", () => {
   const bank = bank_json
 
   // state ==============================
-  const route = useRoute()
-
-  // ----------
   const webData = ref({})
   /* site.MemberFuction: 會員系統 */
   const site = ref({})
@@ -42,8 +39,9 @@ export const useCommonStore = defineStore("common", () => {
   const isConfirmIsRegister = ref(false)
   const isConfirmRegister = ref(false)
 
-  const is_payModal = ref(false)
-  const payModal_message = ref("")
+  const isConfirmEditPass = ref(false)
+  const isConfirmATM2 = ref(false)
+  const isConfirmCheckPay = ref(false)
 
   // methods ==============================
   function storeLogin() {
@@ -62,20 +60,15 @@ export const useCommonStore = defineStore("common", () => {
       throw new Error(error)
     }
   }
-  async function resHandler(res, callback, params) {
+  function resHandler(res) {
     if (res.errormessage || (res.GetSite && res.GetSite.data.length == 0)) {
       try {
-        const storeLoginRes = JSON.parse(await storeLogin())
-        if (storeLoginRes.status) {
-          params ? callback(...params) : callback()
-        } else {
-          console.log(storeLoginRes)
-        }
-
-        return false
+        storeLogin()
       } catch (error) {
         throw new Error(error)
       }
+
+      return false
     } else return true
   }
 
@@ -111,7 +104,7 @@ export const useCommonStore = defineStore("common", () => {
     try {
       const res = JSON.parse(await initialWebApi(query))
       const isResSuccess = resHandler(res, initialWeb)
-      if (!isResSuccess) return
+      if (!isResSuccess) return initialWeb()
 
       webData.value = res
 
@@ -376,7 +369,7 @@ export const useCommonStore = defineStore("common", () => {
   )
 
   // user_account localStorage，purchaseInfoStore, memberInfoStore
-  watch(user_account, (newV) => {
+  watch(user_account, (newV, oldV) => {
     if (newV) localStorage.setItem("user_account", newV)
     else localStorage.removeItem("user_account")
 
@@ -415,8 +408,9 @@ export const useCommonStore = defineStore("common", () => {
     isConfirmIsRegister,
     isConfirmRegister,
 
-    is_payModal,
-    payModal_message,
+    isConfirmEditPass,
+    isConfirmCheckPay,
+    isConfirmATM2,
 
     storeLogin,
     resHandler,

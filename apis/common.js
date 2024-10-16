@@ -10,6 +10,9 @@ export const initialWebApi = (query) =>
   $fetch("/interface/web/InitialWeb", {
     query
   })
+// useFetch("/interface/web/InitialWeb", {
+//   query
+// })
 
 /*  */
 export const connectHandlerApi = (formData) =>

@@ -63,7 +63,7 @@ const props = defineProps({
       <div class="m_controller">
         <div
           class="m_addToFavoriteBtn"
-          @click.stop="productStore.toggleFavorite(product.ID)"
+          @click.prevent="productStore.toggleFavorite(product.ID)"
         >
           <i
             class="fas fa-heart"

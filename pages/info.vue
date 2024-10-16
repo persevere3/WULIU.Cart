@@ -1,6 +1,9 @@
 <script setup>
+import Pagination2 from "~/components/pagination2.vue"
 import Order from "@/components/pages/order/index.vue"
 import c_input from "@/components/registerForm/Input.vue"
+
+import { useUrlPush } from "@/composables/urlPush"
 
 const commonStore = useCommonStore()
 const orderStore = useOrderStore()
@@ -16,7 +19,7 @@ onMounted(() => {
   watch(
     () => commonStore.is_initial,
     async () => {
-      await memberInfoStore.getMemberInfo()
+      if (commonStore.user_account) await memberInfoStore.getMemberInfo()
 
       if (RtnMsg) {
         commonStore.showMessage("已收到您的付款", true)
@@ -30,6 +33,28 @@ onMounted(() => {
     }
   )
 })
+
+watch(
+  () => commonStore.user_account,
+  () => {
+    if (!commonStore.user_account) useUrlPush("/user")
+  },
+  { immediate: true }
+)
+
+watch(
+  () => memberInfoStore.bonus_pagination.activePage,
+  () => {
+    memberInfoStore.getBonus("page")
+  }
+)
+
+watch(
+  () => memberInfoStore.bonus_pagination.perpageItemNum,
+  () => {
+    memberInfoStore.getBonus()
+  }
+)
 </script>
 
 <template>
@@ -69,7 +94,7 @@ onMounted(() => {
       >
         綁定Line帳號
       </div>
-      <div class="button" @click="memberInfoStore.post_logout">登出</div>
+      <div class="button" @click="memberInfoStore.ajaxLogout">登出</div>
     </div>
 
     <div class="navs">
@@ -96,10 +121,7 @@ onMounted(() => {
       <div
         class="nav order_nav"
         :class="{ active: memberInfoStore.member_info_nav_active === 'order' }"
-        @click="
-          ;(memberInfoStore.member_info_nav_active = 'order'),
-            orderStore.getMemberOrder()
-        "
+        @click="memberInfoStore.member_info_nav_active = 'order'"
       >
         訂單列表
       </div>
@@ -147,13 +169,7 @@ onMounted(() => {
             v-if="memberInfoStore.memberInfo.Registermethod != 2"
           >
             <div class="title">密碼</div>
-            <div
-              class="button"
-              @click="
-                ;(commonStore.is_payModal = true),
-                  (commonStore.payModal_message = 'template3')
-              "
-            >
+            <div class="button" @click="commonStore.isConfirmEditPass = true">
               修改密碼
             </div>
           </div>
@@ -360,90 +376,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="page_container">
-          <div class="page">
-            <ul memberInfoStore.bonus_page_number>
-              <li
-                :class="{ disabled: memberInfoStore.bonus_page_index < 2 }"
-                @click="
-                  memberInfoStore.bonus_page_index > 1
-                    ? memberInfoStore.bonus_page_index--
-                    : '',
-                    memberInfoStore.getBonus('page')
-                "
-              >
-                <i class="fas fa-caret-left"></i>
-              </li>
-              <li
-                v-show="
-                  memberInfoStore.bonus_page_index > Math.floor(5 / 2) &&
-                  memberInfoStore.bonus_page_index <
-                    memberInfoStore.bonus_page_number - Math.floor(5 / 2)
-                    ? item >=
-                        memberInfoStore.bonus_page_index - Math.floor(5 / 2) &&
-                      item <=
-                        memberInfoStore.bonus_page_index + Math.floor(5 / 2)
-                    : memberInfoStore.bonus_page_index <= 5
-                    ? item <= 5
-                    : item > memberInfoStore.bonus_page_number - 5
-                "
-                :class="{ active: memberInfoStore.bonus_page_index === item }"
-                v-for="item in memberInfoStore.bonus_page_number"
-                :key="item"
-                @click="
-                  ;(memberInfoStore.bonus_page_index = item),
-                    memberInfoStore.getBonus('page')
-                "
-              >
-                {{ item }}
-              </li>
-              <li
-                :class="{
-                  disabled:
-                    memberInfoStore.bonus_page_index >
-                    memberInfoStore.bonus_page_number - 1
-                }"
-                @click="
-                  memberInfoStore.bonus_page_index <
-                  memberInfoStore.bonus_page_number
-                    ? memberInfoStore.bonus_page_index++
-                    : '',
-                    memberInfoStore.getBonus('page')
-                "
-              >
-                <i class="fas fa-caret-right"></i>
-              </li>
-            </ul>
-          </div>
-          <div class="total">
-            {{ memberInfoStore.bonus_page_index }} /
-            {{ memberInfoStore.bonus_page_number }}
-          </div>
-          <div
-            class="select"
-            @click.stop="
-              memberInfoStore.select_active = !memberInfoStore.select_active
-            "
-          >
-            <div class="value">{{ memberInfoStore.bonus_page_size }}</div>
-            <i class="fas fa-caret-down"></i>
-            <ul :class="{ active: memberInfoStore.select_active }">
-              <li
-                :class="{
-                  active: memberInfoStore.order_page_size === item * 10
-                }"
-                v-for="item in 5"
-                :key="item"
-                @click="
-                  ;(memberInfoStore.bonus_page_size = item * 10),
-                    memberInfoStore.getBonus()
-                "
-              >
-                {{ item * 10 }}
-              </li>
-            </ul>
-          </div>
-        </div>
+        <Pagination2 :pagination="memberInfoStore.bonus_pagination" />
       </div>
 
       <div

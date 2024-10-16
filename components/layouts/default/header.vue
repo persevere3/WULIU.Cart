@@ -134,4 +134,10 @@ onMounted(() => {
   resizeHandler()
   window.addEventListener("resize", resizeHandler)
 })
+
+const fullPath = computed(() => useRoute().fullPath)
+watch(fullPath, async () => {
+  await nextTick()
+  resizeHandler()
+})
 </script>
