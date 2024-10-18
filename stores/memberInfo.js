@@ -585,11 +585,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
   // ---------------
   function bindLine() {
     useUrlPush(
-      `${useRoute().path}/interface/webmember/LineLoginAuthorize?storeid=${
-        commonStore.site.Name
-      }&site=${commonStore.site.Site}&phone=${
-        commonStore.user_account
-      }&method=LineRegister`
+      `${location.origin}/interface/webmember/LineLoginAuthorize?storeid=${commonStore.site.Name}&site=${commonStore.site.Site}&phone=${commonStore.user_account}&method=LineRegister`
     )
   }
 

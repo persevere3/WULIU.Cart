@@ -161,7 +161,7 @@ export const useOrderStore = defineStore("order", () => {
       Site: commonStore.site.Site,
       StoreName: commonStore.site.Name,
       productName: commonStore.store.Name,
-      LogoUrl: useRoute().path + commonStore.store.PayLogo,
+      LogoUrl: location.origin + commonStore.store.PayLogo,
       Preview: commonStore.site.Preview,
 
       // 商品
@@ -191,7 +191,7 @@ export const useOrderStore = defineStore("order", () => {
       Phone2: purchaseInfoStore.info.purchaser_phone.value,
       Receiver: purchaseInfoStore.info.receiver_name.value,
       ReceiverPhone: purchaseInfoStore.info.receiver_number.value,
-      Message: purchaseInfoStore.info_message.value,
+      Message: purchaseInfoStore.info_message,
 
       // 購物金
       MemberWallet: cartStore.use_bonus,
@@ -378,7 +378,8 @@ export const useOrderStore = defineStore("order", () => {
     // ecpay
     else {
       // target="_blank"
-      if (process.env.NODE_ENV === "development") {
+      let isTest = true
+      if (process.env.NODE_ENV === "development" || isTest) {
         ECPay_form_value.value = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
       } else {
         ECPay_form_value.value = `<form id="ECPay_form" action="https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`

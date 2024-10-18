@@ -211,8 +211,9 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     }
     localStorage.setItem("order_info", JSON.stringify(order_info))
 
+    let isTest = true
     let MerchantID
-    if (process.env.NODE_ENV === "development") {
+    if (process.env.NODE_ENV === "development" || isTest) {
       orderStore.ECPay_store_form_value = `<form id="ECPay_store_form" action="https://logistics-stage.ecpay.com.tw/Express/map" method="post">`
       MerchantID = transport.value.indexOf("C2C") > -1 ? "2000933" : "2000132"
     } else {
@@ -228,7 +229,7 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
       LogisticsType: "CVS",
       LogisticsSubType,
       IsCollection,
-      ServerReplyURL: `${useRoute().path}/interface/store/SpmarketAddress}`,
+      ServerReplyURL: `${location.origin}/interface/store/SpmarketAddress}`,
       ExtraData: "",
       Device: ""
     }

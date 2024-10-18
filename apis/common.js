@@ -6,10 +6,17 @@ export const storeLoginApi = (query) =>
   })
 
 /* 查 web 資訊 */
-export const initialWebApi = (query) =>
-  $fetch("/interface/web/InitialWeb", {
-    query
-  })
+export const initialWebApi = (query) => {
+  if (process.server)
+    return $fetch("https://wuliustore.com.tw/interface/web/InitialWeb", {
+      query
+    })
+  else
+    return $fetch("/interface/web/InitialWeb", {
+      query
+    })
+}
+
 // useFetch("/interface/web/InitialWeb", {
 //   query
 // })

@@ -94,43 +94,48 @@ export const useCommonStore = defineStore("common", () => {
 
     return { pagetype }
   }
-  async function initialWeb() {
+
+  function webHandler() {
+    console.log(webData.value)
+
+    site.value = webData.value.GetSite?.data[0] || {}
+
+    // FeedbackFund => bonus_array ----------
+    if (site.value.FeedbackFund) {
+      cartStore.bonus_array = JSON.parse(site.value.FeedbackFund)
+    }
+
+    if (site.value.WebEnable == 0) useUrlPush("/error")
+
+    is_initial.value = true
+
+    allHandler()
+    storeHandler(webData.value.GetStore?.data[0])
+
+    copyRightHandler()
+    customerServiceHandler()
+
+    productStore.categoriesHandler()
+    productStore.productsHandler(webData.value.StoreLogin)
+
+    if (user_account.value) memberInfoStore.getMemberInfo()
+  }
+
+  async function ajaxWeb() {
     let { pagetype } = getInitialWebQuery()
     let query = {
       webpreview: site.value.webpreview || 1,
-      id: useRoute().query.id,
+      id: useRoute().query.id || 0,
       pagetype
     }
     try {
       const res = JSON.parse(await initialWebApi(query))
-      const isResSuccess = resHandler(res, initialWeb)
-      if (!isResSuccess) return initialWeb()
+      const isResSuccess = resHandler(res, ajaxWeb)
+      if (!isResSuccess) return ajaxWeb()
 
       webData.value = res
 
       console.log(webData.value)
-
-      site.value = webData.value.GetSite.data[0] || {}
-
-      // FeedbackFund => bonus_array ----------
-      if (site.value.FeedbackFund) {
-        cartStore.bonus_array = JSON.parse(site.value.FeedbackFund)
-      }
-
-      if (site.value.WebEnable == 0) useUrlPush("/error")
-
-      is_initial.value = true
-
-      allHandler()
-      storeHandler(webData.value.GetStore.data[0])
-
-      copyRightHandler()
-      customerServiceHandler()
-
-      productStore.categoriesHandler()
-      productStore.productsHandler(webData.value.StoreLogin)
-
-      if (user_account.value) memberInfoStore.getMemberInfo()
     } catch (error) {
       console.log(error)
     }
@@ -416,7 +421,8 @@ export const useCommonStore = defineStore("common", () => {
     resHandler,
 
     getInitialWebQuery,
-    initialWeb,
+    ajaxWeb,
+    webHandler,
 
     allHandler,
     storeHandler,

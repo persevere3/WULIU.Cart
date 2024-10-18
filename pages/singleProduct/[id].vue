@@ -3,21 +3,6 @@ import Product from "~/components/pages/product/index.vue"
 import Message from "@/components/layouts/default/Message.vue"
 import Confirm from "@/components/layouts/default/Confirm.vue"
 
-definePageMeta({
-  layout: false
-})
-
-const commonStore = useCommonStore()
-const productStore = useProductStore()
-
-if (useRoute().fullPath.indexOf("singleProduct") > -1)
-  productStore.isSingleProduct = true
-
-await commonStore.initialWeb()
-
-const productId = useRoute().params.id
-const product = ref({})
-
 useHead({
   link: [
     {
@@ -29,6 +14,40 @@ useHead({
     }
   ]
 })
+
+definePageMeta({
+  layout: false
+})
+
+const commonStore = useCommonStore()
+const productStore = useProductStore()
+
+const productId = useRoute().params.id
+const product = ref({})
+
+if (useRoute().fullPath.indexOf("singleProduct") > -1)
+  productStore.isSingleProduct = true
+
+await commonStore.ajaxWeb()
+
+if (useRoute().params.id || useRoute().params.id === 0) {
+  let jsonLd = commonStore.webData.StoreLogin.ldjson.find(
+    (item) => item.identifier === useRoute().params.id
+  )
+
+  useHead({
+    script: [
+      {
+        type: "application/ld-json",
+        children: JSON.stringify(jsonLd)
+      }
+    ]
+  })
+}
+
+setTimeout(() => {
+  commonStore.webHandler()
+}, 0)
 
 watch(
   () => productStore.products,

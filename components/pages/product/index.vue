@@ -32,7 +32,7 @@ function onSwiper(swiper) {
 }
 
 function click_share_link() {
-  useCopy(useRoute().name, ".copy_input")
+  useCopy(location.href, ".copy_input")
 
   commonStore.showMessage("複製分享連結", true)
 }

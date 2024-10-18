@@ -660,4 +660,11 @@ async function checkPay() {
     }
   }
 }
+
+.ECPay_form_container {
+  position: absolute;
+  top: 0;
+  opacity: 0;
+  z-index: -1;
+}
 </style>

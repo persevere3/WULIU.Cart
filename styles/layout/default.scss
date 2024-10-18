@@ -250,8 +250,6 @@ a {
 // header ==================================================
 @mixin index_header {
   .widthContainer {
-    min-height: 13vw;
-    height: 10vw; // ie
     padding: 15px 20px 0px;
 
     flex-direction: column;
@@ -272,8 +270,6 @@ a {
 }
 @mixin scroll_header {
   .widthContainer {
-    min-height: 103px;
-    height: 100px; // ie
     padding: 0px 20px;
 
     flex-direction: row;
@@ -544,7 +540,7 @@ a {
               overflow-y: auto;
               overflow-x: hidden;
               position: absolute;
-              top: 200%;
+              top: 130%;
               left: 0;
               box-shadow: 2px 2px 6px rgba(20, 20, 20, 0.3);
               background-color: #fff;

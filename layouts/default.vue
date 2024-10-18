@@ -52,8 +52,26 @@ useHead({
 })
 
 const commonStore = useCommonStore()
+await commonStore.ajaxWeb()
 
-await commonStore.initialWeb()
+if (useRoute().params.id || useRoute().params.id === 0) {
+  let jsonLd = commonStore.webData.StoreLogin.ldjson.find(
+    (item) => item.identifier === useRoute().params.id
+  )
+
+  useHead({
+    script: [
+      {
+        type: "application/ld-json",
+        children: JSON.stringify(jsonLd)
+      }
+    ]
+  })
+}
+
+setTimeout(() => {
+  commonStore.webHandler()
+}, 0)
 
 const isShow = ref(false)
 setTimeout(() => {

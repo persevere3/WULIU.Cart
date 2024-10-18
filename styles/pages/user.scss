@@ -2,7 +2,6 @@
 
 .button {
   @include button(auto, 40px, 0, 0, 3px, $primaryColor, #fff, $font_s);
-
   margin-bottom: 10px;
 
   &:last-child {

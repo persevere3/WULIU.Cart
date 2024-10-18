@@ -455,7 +455,7 @@ export const useUserStore = defineStore("user", () => {
   }
   function LineLogin(isRegister) {
     useUrlPush(
-      `${useRoute().path}/interface/webmember/LineLoginAuthorize?storeid=${
+      `${location.origin}/interface/webmember/LineLoginAuthorize?storeid=${
         commonStore.site.Name
       }&site=${commonStore.site.Site}${
         isRegister
