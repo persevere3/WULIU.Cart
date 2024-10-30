@@ -8,8 +8,8 @@ export const discountApi = (query) =>
   })
 
 /* 查 金額, 折扣, 運費, 總計 */
-export const getTotalApi = (query) =>
+export const getTotalApi = (formData) =>
   $fetch("/interface/store/GetProductTotal", {
     method: "POST",
-    body: query
+    body: formData
   })

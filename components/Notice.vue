@@ -60,8 +60,6 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import "@/styles/mixin/_button.scss";
-
 .notice_list {
   width: 100%;
   height: 50px;
@@ -97,13 +95,13 @@ onMounted(() => {
     }
   }
 
-  // @include l {
+  // @include mw992 {
   //   width: 700px;
   // }
-  // @include m {
+  // @include mw767 {
   //   width: 450px;
   // }
-  // @include s {
+  // @include mw480 {
   //   width: 300px;
   // }
 }
@@ -165,10 +163,10 @@ onMounted(() => {
       }
     }
 
-    @include l {
+    @include mw992 {
       width: 700px;
     }
-    @include m {
+    @include mw767 {
       width: 90%;
     }
   }

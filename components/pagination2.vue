@@ -213,7 +213,7 @@ function pagePush(page) {
     }
   }
 
-  @include m {
+  @include mw767 {
     flex-wrap: wrap;
 
     .page {

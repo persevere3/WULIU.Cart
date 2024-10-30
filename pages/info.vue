@@ -12,7 +12,6 @@ const memberInfoStore = useMemberInfoStore()
 const purchaseInfoStore = usePurchaseInfoStore()
 
 const isDevelopment = process.env.NODE_ENV === "development" ? true : false
-
 const { RtnMsg, page } = useRoute().query
 
 onMounted(() => {
@@ -390,5 +389,5 @@ watch(
 </template>
 
 <style lang="scss" scoped>
-@import "@/styles/components/info.scss";
+@import "@/styles/pages/info.scss";
 </style>

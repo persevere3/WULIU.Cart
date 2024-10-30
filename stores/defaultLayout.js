@@ -90,8 +90,6 @@ export const useDefaultLayoutStore = defineStore("defaultLayout", () => {
         const isReqSuccess = commonStore.resHandler(res)
         if (!isReqSuccess) return methods.connectHandler()
 
-        console.log(1)
-
         state.is_connect = false
 
         reset(state.connect_mail)

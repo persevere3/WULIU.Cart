@@ -1,5 +1,3 @@
-@import "@/styles/mixin/_button.scss";
-
 .button_row {
   width: 100%;
   display: flex;
@@ -109,7 +107,7 @@
       .right {
         width: 49%;
 
-        @include s {
+        @include mw480 {
           width: 100%;
         }
       }
@@ -642,7 +640,7 @@
           }
         }
       }
-      @include l {
+      @include mw992 {
         .table {
           .head,
           .body {
@@ -712,7 +710,7 @@
           }
         }
       }
-      @include m {
+      @include mw767 {
         .page_container {
           flex-wrap: wrap;
 
@@ -721,7 +719,7 @@
           }
         }
       }
-      @include s {
+      @include mw480 {
         .table {
           .head,
           .body {
@@ -738,7 +736,7 @@
     }
   }
 
-  @include xxl {
+  @include mw1400 {
     width: 95%;
   }
 }

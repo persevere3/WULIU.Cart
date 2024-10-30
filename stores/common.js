@@ -134,8 +134,6 @@ export const useCommonStore = defineStore("common", () => {
       if (!isResSuccess) return ajaxWeb()
 
       webData.value = res
-
-      console.log(webData.value)
     } catch (error) {
       console.log(error)
     }
@@ -358,12 +356,6 @@ export const useCommonStore = defineStore("common", () => {
     })
   }
 
-  // ---------------
-  function cartPush(id) {
-    if (id === undefined) useUrlPush(`/cart`, true)
-    else useUrlPush(`/product/${id}`, true)
-  }
-
   // watch ==============================
   // site localStorage
   watch(
@@ -431,8 +423,6 @@ export const useCommonStore = defineStore("common", () => {
     customerServiceHandler,
 
     showMessage,
-    promiseSetTimeout,
-
-    cartPush
+    promiseSetTimeout
   }
 })

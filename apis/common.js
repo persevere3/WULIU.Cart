@@ -17,10 +17,6 @@ export const initialWebApi = (query) => {
     })
 }
 
-// useFetch("/interface/web/InitialWeb", {
-//   query
-// })
-
 /*  */
 export const connectHandlerApi = (formData) =>
   $fetch("/interface/web/PostFeedback", {

@@ -1,5 +1,3 @@
-// ============================================================
-
 .rich {
   width: 1170px;
   margin: 0 auto;
@@ -26,17 +24,17 @@
     }
   }
 }
-@include xl {
+@include mw1200 {
   .main {
     width: 970px;
   }
 }
-@include l {
+@include mw992 {
   .main {
     width: 750px;
   }
 }
-@include m {
+@include mw767 {
   .main {
     width: 100%;
   }

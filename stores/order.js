@@ -295,7 +295,6 @@ export const useOrderStore = defineStore("order", () => {
           // 沒有登入
           if (!commonStore.user_account) {
             let hasAcount = await hasAccount()
-            console.log(hasAcount)
             if (hasAcount) commonStore.isConfirmToPay = true
             else commonStore.isConfirmIsRegister = true
           }
@@ -560,8 +559,10 @@ export const useOrderStore = defineStore("order", () => {
       url
     }
 
+    let formData = return_formData(query)
+
     try {
-      const res = JSON.parse(await rePayApi(query))
+      const res = JSON.parse(await rePayApi(formData))
       const isReqSuccess = commonStore.resHandler(res)
       if (!isReqSuccess) return rePay(flino, url)
 

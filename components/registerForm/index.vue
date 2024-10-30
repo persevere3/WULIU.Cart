@@ -119,8 +119,6 @@ const userStore = useUserStore()
 </script>
 
 <style lang="scss" scoped>
-@import "@/styles/mixin/_button.scss";
-
 .r_form {
   width: 100%;
   z-index: 10;

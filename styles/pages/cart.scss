@@ -38,13 +38,13 @@
   margin: 0 auto;
   position: relative;
 
-  @include xl {
+  @include mw1200 {
     width: 970px;
   }
-  @include l {
+  @include mw992 {
     width: 750px;
   }
-  @include m {
+  @include mw767 {
     width: 100%;
   }
 
@@ -683,7 +683,7 @@
     color: $white;
   } //
 
-  @include m {
+  @include mw767 {
     .step {
       justify-content: center;
       align-items: center;
@@ -803,7 +803,7 @@
       }
     }
   }
-  @include ms {
+  @include mw600 {
     .stepTwo {
       .title {
         margin-bottom: 10px;
@@ -825,7 +825,7 @@
       }
     }
   }
-  @include s {
+  @include mw480 {
     .stepOne,
     .stepTwo {
       .total {
@@ -1119,7 +1119,7 @@
       padding: 100px 0px;
     }
   }
-  @include l {
+  @include mw992 {
     .products {
       width: 700px;
 
@@ -1130,7 +1130,7 @@
       }
     }
   }
-  @include m {
+  @include mw767 {
     .products {
       width: 100%;
 

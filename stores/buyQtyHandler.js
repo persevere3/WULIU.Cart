@@ -10,8 +10,6 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
   // methods ==============================
   // 改變 主商品數量
   async function changeMainBuyQty(main, specIndex, qty) {
-    console.log(main, specIndex, qty)
-
     let spec = specIndex == null ? null : main.specArr[specIndex]
     let target = spec ? spec : main
 
@@ -112,8 +110,6 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
   }
   // 改變 加價購數量
   async function changeAddProductBuyQty(main, addProductIndex, specIndex, qty) {
-    console.log(main, addProductIndex, specIndex, qty)
-
     let addProduct = main.addProducts[addProductIndex]
     let addProductSpec =
       specIndex == null ? null : addProduct.specArr[specIndex]

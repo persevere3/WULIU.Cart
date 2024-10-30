@@ -25,7 +25,7 @@ export default defineNuxtConfig({
     dirs: ["stores"]
   },
 
-  css: ["@/styles/_all.scss"],
+  // css: ["@/styles/_all.scss"],
 
   // modules
   modules: [
@@ -52,8 +52,7 @@ export default defineNuxtConfig({
       preprocessorOptions: {
         scss: {
           additionalData: `
-            @import "@/styles/mixin/_common.scss";
-            @import "@/styles/_variable.scss";
+            @import "@/styles/common.scss";
           `
         }
       }

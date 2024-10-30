@@ -231,10 +231,10 @@ productStore.getAddProducts([props.product.ID])
   margin: 0 auto;
   padding: 25px;
 
-  @include l {
+  @include mw992 {
     width: 95%;
   }
-  @include m {
+  @include mw767 {
     width: 90%;
   }
 

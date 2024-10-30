@@ -1,6 +1,3 @@
-@import "@/styles/mixin/_input.scss";
-@import "@/styles/mixin/_button.scss";
-
 input {
   // input($width, $height, $padding, $margin, $borderRadius, $border, $shadow, $backgroundColor, $color, $font-size)
   @include input(
@@ -76,7 +73,7 @@ input {
       }
     }
   }
-  @include m {
+  @include mw767 {
     .info {
       input {
         width: 100%;
@@ -262,7 +259,7 @@ input {
       }
     }
   }
-  @include l {
+  @include mw992 {
     .table {
       .head,
       .body {
@@ -446,7 +443,7 @@ input {
       }
     }
   }
-  @include m {
+  @include mw767 {
     .page_container {
       flex-wrap: wrap;
 

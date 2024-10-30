@@ -1,5 +1,3 @@
-@import "@/styles/mixin/_productList.scss";
-
 .allProductsAndCategory {
   .img_container {
     width: 100%;
@@ -37,12 +35,12 @@
       }
     }
   }
-  @include xl {
+  @include mw1200 {
     .content {
       width: 970px;
     }
   }
-  @include l {
+  @include mw992 {
     .content {
       width: 750px;
 
@@ -56,7 +54,7 @@
       }
     }
   }
-  @include m {
+  @include mw767 {
     .content {
       width: 100%;
     }

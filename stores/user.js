@@ -411,8 +411,10 @@ export const useUserStore = defineStore("user", () => {
       query.validate2 = r_form.mail_verify_code.value
     }
 
+    let formData = return_formData(query)
+
     try {
-      const res = JSON.parse(await registerApi(query))
+      const res = JSON.parse(await registerApi(formData))
       const isReqSuccess = commonStore.resHandler(res)
       if (!isReqSuccess) return register()
 

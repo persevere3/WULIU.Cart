@@ -1,5 +1,3 @@
-@import "@/styles/mixin/_ellipsis.scss";
-
 a {
   display: block;
   text-decoration: none;
@@ -14,7 +12,7 @@ a {
   background-color: $modalBackground;
   z-index: 150;
   display: none;
-  @include xl {
+  @include mw1200 {
     &.active {
       display: block;
     }
@@ -123,7 +121,7 @@ a {
       }
     }
   }
-  @include m {
+  @include mw767 {
     .connect {
       width: 98%;
     }
@@ -585,12 +583,12 @@ a {
     @include scroll_header;
   }
 }
-@include xl {
+@include mw1200 {
   .header {
     @include m_header;
   }
 }
-@include m {
+@include mw767 {
   .header {
     .widthContainer {
       .prev {
@@ -599,7 +597,7 @@ a {
     }
   }
 }
-@include s {
+@include mw600 {
   .header {
     .widthContainer {
       .iconbar {
@@ -721,7 +719,7 @@ a {
     }
   }
 }
-@include l {
+@include mw992 {
   .footer {
     .link_list {
       padding: 30px 20px;
@@ -748,7 +746,7 @@ a {
     }
   }
 }
-@include m {
+@include mw767 {
   .footer {
     .link_list {
       padding: 30px 15px;

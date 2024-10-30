@@ -6,8 +6,8 @@ export const confirmPayApi = (formData) =>
   })
 
 /* 重新付款 */
-export const rePayApi = (query) =>
+export const rePayApi = (formData) =>
   $fetch("/LineMK/Line/RePayConfirm", {
     method: "POST",
-    query
+    body: formData
   })

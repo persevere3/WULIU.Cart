@@ -32,8 +32,6 @@ const props = defineProps({
 </template>
 
 <style lang="scss" scoped>
-@import "@/styles/mixin/_ellipsis.scss";
-
 .c_select {
   width: 150px;
   min-height: 35px;

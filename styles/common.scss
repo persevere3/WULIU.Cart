@@ -1,6 +1,11 @@
-*, *:before, *:after {
+@import "@/styles/mixin/index.scss";
+@import "@/styles/variables/index.scss";
+
+*,
+*:before,
+*:after {
   margin: 0;
-  padding :0;
+  padding: 0;
   list-style: none;
   box-sizing: border-box;
   vertical-align: middle;
@@ -11,12 +16,12 @@ html {
   font-size: 16px;
   word-break: break-all;
 }
-@media(max-width: 414px) {
+@media (max-width: 414px) {
   html {
     font-size: 14px;
   }
 }
-@media(max-width: 360px) {
+@media (max-width: 360px) {
   html {
     font-size: 12px;
   }
@@ -27,5 +32,5 @@ html {
 }
 ::-webkit-scrollbar-thumb {
   border-radius: 8px;
-  background-color: lighten($primaryColor, 20%);
+  background-color: $secondColor;
 }

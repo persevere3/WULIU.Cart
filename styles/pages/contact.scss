@@ -58,21 +58,21 @@
       }
     }
   }
-  @include xl {
+  @include mw1200 {
     .opening,
     .info,
     .location {
       width: 970px;
     }
   }
-  @include l {
+  @include mw992 {
     .opening,
     .info,
     .location {
       width: 750px;
     }
   }
-  @include m {
+  @include mw767 {
     .opening,
     .info,
     .location {
@@ -95,7 +95,7 @@
       padding: 15px 0px;
     }
   }
-  @include l {
+  @include mw992 {
     .location {
       .left {
         width: 100%;

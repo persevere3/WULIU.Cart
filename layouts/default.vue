@@ -54,19 +54,21 @@ useHead({
 const commonStore = useCommonStore()
 await commonStore.ajaxWeb()
 
-if (useRoute().params.id || useRoute().params.id === 0) {
-  let jsonLd = commonStore.webData.StoreLogin.ldjson.find(
-    (item) => item.identifier === useRoute().params.id
-  )
+if (process.env.NODE_ENV === "production") {
+  if (useRoute().params.id || useRoute().params.id === 0) {
+    let jsonLd = commonStore.webData.StoreLogin.ldjson.find(
+      (item) => item.identifier === useRoute().params.id
+    )
 
-  useHead({
-    script: [
-      {
-        type: "application/ld-json",
-        children: JSON.stringify(jsonLd)
-      }
-    ]
-  })
+    useHead({
+      script: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(jsonLd)
+        }
+      ]
+    })
+  }
 }
 
 setTimeout(() => {

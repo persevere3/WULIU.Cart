@@ -79,8 +79,6 @@ const props = defineProps({
 </template>
 
 <style lang="scss" scope>
-@import "@/styles/mixin/_ellipsis.scss";
-
 .c_product {
   a {
     display: block;
@@ -192,7 +190,7 @@ const props = defineProps({
 
     .m_controller {
       display: none;
-      @include l {
+      @include mw992 {
         display: flex;
       }
 

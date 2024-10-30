@@ -460,8 +460,6 @@ async function checkPay() {
 </script>
 
 <style lang="scss" scoped>
-@import "@/styles/mixin/_button.scss";
-
 .button {
   @include button(auto, auto, 6px 10px, 0, 5px, $secondColor_3, $white, 14);
 }
@@ -500,10 +498,10 @@ async function checkPay() {
     align-items: center;
     justify-content: center;
 
-    @include m {
+    @include mw767 {
       width: 400px;
     }
-    @include s {
+    @include mw480 {
       width: 300px;
     }
 

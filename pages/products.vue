@@ -145,7 +145,6 @@ watch(
 </template>
 
 <style lang="scss" scoped>
-@import "@/styles/mixin/_productList.scss";
 @include productList;
 
 .selectContainer {
