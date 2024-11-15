@@ -73,6 +73,137 @@ function selectSpec(item, index) {
 defineExpose({
   selectedSpec
 })
+
+// test
+let test_specArr = [
+  {
+    name: "1",
+    itemNum: "1",
+    id: 3287,
+    isQty: false,
+    qty: 0,
+    originId: 3287,
+    itemPrice: "",
+    itemNowPrice: "100",
+    name2: "a"
+  },
+  {
+    name: "2",
+    itemNum: "2",
+    id: 3288,
+    isQty: false,
+    qty: 0,
+    originId: 3288,
+    itemPrice: "",
+    itemNowPrice: "100",
+    name2: "b"
+  },
+  {
+    name: "3",
+    itemNum: "3",
+    id: 3291,
+    isQty: false,
+    qty: 0,
+    originId: 3291,
+    itemPrice: "",
+    itemNowPrice: "100",
+    name2: "c"
+  },
+  {
+    name: "4",
+    itemNum: "4",
+    id: 3292,
+    isQty: false,
+    qty: 0,
+    originId: 3292,
+    itemPrice: "",
+    itemNowPrice: "100",
+    name2: "d"
+  },
+  {
+    name: "5",
+    itemNum: "5",
+    id: 3293,
+    isQty: false,
+    qty: 0,
+    originId: 3293,
+    itemPrice: "",
+    itemNowPrice: "100",
+    name2: "e"
+  },
+  {
+    id: 1731655084340,
+    name: "6",
+    name2: "f",
+    itemNum: "6",
+    isQty: false,
+    qty: 0,
+    originId: 0,
+    itemPrice: "",
+    itemNowPrice: "100"
+  }
+]
+let activeSpecObj = ref({
+  spec1: "",
+  spec2: ""
+})
+let specObj = {}
+let spec1Arr = []
+let spec2Arr = []
+test_specArr.forEach((item) => {
+  if (!specObj[item.name]) specObj[item.name] = {}
+  specObj[item.name][item.name2] = item
+  if (!specObj[item.name2]) specObj[item.name2] = {}
+  specObj[item.name2][item.name] = item
+
+  let spec1 = spec1Arr.find((spec) => spec === item.name)
+  if (!spec1) spec1Arr.push(item.name)
+
+  let spec2 = spec2Arr.find((spec) => spec === item.name2)
+  if (!spec2) spec2Arr.push(item.name2)
+})
+
+watch(
+  activeSpecObj,
+  () => {
+    if (activeSpecObj.value.spec1 && activeSpecObj.value.spec2) {
+      console.log(specObj[activeSpecObj.value.spec1][activeSpecObj.value.spec2])
+    }
+  },
+  { deep: true }
+)
+
+let showSpec1Arr = computed(() => {
+  if (!activeSpecObj.value.spec2) {
+    return spec1Arr
+  }
+
+  let arr = []
+  for (let key in specObj[activeSpecObj.value.spec2]) {
+    arr.push(key)
+  }
+  return arr
+})
+let showSpec2Arr = computed(() => {
+  if (!activeSpecObj.value.spec1) {
+    return spec2Arr
+  }
+
+  let arr = []
+  for (let key in specObj[activeSpecObj.value.spec1]) {
+    arr.push(key)
+  }
+
+  return arr
+})
+
+function test_selectSpec(key, spec) {
+  if (activeSpecObj.value[key] === spec) {
+    activeSpecObj.value[key] = ""
+  } else {
+    activeSpecObj.value[key] = spec
+  }
+}
 </script>
 
 <template>
@@ -116,6 +247,38 @@ defineExpose({
         </div>
       </div>
       <div class="noSpec" v-else></div>
+
+      <template v-if="product.specArr">
+        <div class="specContainer">
+          <div class="specTitle">顏色:</div>
+          <div class="specOptions">
+            <div
+              class="specOption"
+              :class="{ active: spec === activeSpecObj.spec1 }"
+              v-for="(spec, index) in showSpec1Arr"
+              :key="spec"
+              @click="test_selectSpec('spec1', spec)"
+            >
+              {{ spec }}
+            </div>
+          </div>
+        </div>
+
+        <div class="specContainer">
+          <div class="specTitle">尺寸:</div>
+          <div class="specOptions">
+            <div
+              class="specOption"
+              :class="{ active: spec === activeSpecObj.spec2 }"
+              v-for="(spec, index) in showSpec2Arr"
+              :key="spec"
+              @click="test_selectSpec('spec2', spec)"
+            >
+              {{ spec }}
+            </div>
+          </div>
+        </div>
+      </template>
     </template>
 
     <!-- 數量 -->
@@ -568,6 +731,35 @@ defineExpose({
     height: 33px;
     line-height: 33px;
     color: $dangerColor;
+  }
+
+  .specContainer {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+
+    .specTitle {
+      margin-right: 10px;
+    }
+    .specOptions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      .specOption {
+        @include border_button(
+          auto,
+          auto,
+          6px 10px,
+          0 5px,
+          3px,
+          $secondColor_3,
+          $secondColor_3,
+          $white,
+          14
+        );
+      }
+    }
   }
 }
 </style>

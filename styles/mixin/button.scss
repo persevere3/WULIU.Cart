@@ -1,4 +1,13 @@
-@mixin button($width, $height, $padding, $margin, $borderRadius, $backgroundColor, $color, $font-size) {
+@mixin button(
+  $width,
+  $height,
+  $padding,
+  $margin,
+  $borderRadius,
+  $backgroundColor,
+  $color,
+  $font-size
+) {
   width: $width;
   height: $height;
   padding: $padding;
@@ -12,7 +21,7 @@
   justify-content: center;
   align-items: center;
   opacity: 0.8;
-  transition: .3s;
+  transition: 0.3s;
   cursor: pointer;
 
   &:hover {
@@ -22,6 +31,49 @@
   &.disabled {
     background-color: $backgroundColor !important;
     color: $color !important;
+    opacity: 0.3 !important;
+  }
+}
+
+@mixin border_button(
+  $width,
+  $height,
+  $padding,
+  $margin,
+  $borderRadius,
+  $borderColor,
+  $color,
+  $hoverColor,
+  $font-size
+) {
+  width: $width;
+  height: $height;
+  padding: $padding;
+  margin: $margin;
+  border-radius: $borderRadius;
+  border: 1px solid $borderColor;
+  color: $color;
+  white-space: nowrap;
+  font-size: $font-size;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.8;
+  transition: 0.3s;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: 0 0 2px 1px $borderColor;
+    opacity: 1;
+  }
+
+  &.active {
+    background: $borderColor;
+    color: $hoverColor;
+    opacity: 1;
+  }
+
+  &.disabled {
     opacity: 0.3 !important;
   }
 }
