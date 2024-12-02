@@ -1,14 +1,13 @@
 <script setup>
+import CategoryMenu from "@/components/pages/category/Menu.vue"
 import Select from "@/components/select.vue"
 import ProductItem from "~/components/productItem.vue"
 import Pagination from "@/components/pagination.vue"
 import Notice from "@/components/Notice.vue"
 
-const commonStore = useCommonStore()
 const productStore = useProductStore()
 
 const search = ref("")
-const categorySelect = ref({})
 const perpageItemNumSelect = ref({
   options: [
     {
@@ -37,52 +36,39 @@ const perpageItemNumSelect = ref({
     number: 8
   }
 })
-
 const pagination = ref({
   perpageItemNum: 8,
   totalPageNum: 0,
   activePage: 1
 })
 
+function filterCategoryProducts(categories) {
+  let arr = []
+  categories.forEach((category) => {
+    if (category.products) arr = [...arr, ...category.products]
+    else arr = [...arr, ...filterCategoryProducts(category.children)]
+  })
+  return arr
+}
 const filterProducts = computed(() => {
-  let searchFilterProducts = productStore.products.filter(
+  let products = []
+  if (productStore.category) {
+    if (productStore.category.products)
+      products = productStore.category.products
+    else products = filterCategoryProducts(productStore.category.children)
+  } else products = productStore.products
+
+  let searchFilterProducts = products.filter(
     (p) => search.value == undefined || p.Name.indexOf(search.value) > -1
   )
 
-  let filteredProducts = searchFilterProducts.filter(
-    (p) =>
-      categorySelect.value.activeOption?.ID == 0 ||
-      p.categoryArr.includes(categorySelect.value.activeOption?.ID)
-  )
-
-  return filteredProducts
+  return searchFilterProducts
 })
 
 // search
 onMounted(() => {
   search.value = useRoute().query.search
 })
-
-// categorySelect
-watch(
-  () => productStore.category_products,
-  (v) => {
-    if (Object.entries(v).length > 0) {
-      categorySelect.value = {
-        options: productStore.categories,
-        activeOption: productStore.categories[0]
-      }
-    }
-  },
-  { immediate: true }
-)
-watch(
-  () => categorySelect.value.activeOption,
-  () => {
-    pagination.value.activePage = 1
-  },
-  { immediate: true }
-)
 
 // perpageItemNumSelect => pagination.value.perpageItemNum
 watch(
@@ -109,12 +95,16 @@ watch(
 </script>
 
 <template>
-  <div>
+  <div class="products">
+    <div class="categories">
+      <CategoryMenu :categories="productStore.categories" />
+    </div>
+
     <div class="selectContainer">
       <input type="text" placeholder="請輸入產品名稱" v-model="search" />
-      <Select v-if="categorySelect.options" :select="categorySelect" />
       <Select :select="perpageItemNumSelect" />
     </div>
+
     <div class="productList">
       <ul>
         <li
@@ -146,6 +136,28 @@ watch(
 
 <style lang="scss" scoped>
 @include productList;
+
+.products {
+  position: relative;
+
+  .categories {
+    width: 1170px;
+    padding: 10px 0;
+    margin: 20px auto 0 auto;
+    display: flex;
+    justify-content: center;
+
+    @include mw1200 {
+      width: 970px;
+    }
+    @include mw992 {
+      width: 750px;
+    }
+    @include mw767 {
+      width: 95%;
+    }
+  }
+}
 
 .selectContainer {
   display: flex;

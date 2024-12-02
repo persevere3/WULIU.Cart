@@ -13,23 +13,16 @@ const product = computed(() => {
   return props.addProduct ? props.addProduct : props.main
 })
 
-const selectedIndex = ref()
-const selectedSpec = computed({
-  get() {
-    if (props.assignIndex || props.assignIndex === 0) {
-      return product.value.specArr[props.assignIndex]
-    } else if (selectedIndex.value || selectedIndex.value === 0) {
-      return product.value.specArr[selectedIndex.value]
-    } else return null
-  },
-  set(v) {
-    selectedIndex.value = v
-  }
+const selectedSpec = computed(() => {
+  if (props.assignIndex || props.assignIndex === 0) {
+    return product.value.specArr[props.assignIndex]
+  } else if (activeSpec.value.ID) {
+    return activeSpec.value
+  } else return null
 })
-
 const isSelect = computed(() => {
-  if (!product.value.specArr || !selectedSpec.value) return false
-  return selectedSpec.value.ID || selectedSpec.value.ID === 0
+  if (!product.value.specArr || !selectedSpec.value?.ID) return false
+  return selectedSpec.value.ID || selectedSpec.value?.ID === 0
 })
 
 // addProductIndex, specIndex => changeButQty
@@ -65,84 +58,12 @@ const productSpecStatus = computed(() => {
   return 1
 })
 
-function selectSpec(item, index) {
-  item.isShowOption = false
-  selectedIndex.value = index
-}
-
 defineExpose({
   selectedSpec
 })
 
-// test
-let test_specArr = [
-  {
-    name: "1",
-    itemNum: "1",
-    id: 3287,
-    isQty: false,
-    qty: 0,
-    originId: 3287,
-    itemPrice: "",
-    itemNowPrice: "100",
-    name2: "a"
-  },
-  {
-    name: "2",
-    itemNum: "2",
-    id: 3288,
-    isQty: false,
-    qty: 0,
-    originId: 3288,
-    itemPrice: "",
-    itemNowPrice: "100",
-    name2: "b"
-  },
-  {
-    name: "3",
-    itemNum: "3",
-    id: 3291,
-    isQty: false,
-    qty: 0,
-    originId: 3291,
-    itemPrice: "",
-    itemNowPrice: "100",
-    name2: "c"
-  },
-  {
-    name: "4",
-    itemNum: "4",
-    id: 3292,
-    isQty: false,
-    qty: 0,
-    originId: 3292,
-    itemPrice: "",
-    itemNowPrice: "100",
-    name2: "d"
-  },
-  {
-    name: "5",
-    itemNum: "5",
-    id: 3293,
-    isQty: false,
-    qty: 0,
-    originId: 3293,
-    itemPrice: "",
-    itemNowPrice: "100",
-    name2: "e"
-  },
-  {
-    id: 1731655084340,
-    name: "6",
-    name2: "f",
-    itemNum: "6",
-    isQty: false,
-    qty: 0,
-    originId: 0,
-    itemPrice: "",
-    itemNowPrice: "100"
-  }
-]
+let specArr = product.value.specArr
+const activeSpec = ref({})
 let activeSpecObj = ref({
   spec1: "",
   spec2: ""
@@ -150,129 +71,122 @@ let activeSpecObj = ref({
 let specObj = {}
 let spec1Arr = []
 let spec2Arr = []
-test_specArr.forEach((item) => {
-  if (!specObj[item.name]) specObj[item.name] = {}
-  specObj[item.name][item.name2] = item
-  if (!specObj[item.name2]) specObj[item.name2] = {}
-  specObj[item.name2][item.name] = item
 
-  let spec1 = spec1Arr.find((spec) => spec === item.name)
-  if (!spec1) spec1Arr.push(item.name)
+const specNumber = ref(0)
+let isSingleSpec = specArr.some((item) => !item.Name2)
+specNumber.value = isSingleSpec ? 1 : 2
 
-  let spec2 = spec2Arr.find((spec) => spec === item.name2)
-  if (!spec2) spec2Arr.push(item.name2)
-})
+if (specArr) {
+  specArr.forEach((item) => {
+    // 雙規格
+    if (specNumber.value === 2) {
+      if (!specObj[item.Name]) specObj[item.Name] = {}
+      specObj[item.Name][item.Name2] = item
 
-watch(
-  activeSpecObj,
-  () => {
-    if (activeSpecObj.value.spec1 && activeSpecObj.value.spec2) {
-      console.log(specObj[activeSpecObj.value.spec1][activeSpecObj.value.spec2])
+      if (!specObj[item.Name2]) specObj[item.Name2] = {}
+      specObj[item.Name2][item.Name] = item
+
+      let spec1 = spec1Arr.find((spec) => spec === item.Name)
+      if (!spec1) spec1Arr.push(item.Name)
+
+      let spec2 = spec2Arr.find((spec) => spec === item.Name2)
+      if (!spec2) spec2Arr.push(item.Name2)
     }
-  },
-  { deep: true }
-)
+    // 單規格
+    else {
+      specObj[item.Name] = item
+
+      let spec1 = spec1Arr.find((spec) => spec === item.Name)
+      if (!spec1) spec1Arr.push(item.Name)
+    }
+  })
+}
 
 let showSpec1Arr = computed(() => {
-  if (!activeSpecObj.value.spec2) {
+  if (specNumber.value === 1) {
     return spec1Arr
-  }
+  } else if (specNumber.value === 2) {
+    if (!activeSpecObj.value.spec2) {
+      return spec1Arr
+    }
 
-  let arr = []
-  for (let key in specObj[activeSpecObj.value.spec2]) {
-    arr.push(key)
+    let arr = []
+    for (let key in specObj[activeSpecObj.value.spec2]) {
+      arr.push(key)
+    }
+    return arr
   }
-  return arr
 })
 let showSpec2Arr = computed(() => {
-  if (!activeSpecObj.value.spec1) {
-    return spec2Arr
-  }
+  if (specNumber.value === 1) {
+    return []
+  } else if (specNumber.value === 2) {
+    if (!activeSpecObj.value.spec1) {
+      return spec2Arr
+    }
 
-  let arr = []
-  for (let key in specObj[activeSpecObj.value.spec1]) {
-    arr.push(key)
-  }
+    let arr = []
+    for (let key in specObj[activeSpecObj.value.spec1]) {
+      arr.push(key)
+    }
 
-  return arr
+    return arr
+  }
 })
 
-function test_selectSpec(key, spec) {
+function selectSpec(key, spec) {
   if (activeSpecObj.value[key] === spec) {
     activeSpecObj.value[key] = ""
   } else {
     activeSpecObj.value[key] = spec
+  }
+
+  // 單
+  if (specNumber.value === 1) {
+    if (activeSpecObj.value["spec1"]) {
+      activeSpec.value = specObj[activeSpecObj.value["spec1"]]
+    }
+  }
+  // 雙
+  else if (specNumber.value === 2) {
+    if (activeSpecObj.value["spec1"] && activeSpecObj.value["spec2"]) {
+      activeSpec.value =
+        specObj[activeSpecObj.value["spec1"]][activeSpecObj.value["spec2"]]
+    }
   }
 }
 </script>
 
 <template>
   <div class="ProductBuyQtyBox">
-    <!-- test -->
-    <!-- <template v-if="addProduct && addProduct.specArr">
-      {{ addProduct.specArr[assignIndex] === selectedSpec }}
-    </template>
-
-    <template v-else-if="main.specArr">
-      {{ main.specArr[assignIndex] === selectedSpec }}
-    </template>
-    <div>==========</div>
-    {{ selectedSpec }} -->
-
     <!-- 規格 -->
     <template v-if="assignIndex === undefined">
-      <div class="spec" v-if="product.specArr">
-        <!-- tabindex="0" => @blur 生效 -->
-        <div
-          class="select"
-          @click="product.isShowOption = !product.isShowOption"
-          tabindex="0"
-          @blur="product.isShowOption = false"
-        >
-          <div class="text">
-            {{ !isSelect ? "請選擇規格" : selectedSpec.Name }}
-          </div>
-          <div class="icon" :class="{ iconActive: product.isShowOption }">
-            <i class="fa fa-caret-down" aria-hidden="true"></i>
-          </div>
-          <ul class="option" :class="{ showOption: product.isShowOption }">
-            <li
-              v-for="(spec, index) in product.specArr"
-              :key="spec.ID"
-              @click.stop="selectSpec(product, index)"
-            >
-              {{ spec.Name }}
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div class="noSpec" v-else></div>
-
       <template v-if="product.specArr">
         <div class="specContainer">
-          <div class="specTitle">顏色:</div>
+          <div class="specTitle">{{ product.specArr[0].Title }}</div>
           <div class="specOptions">
             <div
               class="specOption"
               :class="{ active: spec === activeSpecObj.spec1 }"
               v-for="(spec, index) in showSpec1Arr"
               :key="spec"
-              @click="test_selectSpec('spec1', spec)"
+              @click="selectSpec('spec1', spec)"
             >
               {{ spec }}
             </div>
           </div>
         </div>
 
-        <div class="specContainer">
-          <div class="specTitle">尺寸:</div>
+        <div class="specContainer" v-if="showSpec2Arr.length">
+          <div class="specTitle">{{ product.specArr[0].Title2 }}</div>
           <div class="specOptions">
             <div
               class="specOption"
               :class="{ active: spec === activeSpecObj.spec2 }"
               v-for="(spec, index) in showSpec2Arr"
               :key="spec"
-              @click="test_selectSpec('spec2', spec)"
+              @click="selectSpec('spec2', spec)"
+              v-show="spec"
             >
               {{ spec }}
             </div>

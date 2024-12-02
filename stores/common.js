@@ -115,7 +115,6 @@ export const useCommonStore = defineStore("common", () => {
     copyRightHandler()
     customerServiceHandler()
 
-    productStore.categoriesHandler()
     productStore.productsHandler(webData.value.StoreLogin)
 
     if (user_account.value) memberInfoStore.getMemberInfo()

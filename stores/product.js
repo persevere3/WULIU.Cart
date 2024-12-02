@@ -16,8 +16,6 @@ export const useProductStore = defineStore("product", () => {
   const { return_formData } = useRequest()
 
   // state ==============================
-  const category_products = ref({})
-
   const categories = ref([])
   // category ID
   const category = ref("")
@@ -37,41 +35,42 @@ export const useProductStore = defineStore("product", () => {
   const favorite = ref({})
 
   // methods ==============================
-  async function categoriesHandler() {
-    let data = commonStore.webData.GetCategory.data
-    categories.value = [{ ID: "0", Name: "所有分類商品", Show: "1" }, ...data]
-    category.value = "0"
-  }
+  function sort_categories(cg_arr, parentid, layer) {
+    let result_arr = []
 
-  function category_productsHandler() {
-    let originCategory_products = {}
+    let children_cg_arr = cg_arr
+      .filter((item) => item.ParentId === parentid)
+      .sort((a, b) => a.Sort - b.Sort)
 
-    categories.value.forEach((c) => {
-      if (c.Show) originCategory_products[c.ID] = c
+    children_cg_arr.forEach((item) => {
+      item.layer = layer
+    })
+    let other_cg_arr = cg_arr.filter((item) => item.ParentId !== parentid)
+
+    children_cg_arr.forEach((item) => {
+      item.children = sort_categories(other_cg_arr, item.ID, layer + 1)
+      result_arr.push(item)
     })
 
-    products.value.forEach((product) => {
-      product.categories = [
-        product.Category1,
-        product.Category2,
-        product.Category3,
-        product.Category4,
-        product.Category5
-      ].filter((c) => c)
+    return result_arr
+  }
 
-      product.categories.forEach((c) => {
-        if (originCategory_products[c]) {
-          if (!originCategory_products[c].products) {
-            originCategory_products[c].products = []
-          }
-          originCategory_products[c].products.push(product)
+  async function categoryHandler() {
+    let data = JSON.parse(JSON.stringify(commonStore.webData.GetCategory.data))
+
+    // 分類中加入 products
+    products.value.forEach((product) => {
+      product.categoryArr.forEach((c_id) => {
+        let category = data.find((category) => category.ID === c_id)
+        if (category) {
+          if (!category.products) category.products = []
+          category.products.push(product)
         }
       })
     })
 
-    originCategory_products[0].products = products.value
-
-    category_products.value = originCategory_products
+    categories.value = sort_categories(data, "0", 0)
+    console.log(categories.value)
   }
 
   function returnPriceRange(product, priceKey) {
@@ -162,9 +161,7 @@ export const useProductStore = defineStore("product", () => {
     products.value = originProducts
 
     //
-    category_productsHandler()
-
-    category.value = "0"
+    categoryHandler()
 
     getFavorite()
 
@@ -342,8 +339,6 @@ export const useProductStore = defineStore("product", () => {
   }
 
   return {
-    category_products,
-
     categories,
     category,
 
@@ -357,8 +352,7 @@ export const useProductStore = defineStore("product", () => {
     is_favorite_modal,
     favorite,
 
-    categoriesHandler,
-    category_productsHandler,
+    categoryHandler,
     ajaxProducts,
     productsHandler,
     getAddProducts,

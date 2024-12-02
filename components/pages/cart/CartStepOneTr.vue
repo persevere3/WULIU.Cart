@@ -43,6 +43,7 @@
           :class="{ specTextShow: activeCartSpecId.value == spec.ID }"
         >
           {{ spec.Name }}
+          <template v-if="spec.Name2"> ，{{ spec.Name2 }} </template>
         </div>
       </template>
     </div>

@@ -12,11 +12,8 @@ const config = useRuntimeConfig()
 const commonStore = useCommonStore()
 const productStore = useProductStore()
 
-const { is_initial } = storeToRefs(commonStore)
-const { category_products } = storeToRefs(productStore)
-
 const category_content = ref({})
-const show_categories = ref([])
+const products = ref([])
 
 async function ajaxCategory() {
   let query = {
@@ -40,6 +37,7 @@ async function ajaxCategory() {
 function initCategory(resData) {
   console.log("initCategory")
 
+  // category_content
   category_content.value = resData.Data[0]
   category_content.value.Img = [
     category_content.value.Img1,
@@ -55,7 +53,11 @@ function initCategory(resData) {
     })
   }
 
-  show_categories.value = resData.Category.map((c) => c.ID)
+  // products
+  let idArr = resData.Product.map((item) => item.ID)
+  products.value = productStore.products.filter((item) => {
+    return idArr.indexOf(item.ID) > -1
+  })
 }
 
 function videoHandler(url) {
@@ -125,23 +127,16 @@ watch(fullPath, async () => {
       ></div>
     </div>
 
-    <template v-if="category_products">
-      <div
-        class="products"
-        v-for="(item, key) in category_products"
-        :key="`Sort${key}`"
-        v-show="show_categories.indexOf(item.ID) > -1"
-      >
-        <div class="title">
-          {{ item.Name }}
-        </div>
-        <div class="productList">
-          <ul>
-            <li v-for="(item2, key2) in item.products" :key="`products${key2}`">
-              <ProductItem :product="item2" />
-            </li>
-          </ul>
-        </div>
+    <div class="title">
+      {{ category_content.Name }}
+    </div>
+    <template v-if="products && products.length">
+      <div class="productList">
+        <ul>
+          <li v-for="(item, key) in products" :key="item.ID">
+            <ProductItem :product="item" />
+          </li>
+        </ul>
       </div>
     </template>
   </div>
