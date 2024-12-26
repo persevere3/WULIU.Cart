@@ -14,6 +14,9 @@ const props = defineProps({
   <div class="c_product">
     <nuxt-link :to="`/product/${product.ID}`">
       <div class="pic" :style="{ backgroundImage: `url(${product.Img1})` }">
+        <div class="productDiscount" v-if="product.productDiscount === 'FULL'">
+          滿件優惠
+        </div>
         <div class="controller">
           <div
             class="addToFavoriteBtn"
@@ -105,6 +108,16 @@ const props = defineProps({
         left: 0;
         background: $modalBackground;
         display: none;
+      }
+
+      .productDiscount {
+        display: inline-block;
+        padding: 3px 6px;
+        background: rgb(238, 77, 45, 0.8);
+        color: #fff;
+        position: absolute;
+        top: 5px;
+        right: 5px;
       }
 
       .controller {

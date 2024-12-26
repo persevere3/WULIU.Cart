@@ -117,8 +117,8 @@
       </div>
 
       <div class="right">
-        <!-- 運送方式 -->
-        <label> 運送方式 </label>
+        <!-- 配送狀態 -->
+        <label> 配送方式 </label>
         <template v-if="transport_number < 6">
           <div
             class="custom_option2"
@@ -303,7 +303,7 @@
               {{
                 purchaseInfoStore.transport !== "0"
                   ? purchaseInfoStore.transport_obj[purchaseInfoStore.transport]
-                  : "請選擇運送方式"
+                  : "請選擇配送狀態"
               }}
             </div>
             <div
@@ -463,6 +463,41 @@
         >
           請選擇配送方式
         </div>
+
+        <!-- 選擇門市 -->
+        <template
+          v-if="
+            purchaseInfoStore.transport === '2' &&
+            commonStore.store.stores.length
+          "
+        >
+          <label> 選擇門市 </label>
+          <div
+            class="custom_option2 storeInfo"
+            :class="{ active: purchaseInfoStore.activeStore === item }"
+            @click="purchaseInfoStore.activeStore = item"
+            v-for="(item, key) in commonStore.store.stores"
+            :key="key"
+          >
+            <div class="store_name">{{ item.StoreName }}</div>
+            <div class="store_phone">{{ item.Phone }}</div>
+            <div class="store_address">
+              {{ item.ZipCode }} {{ item.CountyAndCity }} {{ item.Area }}
+              {{ item.Address }}
+            </div>
+            <div class="store_business_time">{{ item.BusinessTime }}</div>
+            <div class="store_note">{{ item.Note }}</div>
+          </div>
+          <div
+            class="errorMessage"
+            v-if="
+              purchaseInfoStore.transport === '2' &&
+              !purchaseInfoStore.activeStore
+            "
+          >
+            請選擇門市
+          </div>
+        </template>
 
         <!-- 支付方式 -->
         <label for="pay_method">支付方式</label>
@@ -826,7 +861,7 @@
                 v-model="purchaseInfoStore.phone_barCode"
               />
               <div
-                class="prompt"
+                class="errorMessage"
                 v-if="
                   orderStore.is_click_finish_order &&
                   purchaseInfoStore.phone_barCode === ''
@@ -851,7 +886,7 @@
                 v-model="purchaseInfoStore.natural_barCode"
               />
               <div
-                class="prompt"
+                class="errorMessage"
                 v-if="
                   orderStore.is_click_finish_order &&
                   purchaseInfoStore.natural_barCode === ''
@@ -902,7 +937,7 @@
           </template>
 
           <div
-            class="prompt"
+            class="errorMessage"
             v-if="
               orderStore.is_click_finish_order &&
               purchaseInfoStore.invoice_type === '0'

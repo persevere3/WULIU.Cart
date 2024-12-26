@@ -1,3 +1,6 @@
+import { ref, onMounted, onUnmounted } from "vue"
+import { v4 as uuidv4 } from "uuid"
+
 // json
 import city_district_json from "@/json/city_district.json"
 
@@ -124,7 +127,7 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
   const invoice_title = ref("")
   const invoice_uniNumber = ref("")
 
-  // 運送方式
+  // 配送狀態
   const transport_obj = ref({
     0: "",
     1: "一般宅配",
@@ -152,11 +155,23 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
   const transport = ref("0")
   const is_show_transport_options = ref(false)
 
+  const activeStore = ref(null)
+
   // 支付方式
   const pay_method = ref("0")
 
   //
   const city_district = city_district_json
+
+  //
+  const notEstablishedOrderInfo = ref({
+    role: "", // 會員/非會員
+    startTime: "",
+    receiver_name: "",
+    receiver_phone: "",
+    payMethod: "",
+    shipMethod: ""
+  })
 
   // computed ==============================
   // `${city} ${district} ${detail}`
@@ -173,7 +188,7 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     }
     return address
   })
-  // 運送方式是否選擇門市
+  // 配送狀態是否選擇門市
   const is_store = computed(() => {
     if (transport.value == 0) return undefined
     else if (transport.value === "1" || transport.value === "2") return false
@@ -229,7 +244,7 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
       LogisticsType: "CVS",
       LogisticsSubType,
       IsCollection,
-      ServerReplyURL: `${location.origin}/interface/store/SpmarketAddress}`,
+      ServerReplyURL: `${location.origin}/interface/store/SpmarketAddress`,
       ExtraData: "",
       Device: ""
     }
@@ -302,6 +317,109 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     await cartStore.getTotal(stepPage)
   }
 
+  //
+  function storeNotEstablishedOrderInfo() {
+    let id_key = ""
+    if (commonStore.user_account) {
+      id_key = `${commonStore.user_account}_id`
+    } else {
+      id_key = `notMember_id`
+    }
+
+    let id = localStorage.getItem(id_key)
+    if (!id) {
+      id = uuidv4()
+      localStorage.setItem(id_key, id)
+    }
+
+    console.log(id_key, id)
+
+    notEstablishedOrderInfo.value.id = id
+    notEstablishedOrderInfo.value.role = commonStore.user_account
+      ? "會員"
+      : "非會員"
+
+    notEstablishedOrderInfo.value.user_account = commonStore.user_account
+
+    notEstablishedOrderInfo.value.receiver_name = info.value.receiver_name.value
+    notEstablishedOrderInfo.value.receiver_phone =
+      info.value.receiver_number.value
+
+    if (pay_method.value) {
+      notEstablishedOrderInfo.value.payMethod =
+        orderStore.payMethod_obj[pay_method.value]
+    }
+
+    if (transport.value) {
+      notEstablishedOrderInfo.value.shipMethod =
+        transport_obj.value[transport.value]
+    }
+
+    let products = []
+    cartStore.cart.forEach((item) => {
+      if (!item.specArr) {
+        products.push({
+          name: item.Name,
+          spec: "",
+          buyQty: item.buyQty
+        })
+      } else {
+        item.specArr.forEach((spec) => {
+          if (spec.buyQty) {
+            products.push({
+              name: item.Name,
+              spec: `${spec.Name}${spec.Name2 ? `，${spec.Name2}` : ""}`,
+              buyQty: spec.buyQty
+            })
+          }
+        })
+      }
+
+      if (item.addProducts) {
+        item.addProducts.forEach((addProduct) => {
+          if (!addProduct.specArr) {
+            if (addProduct.buyQty) {
+              products.push({
+                name: addProduct.Name,
+                spec: "",
+                buyQty: addProduct.buyQty
+              })
+            }
+          } else {
+            addProduct.specArr.forEach((spec) => {
+              if (spec.buyQty) {
+                products.push({
+                  name: addProduct.Name,
+                  spec: spec.Name,
+                  buyQty: spec.buyQty
+                })
+              }
+            })
+          }
+        })
+      }
+    })
+    console.log(products)
+    console.log(notEstablishedOrderInfo.value)
+
+    // let formData = new FormData()
+    // for (let key in notEstablishedOrderInfo.value) {
+    //   let item = notEstablishedOrderInfo.value[key]
+    //   formData.append(key, item)
+    // }
+
+    // fetch("", {
+    //   method: "POST",
+    //   body: formData
+    // })
+    //   .then((response) => {
+    //     console.log(response)
+    //   })
+    //   .catch((error) => {
+    //     console.log("Error:", error)
+    //   })
+  }
+
   return {
     info,
 
@@ -325,9 +443,13 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     transport,
     is_show_transport_options,
 
+    activeStore,
+
     pay_method,
 
     city_district,
+
+    notEstablishedOrderInfo,
 
     receiver_address,
     is_store,
@@ -336,6 +458,8 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     getConvenienceStore,
     returnInfo,
 
-    filter_use_bonus
+    filter_use_bonus,
+
+    storeNotEstablishedOrderInfo
   }
 })

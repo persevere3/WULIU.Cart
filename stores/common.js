@@ -194,6 +194,7 @@ export const useCommonStore = defineStore("common", () => {
     store.value = res
 
     let cartStore = webData.value.GetStoreFromStore.data[0]
+    cartStore.stores = webData.value.GetStoreFromStore.data2 || []
     delete cartStore.Logo
 
     store.value = { ...store.value, ...cartStore }

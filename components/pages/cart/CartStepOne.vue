@@ -98,7 +98,9 @@ const activeCartSpecId = ref({
 
     <div
       class="productDiscountList"
-      v-if="cartStore.productDiscountList && cartStore.productDiscountList.length"
+      v-if="
+        cartStore.productDiscountList && cartStore.productDiscountList.length
+      "
     >
       <ul>
         <li v-for="product in cartStore.productDiscountList" :key="product.ID">

@@ -73,10 +73,11 @@ let spec1Arr = []
 let spec2Arr = []
 
 const specNumber = ref(0)
-let isSingleSpec = specArr.some((item) => !item.Name2)
-specNumber.value = isSingleSpec ? 1 : 2
 
 if (specArr) {
+  let isSingleSpec = specArr.some((item) => !item.Name2)
+  specNumber.value = isSingleSpec ? 1 : 2
+
   specArr.forEach((item) => {
     // 雙規格
     if (specNumber.value === 2) {

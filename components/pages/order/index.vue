@@ -116,9 +116,9 @@ onMounted(() => {
         </div>
 
         <div class="item">
-          <label> 運送狀態 </label>
+          <label> 配送狀態 </label>
           <select v-model="orderStore.filter_delivery">
-            <option value="0">=== 運送狀態 ===</option>
+            <option value="0">=== 配送狀態 ===</option>
             <option
               :value="index"
               v-for="(item, index) in orderStore.delivery_arr"
@@ -147,7 +147,7 @@ onMounted(() => {
             <div class="td products">商品</div>
             <div class="td amount">金額</div>
             <div class="td payState">付款狀態</div>
-            <div class="td transportState">運送狀態</div>
+            <div class="td transportState">配送狀態</div>
             <div class="td time">成立時間</div>
           </div>
         </div>
@@ -328,7 +328,7 @@ onMounted(() => {
             </div>
 
             <div class="td transportState">
-              <div class="l_head">運送狀態</div>
+              <div class="l_head">配送狀態</div>
               <div class="text">
                 <span> {{ orderStore.delivery_arr[item.Delivery] }} </span>
                 <span

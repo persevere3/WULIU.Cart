@@ -402,6 +402,7 @@ export const useCartStore = defineStore("cart", () => {
       originTotal.tradeDataCheckInfo = res.tradeDataCheckInfo
 
       total.value = originTotal
+      console.log(total.value)
     } catch (error) {
       throw new Error(error)
     }
@@ -435,7 +436,9 @@ export const useCartStore = defineStore("cart", () => {
               (cartStrObj.specificationqty ? "," : "") + spec.buyQty
             cartStrObj.ItemName +=
               (cartStrObj.ItemName ? "#" : "") +
-              `${cartItem.Name} (${spec.Name}) NT$${nowPriceStr} x ${spec.buyQty}`
+              `${cartItem.Name} (${spec.Name}${
+                spec.Name2 ? `，${spec.Name2}` : ""
+              }) NT$${nowPriceStr} x ${spec.buyQty}`
           }
         })
       }

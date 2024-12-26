@@ -1,5 +1,8 @@
 <template>
   <template v-if="isShow">
+    <div @click="purchaseInfoStore.storeNotEstablishedOrderInfo">
+      未成立訂單test
+    </div>
     <SidebarModal />
 
     <SearchModal />
@@ -52,6 +55,7 @@ useHead({
 })
 
 const commonStore = useCommonStore()
+const purchaseInfoStore = usePurchaseInfoStore()
 await commonStore.ajaxWeb()
 
 if (process.env.NODE_ENV === "production") {
@@ -79,6 +83,23 @@ const isShow = ref(false)
 setTimeout(() => {
   isShow.value = true
 }, 0)
+
+// ==============================
+// 綁定事件
+onMounted(() => {
+  window.addEventListener(
+    "beforeunload",
+    purchaseInfoStore.storeNotEstablishedOrderInfo
+  )
+})
+
+// 卸載事件
+onUnmounted(() => {
+  window.removeEventListener(
+    "beforeunload",
+    purchaseInfoStore.storeNotEstablishedOrderInfo
+  )
+})
 </script>
 
 <style lang="scss">

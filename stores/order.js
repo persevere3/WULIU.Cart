@@ -26,7 +26,7 @@ export const useOrderStore = defineStore("order", () => {
 
   // state ==============================
   //
-  const is_click_finish_order = ref(false) // true => 驗證 運送方式 支付方式 地址
+  const is_click_finish_order = ref(false) // true => 驗證 配送狀態 支付方式 地址
   const isOrderIng = ref(false)
 
   const payResult = ref({})
@@ -65,6 +65,7 @@ export const useOrderStore = defineStore("order", () => {
   ])
 
   const payMethod_obj = ref({
+    0: "",
     CreditCard: "信用卡",
     ATM: "ATM",
     PayCode: "超商代碼",
@@ -123,8 +124,13 @@ export const useOrderStore = defineStore("order", () => {
 
     if (v) {
       if (
-        // 運送驗證
+        // 配送驗證
         purchaseInfoStore.transport !== "0" &&
+        !(
+          purchaseInfoStore.transport === "2" &&
+          commonStore.store.stores.length &&
+          !purchaseInfoStore.activeStore
+        ) &&
         // 支付驗證
         purchaseInfoStore.pay_method !== "0" &&
         // 發票驗證
@@ -198,7 +204,7 @@ export const useOrderStore = defineStore("order", () => {
       MemberBonus: cartStore.member_bonus
     }
 
-    // 運送方式 支付方式
+    // 配送狀態 支付方式
     if (
       purchaseInfoStore.transport === "1" ||
       purchaseInfoStore.transport === "2"

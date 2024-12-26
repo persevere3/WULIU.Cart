@@ -563,6 +563,25 @@
           background: #555;
           color: #fff;
         }
+
+        &.storeInfo {
+          width: 100%;
+          height: auto;
+          padding: 5px 10px;
+          flex-direction: column;
+          align-items: flex-start;
+
+          .store_name {
+          }
+          .store_phone {
+          }
+          .store_address {
+          }
+          .store_business_time {
+          }
+          .store_note {
+          }
+        }
       }
       .button2 {
         border: none;

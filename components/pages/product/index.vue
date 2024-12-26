@@ -111,6 +111,10 @@ productStore.getAddProducts([props.product.ID])
           <div v-html="useUnescapeHTML(product.Content)"></div>
         </div>
 
+        <div class="productDiscount" v-if="product.productDiscount === 'FULL'">
+          滿 {{ product.fullAmount }} 送 {{ product.fullRatio }}
+        </div>
+
         <ProductBuyQtyBox ref="mainRef" :main="product" />
 
         <div class="controller">
@@ -324,6 +328,14 @@ productStore.getAddProducts([props.product.ID])
         font-size: 18px;
         white-space: pre-wrap;
         word-wrap: break-word;
+      }
+
+      .productDiscount {
+        display: inline-block;
+        padding: 3px 6px;
+        margin-bottom: 15px;
+        background: rgb(238, 77, 45, 0.8);
+        color: #fff;
       }
 
       .price {

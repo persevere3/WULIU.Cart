@@ -21,7 +21,7 @@ export const getMemberOrderApi = (formData) =>
     body: formData
   })
 
-/* 查便利商店運送狀態 */
+/* 查便利商店配送狀態 */
 export const searchMartDeliveryApi = (formData) =>
   $fetch("/interface/store/QueryLogisticsInfo", {
     method: "POST",

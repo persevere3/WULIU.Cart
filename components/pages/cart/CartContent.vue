@@ -5,6 +5,17 @@ import cartStepTwo from "./CartStepTwo.vue"
 import { useUrlPush } from "@/composables/urlPush"
 
 const cartStore = useCartStore()
+const purchaseInfoStore = usePurchaseInfoStore()
+
+onMounted(() => {
+  if (!purchaseInfoStore.notEstablishedOrderInfo.startTime) {
+    purchaseInfoStore.notEstablishedOrderInfo.startTime = useFormatDate(
+      new Date(),
+      "-",
+      "time"
+    )
+  }
+})
 </script>
 
 <template>
@@ -19,7 +30,7 @@ const cartStore = useCartStore()
       </div>
       <div class="stepItem" :class="{ stepItemActive: cartStore.step === 2 }">
         <div class="icon">2</div>
-        <p>付款與運送方式</p>
+        <p>付款與配送狀態</p>
       </div>
       <div class="arrow" :class="{ arrowActive: cartStore.step === 2 }">
         <i class="fa fa-arrow-right" aria-hidden="true"></i>
