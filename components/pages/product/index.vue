@@ -2,6 +2,7 @@
 import ProductBuyQtyBox from "@/components/ProductBuyQtyBox.vue"
 import Cart from "~/components/pages/cart/index.vue"
 
+// 輪播
 import { Swiper, SwiperSlide } from "swiper/vue"
 import "swiper/css"
 
@@ -19,13 +20,16 @@ const props = defineProps({
   }
 })
 
+// dom元素
 const mainRef = ref(null)
 const addProductsRef = ref(null)
 
-const isShow = ref(false)
+// 是否顯示加價購商品
 const isShowAddProduct = ref(true)
+// 是否顯示商品詳情
 const isShowDetail = ref(true)
 
+// 輪播
 let useSwiper = ref({})
 function onSwiper(swiper) {
   useSwiper.value = swiper
@@ -35,6 +39,26 @@ function click_share_link() {
   useCopy(location.href, ".copy_input")
 
   commonStore.showMessage("複製分享連結", true)
+}
+
+console.log(process.env.NODE_ENV)
+if (process.env.NODE_ENV === "production") {
+  console.log(useRoute().params.id)
+  if (useRoute().params.id || useRoute().params.id === 0) {
+    console.log(commonStore.webData.StoreLogin.ldjson)
+    let jsonLd = commonStore.webData.StoreLogin.ldjson.find(
+      (item) => item.identifier === useRoute().params.id
+    )
+    console.log(JSON.stringify(jsonLd))
+    useHead({
+      script: [
+        {
+          type: "application/ld+json",
+          innerHTML: JSON.stringify(jsonLd)
+        }
+      ]
+    })
+  }
 }
 
 productStore.getAddProducts([props.product.ID])
@@ -84,6 +108,7 @@ productStore.getAddProducts([props.product.ID])
           </div>
         </template>
         <template v-else>
+          <!-- mainRef === ProductBuyQtyBox，ProductBuyQtyBox 有 selectedSpec 時顯示 (ProductBuyQtyBox 選擇規格) -->
           <template
             v-if="mainRef && mainRef.selectedSpec && mainRef.selectedSpec.ID"
           >
@@ -138,6 +163,7 @@ productStore.getAddProducts([props.product.ID])
       </div>
     </div>
 
+    <!-- 加價購 -->
     <div
       class="addProduct"
       v-if="product.addProducts && product.addProducts.length"
@@ -195,6 +221,7 @@ productStore.getAddProducts([props.product.ID])
       </ul>
     </div>
 
+    <!-- 商品詳情 -->
     <div class="detail">
       <div class="title">
         商品詳情
@@ -216,6 +243,7 @@ productStore.getAddProducts([props.product.ID])
       ></div>
     </div>
 
+    <!-- 如果 isSingleProduct 為 true: 一頁式商品 顯示 立即購買 區塊 -->
     <div
       class="buyNow"
       v-if="productStore.isSingleProduct && cartStore.getMainTotalQty(product)"

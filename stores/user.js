@@ -24,6 +24,7 @@ export const useUserStore = defineStore("user", () => {
   // state ==============================
   const activeUserNav = ref("login")
 
+  // 註冊表單
   const r_form = reactive({
     recommender: {
       value: "",
@@ -173,6 +174,7 @@ export const useUserStore = defineStore("user", () => {
   })
   r_form.confirm_password.rules.confirm.password = r_form.password
 
+  // 登入表單
   const l_form = reactive({
     account: {
       value: "0910456456",
@@ -203,6 +205,7 @@ export const useUserStore = defineStore("user", () => {
     }
   })
 
+  // 忘記密碼表單
   const f_form = reactive({
     step: 1,
     // 0 信箱 1 手機
@@ -321,7 +324,7 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
-  //
+  // register ----------
   async function send_verify_code(form) {
     if (form.second > 0) return
 
@@ -430,7 +433,7 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
-  //
+  // login ----------
   async function validateRecommenderCode() {
     if (!r_form.recommender.value) {
       LineLogin(true)

@@ -3,6 +3,7 @@ import Product from "~/components/pages/product/index.vue"
 import Message from "@/components/layouts/default/Message.vue"
 import Confirm from "@/components/layouts/default/Confirm.vue"
 
+// font-awesome: icon
 useHead({
   link: [
     {
@@ -15,6 +16,7 @@ useHead({
   ]
 })
 
+// 取消 layout
 definePageMeta({
   layout: false
 })
@@ -29,27 +31,6 @@ if (useRoute().fullPath.indexOf("singleProduct") > -1)
   productStore.isSingleProduct = true
 
 await commonStore.ajaxWeb()
-
-if (process.env.NODE_ENV === "production") {
-  if (useRoute().params.id || useRoute().params.id === 0) {
-    let jsonLd = commonStore.webData.StoreLogin.ldjson.find(
-      (item) => item.identifier === useRoute().params.id
-    )
-
-    useHead({
-      script: [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify(jsonLd)
-        }
-      ]
-    })
-  }
-}
-
-setTimeout(() => {
-  commonStore.webHandler()
-}, 0)
 
 watch(
   () => productStore.products,

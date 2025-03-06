@@ -1,114 +1,3 @@
-<template>
-  <div class="tr p-1">
-    <div class="td picName">
-      <div
-        class="pic"
-        :style="{
-          backgroundImage: `url(${
-            addProduct ? product.Img : product.imgArr[0]
-          })`
-        }"
-      >
-        <div class="tag" v-if="addProduct">加價購</div>
-      </div>
-      <div class="name">{{ product.Name }}</div>
-    </div>
-    <div class="td spec">
-      <!-- test -->
-      <!-- <template v-if="addProduct && addProduct.specArr">
-        {{ addProduct.specArr[specIndex] }}
-      </template>
-      <template v-else-if="main.specArr">
-        {{ main.specArr[specIndex] }}
-      </template> -->
-
-      <template v-if="spec">
-        <!-- rwd -->
-        <div
-          class="specButton"
-          @click="
-            activeCartSpecId.value =
-              activeCartSpecId.value == spec.ID ? -1 : spec.ID
-          "
-        >
-          規格
-          <i
-            :class="{ iActive: activeCartSpecId.value == spec.ID }"
-            class="fa fa-caret-down"
-            aria-hidden="true"
-          ></i>
-        </div>
-        <div
-          class="specText"
-          :class="{ specTextShow: activeCartSpecId.value == spec.ID }"
-        >
-          {{ spec.Name }}
-          <template v-if="spec.Name2"> ，{{ spec.Name2 }} </template>
-        </div>
-      </template>
-    </div>
-
-    <!-- 多價格 cart table 單價 -->
-    <div class="td price" v-if="product.priceType === 'onePrice'">
-      NT$ {{ useNumberThousands(product[addProduct ? "Price" : "NowPrice"]) }}
-    </div>
-    <div class="td price" v-else>
-      NT$ {{ useNumberThousands(productSpec.ItemNowPrice) }}
-    </div>
-
-    <div class="td qty">
-      <ProductBuyQtyBox
-        v-if="addProduct"
-        :main="main"
-        :addProduct="addProduct"
-        :assignIndex="specIndex"
-      />
-      <ProductBuyQtyBox v-else :main="main" :assignIndex="specIndex" />
-    </div>
-
-    <div class="td subtotal">
-      <div class="subtotalTitle">小計</div>
-
-      <!-- 多價格 cart table 小計 -->
-      <div class="subtotalText" v-if="product.priceType === 'onePrice'">
-        NT$
-        {{
-          useNumberThousands(
-            product[addProduct ? "Price" : "NowPrice"] *
-              (isNaN(buyQty) ? 0 : buyQty)
-          )
-        }}
-      </div>
-      <div class="subtotalText" v-else>
-        NT$
-        {{
-          useNumberThousands(
-            productSpec.ItemNowPrice * (isNaN(buyQty) ? 0 : buyQty)
-          )
-        }}
-      </div>
-    </div>
-
-    <div class="td delete">
-      <div
-        class="button"
-        @click="
-          !addProduct
-            ? buyQtyHandlerStore.changeMainBuyQty(product, specIndex, 0)
-            : buyQtyHandlerStore.changeAddProductBuyQty(
-                main,
-                addProductIndex,
-                specIndex,
-                0
-              )
-        "
-      >
-        刪除
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import ProductBuyQtyBox from "@/components/ProductBuyQtyBox.vue"
 
@@ -153,3 +42,111 @@ const buyQty = computed({
   }
 })
 </script>
+
+<template>
+  <div class="tr p-1">
+    <div class="td picName">
+      <div
+        class="pic"
+        :style="{
+          backgroundImage: `url(${
+            addProduct ? product.Img : product.imgArr[0]
+          })`
+        }"
+      >
+        <div class="tag" v-if="addProduct">加價購</div>
+      </div>
+      <div class="name">{{ product.Name }}</div>
+    </div>
+    <!-- 規格 -->
+    <div class="td spec">
+      <template v-if="spec">
+        <!-- rwd .specButton .specText css設定小螢幕時顯示  -->
+        <div
+          class="specButton"
+          @click="
+            activeCartSpecId.value =
+              activeCartSpecId.value == spec.ID ? -1 : spec.ID
+          "
+        >
+          規格
+          <i
+            :class="{ iActive: activeCartSpecId.value == spec.ID }"
+            class="fa fa-caret-down"
+            aria-hidden="true"
+          ></i>
+        </div>
+        <div
+          class="specText"
+          :class="{ specTextShow: activeCartSpecId.value == spec.ID }"
+        >
+          {{ spec.Name }}
+          <template v-if="spec.Name2"> ，{{ spec.Name2 }} </template>
+        </div>
+      </template>
+    </div>
+
+    <!-- 價格 -->
+    <!-- 多價格 cart table 單價 -->
+    <div class="td price" v-if="product.priceType === 'onePrice'">
+      NT$ {{ useNumberThousands(product[addProduct ? "Price" : "NowPrice"]) }}
+    </div>
+    <div class="td price" v-else>
+      NT$ {{ useNumberThousands(productSpec.ItemNowPrice) }}
+    </div>
+
+    <!-- 數量 控制box -->
+    <div class="td qty">
+      <ProductBuyQtyBox
+        v-if="addProduct"
+        :main="main"
+        :addProduct="addProduct"
+        :assignIndex="specIndex"
+      />
+      <ProductBuyQtyBox v-else :main="main" :assignIndex="specIndex" />
+    </div>
+
+    <!-- 小計 -->
+    <div class="td subtotal">
+      <div class="subtotalTitle">小計</div>
+
+      <!-- 多價格 cart table 小計 -->
+      <div class="subtotalText" v-if="product.priceType === 'onePrice'">
+        NT$
+        {{
+          useNumberThousands(
+            product[addProduct ? "Price" : "NowPrice"] *
+              (isNaN(buyQty) ? 0 : buyQty)
+          )
+        }}
+      </div>
+      <div class="subtotalText" v-else>
+        NT$
+        {{
+          useNumberThousands(
+            productSpec.ItemNowPrice * (isNaN(buyQty) ? 0 : buyQty)
+          )
+        }}
+      </div>
+    </div>
+
+    <!-- 刪除 -->
+    <div class="td delete">
+      <div
+        class="button"
+        @click="
+          !addProduct
+            ? buyQtyHandlerStore.changeMainBuyQty(product, specIndex, 0)
+            : buyQtyHandlerStore.changeAddProductBuyQty(
+                main,
+                addProductIndex,
+                specIndex,
+                0
+              )
+        "
+      >
+        刪除
+      </div>
+    </div>
+  </div>
+</template>

@@ -8,11 +8,12 @@ const buyQtyHandlerStore = useBuyQtyHandlerStore()
 // 指定的話不會顯示Select => 購物車列表
 let props = defineProps(["main", "addProduct", "assignIndex"])
 
-// 主商品 or 加購商品
+// 主商品 or 加價購商品
 const product = computed(() => {
   return props.addProduct ? props.addProduct : props.main
 })
 
+// 被選中的規格
 const selectedSpec = computed(() => {
   if (props.assignIndex || props.assignIndex === 0) {
     return product.value.specArr[props.assignIndex]
@@ -20,6 +21,7 @@ const selectedSpec = computed(() => {
     return activeSpec.value
   } else return null
 })
+// 是否選取規格
 const isSelect = computed(() => {
   if (!product.value.specArr || !selectedSpec.value?.ID) return false
   return selectedSpec.value.ID || selectedSpec.value?.ID === 0
@@ -58,6 +60,7 @@ const productSpecStatus = computed(() => {
   return 1
 })
 
+// 暴露給父元件
 defineExpose({
   selectedSpec
 })
@@ -68,28 +71,38 @@ let activeSpecObj = ref({
   spec1: "",
   spec2: ""
 })
+
+// 規格組合物件: 雙規格時，用來判斷是否有該規格組合
 let specObj = {}
+// 規格1陣列
 let spec1Arr = []
+// 規格2陣列
 let spec2Arr = []
 
 const specNumber = ref(0)
 
 if (specArr) {
+  // 規格陣列中有其中一個規格沒有規格2，視商品為單一規格
   let isSingleSpec = specArr.some((item) => !item.Name2)
   specNumber.value = isSingleSpec ? 1 : 2
 
+  // specArr => specObj spec1Arr spec2Arr
   specArr.forEach((item) => {
     // 雙規格
     if (specNumber.value === 2) {
+      // 先選規格1再選規格2
       if (!specObj[item.Name]) specObj[item.Name] = {}
       specObj[item.Name][item.Name2] = item
 
+      // 先選規格2再選規格1
       if (!specObj[item.Name2]) specObj[item.Name2] = {}
       specObj[item.Name2][item.Name] = item
 
+      // spec1Arr
       let spec1 = spec1Arr.find((spec) => spec === item.Name)
       if (!spec1) spec1Arr.push(item.Name)
 
+      // spec2Arr
       let spec2 = spec2Arr.find((spec) => spec === item.Name2)
       if (!spec2) spec2Arr.push(item.Name2)
     }
@@ -107,10 +120,12 @@ let showSpec1Arr = computed(() => {
   if (specNumber.value === 1) {
     return spec1Arr
   } else if (specNumber.value === 2) {
+    // 沒有選規格2的情況，顯示完整規格1陣列
     if (!activeSpecObj.value.spec2) {
       return spec1Arr
     }
 
+    // 有選規格2的情況下，利用 規格組合物件 判斷要顯示的規格1
     let arr = []
     for (let key in specObj[activeSpecObj.value.spec2]) {
       arr.push(key)
@@ -142,13 +157,13 @@ function selectSpec(key, spec) {
     activeSpecObj.value[key] = spec
   }
 
-  // 單
+  // 單規格
   if (specNumber.value === 1) {
     if (activeSpecObj.value["spec1"]) {
       activeSpec.value = specObj[activeSpecObj.value["spec1"]]
     }
   }
-  // 雙
+  // 雙規格
   else if (specNumber.value === 2) {
     if (activeSpecObj.value["spec1"] && activeSpecObj.value["spec2"]) {
       activeSpec.value =
@@ -206,9 +221,9 @@ function selectSpec(key, spec) {
     >
       <!-- 沒有規格 or 有規格且有選規格  -->
       <template v-if="!product.specArr || isSelect">
-        <!-- 加購商品 -->
+        <!-- 加價購商品 -->
         <template v-if="addProduct && (addProduct.ID || addProduct.ID === 0)">
-          <!-- 加購商品 規格 -->
+          <!-- 加價購商品 規格 -->
           <template v-if="addProduct.specArr">
             <div
               class="reduce"
@@ -272,7 +287,7 @@ function selectSpec(key, spec) {
             </div>
           </template>
 
-          <!-- 加購商品 沒有規格 -->
+          <!-- 加價購商品 沒有規格 -->
           <template v-else>
             <div
               class="reduce"

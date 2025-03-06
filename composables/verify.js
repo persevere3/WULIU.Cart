@@ -1,3 +1,5 @@
+// 驗證 資料
+
 export function useVerify() {
   const verify_methods = {
     required_verify(item) {
@@ -121,14 +123,18 @@ export function useVerify() {
   }
 
   const methods = {
+    // item: 資料物件
     reset(item) {
       item.value = ""
       item.is_error = false
       item.message = ""
     },
+    // arr: 資料物件陣列
     verify(...arr) {
       let is_valid = true
+      // item 資料物件
       for (let item of arr) {
+        // 根據資料物件的rules，呼叫相對應的驗證function
         for (let rule in item.rules) {
           if (!verify_methods[`${rule}_verify`](item)) {
             is_valid = false

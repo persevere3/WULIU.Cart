@@ -7,8 +7,10 @@ const memberInfoStore = useMemberInfoStore()
 const purchaseInfoStore = usePurchaseInfoStore()
 
 const { RtnMsg, account, result, phone, email } = useRoute().query
+console.log(useRoute().query)
 
 let getOrderHandler = computed(() => {
+  console.log(commonStore.user_account)
   return commonStore.user_account
     ? orderStore.getMemberOrder
     : orderStore.getOrder
@@ -32,17 +34,6 @@ onMounted(() => {
   // 付款成功
   if (RtnMsg) {
     commonStore.showMessage("已收到您的付款", true)
-  }
-
-  // Line 登入
-  if (account) {
-    commonStore.user_account = account
-  }
-  // Line 綁定
-  if (result) {
-    result = JSON.parse(decodeURI(result))
-    if (!result.status) commonStore.showMessage(result.msg, false)
-    else commonStore.user_account = result.account
   }
 
   watch(

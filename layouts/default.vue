@@ -1,8 +1,8 @@
 <template>
   <template v-if="isShow">
-    <div @click="purchaseInfoStore.storeNotEstablishedOrderInfo">
+    <!-- <div @click="purchaseInfoStore.storeNotEstablishedOrderInfo">
       未成立訂單test
-    </div>
+    </div> -->
     <SidebarModal />
 
     <SearchModal />
@@ -42,6 +42,7 @@ import Third from "@/components/layouts/default/third"
 import Message from "@/components/layouts/default/Message.vue"
 import Confirm from "@/components/layouts/default/Confirm.vue"
 
+// font-awesome: icon
 useHead({
   link: [
     {
@@ -58,33 +59,12 @@ const commonStore = useCommonStore()
 const purchaseInfoStore = usePurchaseInfoStore()
 await commonStore.ajaxWeb()
 
-if (process.env.NODE_ENV === "production") {
-  if (useRoute().params.id || useRoute().params.id === 0) {
-    let jsonLd = commonStore.webData.StoreLogin.ldjson.find(
-      (item) => item.identifier === useRoute().params.id
-    )
-
-    useHead({
-      script: [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify(jsonLd)
-        }
-      ]
-    })
-  }
-}
-
-setTimeout(() => {
-  commonStore.webHandler()
-}, 0)
-
 const isShow = ref(false)
 setTimeout(() => {
   isShow.value = true
 }, 0)
 
-// ==============================
+// 未成立訂單 ==============================
 // 綁定事件
 onMounted(() => {
   window.addEventListener(

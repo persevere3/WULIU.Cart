@@ -9,7 +9,7 @@
     v-if="commonStore.customerService && commonStore.customerService.CSText"
     @click="useUrlPush(commonStore.customerService.CSText, true)"
   >
-    <img src="@/assets/img/line_icon.png" alt="" />
+    <img src="@/assets/img/line2.png" alt="" />
   </div>
 
   <!-- chat controler -->

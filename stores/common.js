@@ -1,11 +1,14 @@
-import { storeLoginApi, initialWebApi, ajaxStoreApi } from "@/apis/common"
+import { storeLoginApi, initialWebApi } from "@/apis/common"
 
 import bank_json from "@/json/bank"
 
 import { useAppendScript } from "@/composables/appendScript"
 import { useUrlPush } from "@/composables/urlPush"
+import { useRequest } from "@/composables/request"
 
 export const useCommonStore = defineStore("common", () => {
+  let { return_formData } = useRequest()
+
   const config = useRuntimeConfig()
   const productStore = useProductStore()
   const cartStore = useCartStore()
@@ -30,6 +33,8 @@ export const useCommonStore = defineStore("common", () => {
   const is_getAll = ref(false)
   const is_logout = ref(null)
 
+  const handlerTimes = ref(3)
+
   // ----------
   const messageArr = ref([])
 
@@ -44,6 +49,7 @@ export const useCommonStore = defineStore("common", () => {
   const isConfirmCheckPay = ref(false)
 
   // methods ==============================
+  // 透過localstorage的site登入商店
   function storeLogin() {
     const site = JSON.parse(localStorage.getItem("site")) || {}
 
@@ -55,11 +61,12 @@ export const useCommonStore = defineStore("common", () => {
     }
 
     try {
-      return storeLoginApi(query)
+      return storeLoginApi(return_formData(query))
     } catch (error) {
       throw new Error(error)
     }
   }
+  // res: ajax回傳值
   function resHandler(res) {
     if (res.errormessage || (res.GetSite && res.GetSite.data.length == 0)) {
       try {
@@ -73,6 +80,7 @@ export const useCommonStore = defineStore("common", () => {
   }
 
   // ---------------
+  // 取得所有初始化資料的參數
   function getInitialWebQuery() {
     // pagetype
     let pagetype = 1
@@ -95,6 +103,7 @@ export const useCommonStore = defineStore("common", () => {
     return { pagetype }
   }
 
+  // 初始化資料處理
   function webHandler() {
     console.log(webData.value)
 
@@ -120,6 +129,7 @@ export const useCommonStore = defineStore("common", () => {
     if (user_account.value) memberInfoStore.getMemberInfo()
   }
 
+  // 取得所有初始化資料
   async function ajaxWeb() {
     let { pagetype } = getInitialWebQuery()
     let query = {
@@ -129,19 +139,27 @@ export const useCommonStore = defineStore("common", () => {
     }
     try {
       const res = JSON.parse(await initialWebApi(query))
-      const isResSuccess = resHandler(res, ajaxWeb)
-      if (!isResSuccess) return ajaxWeb()
-
-      webData.value = res
+      if (handlerTimes.value > 0) {
+        const isResSuccess = resHandler(res)
+        handlerTimes.value -= 1
+        if (!isResSuccess) return ajaxWeb()
+        else {
+          console.log(1)
+          webData.value = res
+          webHandler()
+        }
+      }
     } catch (error) {
       console.log(error)
     }
   }
 
   // ---------------
+  // 處理 menu 頁尾
   async function allHandler() {
     all.value = webData.value.WebLogin || {}
 
+    // menu
     // webcategory, websubcategory => navbar ------------
     let navbar = []
     all.value.webcategory.forEach((category) => {
@@ -173,6 +191,7 @@ export const useCommonStore = defineStore("common", () => {
     })
     all.value.Navbar = navbar
 
+    // 頁尾
     // footer => about, client ------------
     let about = []
     let client = []
@@ -190,6 +209,7 @@ export const useCommonStore = defineStore("common", () => {
 
     is_getAll.value = true
   }
+  // 處理 store
   async function storeHandler(res) {
     store.value = res
 
@@ -197,6 +217,7 @@ export const useCommonStore = defineStore("common", () => {
     cartStore.stores = webData.value.GetStoreFromStore.data2 || []
     delete cartStore.Logo
 
+    // 合併 store cartStore
     store.value = { ...store.value, ...cartStore }
 
     if (process.env.NODE_ENV === "development") {
@@ -230,11 +251,11 @@ export const useCommonStore = defineStore("common", () => {
     useAppendScript(GAText, "head")
 
     // user_account ----------
-    user_account.value = localStorage.getItem("user_account")
+    user_account.value = localStorage.getItem("user_account") || ""
 
     // Line 登入
     let account = useRoute().query["account"]
-    if (account) user_account.value = account
+    if (account && account !== "null") user_account.value = account
 
     // Line 綁定
     let result = useRoute().query["result"]
@@ -306,9 +327,11 @@ export const useCommonStore = defineStore("common", () => {
     }
   }
 
+  // 處理 copyRight
   function copyRightHandler() {
     copyRight.value = webData.value.GetCopyRight.data[0] || {}
   }
+  // 處理 customerService
   function customerServiceHandler() {
     customerService.value = webData.value.GetCustomerService.data[0] || {}
     useAppendScript(
@@ -318,7 +341,8 @@ export const useCommonStore = defineStore("common", () => {
     // if(customerService.value.FBText ) useAppendScript(customerService.value.FBText, 'body')
   }
 
-  // ---------------
+  // message ---------------
+  //
   async function showMessage(messageStr, isSuccess) {
     // let message = messageArr.value.find(
     //   (message) => message.messageStr === messageStr
@@ -347,6 +371,7 @@ export const useCommonStore = defineStore("common", () => {
       index > -1 && messageArr.value.splice(index, 1)
     }, 500)
   }
+  // showMessage 延遲
   function promiseSetTimeout(func, ms) {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -357,7 +382,7 @@ export const useCommonStore = defineStore("common", () => {
   }
 
   // watch ==============================
-  // site localStorage
+  // site改變時，處理 localStorage
   watch(
     () => site.Name,
     () => {
@@ -365,12 +390,12 @@ export const useCommonStore = defineStore("common", () => {
     }
   )
 
-  // user_account localStorage，purchaseInfoStore, memberInfoStore
+  // user_account改變時，處理 localStorage，purchaseInfoStore，memberInfoStore
   watch(user_account, (newV, oldV) => {
     if (newV) localStorage.setItem("user_account", newV)
     else localStorage.removeItem("user_account")
 
-    if (!newV) {
+    if (oldV && !newV) {
       purchaseInfoStore.info.purchaser_email.value = ""
       purchaseInfoStore.info.purchaser_name.value = ""
       purchaseInfoStore.info.purchaser_phone.value = ""

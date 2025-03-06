@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: true,
 
-  //
+  // 環境變數
   runtimeConfig: {
     public: {
       apiUrl: "https://demo.uniqcarttest.com/"
@@ -24,8 +24,6 @@ export default defineNuxtConfig({
   imports: {
     dirs: ["stores"]
   },
-
-  // css: ["@/styles/_all.scss"],
 
   // modules
   modules: [
@@ -48,6 +46,7 @@ export default defineNuxtConfig({
     define: {
       "process.env": process.env
     },
+    // 每個元件載入共用css
     css: {
       preprocessorOptions: {
         scss: {

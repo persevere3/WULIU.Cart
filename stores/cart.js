@@ -82,6 +82,7 @@ export const useCartStore = defineStore("cart", () => {
     )
   })
 
+  // 滿件優惠商品陣列
   const productDiscountList = computed(() => {
     let list = []
     if (!total.value.FreeItem) return list
@@ -112,14 +113,19 @@ export const useCartStore = defineStore("cart", () => {
   })
 
   // methods ==============================
+  // 從localstorage取得購物車
   function getCart() {
     let key = ""
+    // 一頁式
     if (productStore.isSingleProduct) {
       key = `${commonStore.site.Name}@${useRoute().params.id}@cart`
     } else {
+      // 會員
       if (commonStore.user_account) {
         key = `${commonStore.site.Name}@${commonStore.user_account}@cart`
-      } else {
+      }
+      // 一般顧客
+      else {
         key = `${commonStore.site.Name}@cart`
       }
     }
@@ -155,8 +161,8 @@ export const useCartStore = defineStore("cart", () => {
     await purchaseInfoStore.filter_use_bonus(0)
   }
 
-  // cartItem addProcucts 購買數量 => product addProcucts
-  function cartItemAddProcuctsQtyToProduct(cartItem, product) {
+  //
+  function asyncAddProducts(cartItem, product) {
     let mainTotalQty = getMainTotalQty(product)
     if (cartItem.addProducts && product.addProducts) {
       cartItem.addProducts.forEach((cartItemAddProduct) => {
@@ -196,7 +202,7 @@ export const useCartStore = defineStore("cart", () => {
                   }
                 }
 
-                // 檢查加購數量是否超過主商品
+                // 檢查加價購數量是否超過主商品
                 if (productAddProductSpec.buyQty > mainTotalQty) {
                   productAddProductSpec.buyQty = mainTotalQty
                 }
@@ -225,7 +231,7 @@ export const useCartStore = defineStore("cart", () => {
                 }
               }
             }
-            // 檢查加購數量是否超過主商品
+            // 檢查加價購數量是否超過主商品
             if (productAddProduct.buyQty > mainTotalQty) {
               productAddProduct.buyQty = mainTotalQty
             }
@@ -234,13 +240,14 @@ export const useCartStore = defineStore("cart", () => {
       })
     }
   }
+  //
   function asyncCart() {
     cart.value.forEach((cartItem, cartIndex) => {
       let product = productStore.products.find(
         (product) => product.ID == cartItem.ID
       )
       if (product) {
-        // cart 購買數量 => product ----------
+        // 購物車商品的購買數量 => 商品列表商品數量 ----------
         // 都有規格
         if (cartItem.specArr && product.specArr) {
           cartItem.specArr.forEach((cartItemSpec) => {
@@ -272,10 +279,10 @@ export const useCartStore = defineStore("cart", () => {
 
         // main product 購買數量不為0 ----------
         if (cartItem) {
-          // cartItem addProcucts 購買數量 => product addProcucts
-          cartItemAddProcuctsQtyToProduct(cartItem, product)
+          // 購物車加價購商品的購買數量 => 商品列表加價購商品數量
+          asyncAddProducts(cartItem, product)
 
-          // copy procuct => cart ----------
+          // 商品列表 => 購物車 ----------
           cart.value[cartIndex] = JSON.parse(JSON.stringify(product))
         }
       }
@@ -285,6 +292,7 @@ export const useCartStore = defineStore("cart", () => {
     setCart()
   }
 
+  // 存到 localstorage
   function setCart() {
     let key = ""
     if (productStore.isSingleProduct) {
@@ -297,6 +305,7 @@ export const useCartStore = defineStore("cart", () => {
 
     localStorage.setItem(key, JSON.stringify(cart.value))
   }
+  // 清空購物車
   function clearCart() {
     cart.value = []
     setCart()
@@ -311,6 +320,7 @@ export const useCartStore = defineStore("cart", () => {
     productStore.ajaxProducts()
   }
 
+  // 套用折扣碼
   async function discount() {
     if (!discountCode.value) {
       discountErrorMessage.value = "請輸入折扣碼"
@@ -347,6 +357,7 @@ export const useCartStore = defineStore("cart", () => {
       throw new Error(error)
     }
   }
+  // 取消套用折扣碼
   function unDiscount() {
     discountCode.value = ""
     successUsedDiscountCode.value = ""
@@ -354,6 +365,7 @@ export const useCartStore = defineStore("cart", () => {
   }
 
   // 查 金額, 折扣, 運費, 總計
+  // isStepTwo: 是否為步驟2
   async function getTotal(isStepTwo) {
     let {
       id,
@@ -389,7 +401,6 @@ export const useCartStore = defineStore("cart", () => {
       memberWallet: is_use_bonus.value ? use_bonus.value : 0,
       Preview: commonStore.site.Preview
     }
-
     if (shipping === 4) query["Mart"] = purchaseInfoStore.transport
 
     try {
@@ -407,6 +418,8 @@ export const useCartStore = defineStore("cart", () => {
       throw new Error(error)
     }
   }
+
+  // getTotal createOrder 會用到的參數
   function createCartStrObj() {
     let cartStrObj = {
       id: "",
@@ -557,7 +570,7 @@ export const useCartStore = defineStore("cart", () => {
     getCart,
     cartHandler,
 
-    cartItemAddProcuctsQtyToProduct,
+    asyncAddProducts,
     asyncCart,
 
     setCart,

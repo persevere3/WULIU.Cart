@@ -1,6 +1,6 @@
-export function useAppendScript(text, tag) {
-  return
+// 動態載入script text: 複製來的script tag: body or head ex:GA
 
+export function useAppendScript(text, tag) {
   if (!text) return
 
   //

@@ -33,14 +33,14 @@ export const useOrderStore = defineStore("order", () => {
   const ECPay_form_value = ref("")
   const ECPay_store_form_value = ref("")
 
-  //
-  const search_phone = ref("0910456456")
-  const search_mail = ref("test@gmail.com")
+  // 訂單列表頁
+  const search_phone = ref("")
+  const search_mail = ref("")
   const filter_number = ref("")
   const filter_pay = ref("0")
   const filter_delivery = ref("0")
 
-  const order = ref({})
+  const order = ref([])
   // 展開某一筆訂單的產品列表
   const active_order_products = ref("")
   const activeOrder = ref(null)
@@ -92,14 +92,15 @@ export const useOrderStore = defineStore("order", () => {
     options_arr: [10, 20, 30, 40, 50]
   })
 
-  // 確認付款參數
+  // ATM確認付款參數
   const order_number = ref("")
   const account_number = ref("")
 
-  // 前往付款
+  // 是否查無訂單資料
   const noOrder = ref(false)
 
   // methods ==============================
+  // 驗證訂單
   async function checkOrder() {
     if (commonStore.site.Preview == 2) {
       commonStore.showMessage("預覽模式不開放完成訂單", false)
@@ -151,12 +152,14 @@ export const useOrderStore = defineStore("order", () => {
       }
     }
   }
+  // 取消折扣碼優惠，直接送出訂單
   async function cancelDiscountCodeCreateOrder() {
     cartStore.unDiscount()
     await cartStore.getTotal(1)
     commonStore.isConfirmDiscountCodeUsed = false
     createOrder()
   }
+  // 送出訂單
   async function createOrder() {
     isOrderIng.value = true
 
@@ -230,11 +233,22 @@ export const useOrderStore = defineStore("order", () => {
     }
 
     // 地址
-    if (purchaseInfoStore.is_store)
+    console.log(purchaseInfoStore.is_store)
+    console.log(purchaseInfoStore.transport)
+    if (purchaseInfoStore.is_store) {
       query["Address"] = encodeURI(
         `${purchaseInfoStore.storeid} - ${purchaseInfoStore.storename} - ${purchaseInfoStore.storeaddress}`
       )
-    else query["Address"] = encodeURI(purchaseInfoStore.receiver_address)
+    } else if (purchaseInfoStore.transport == 2) {
+      if (commonStore.store?.stores?.length) {
+        let store = purchaseInfoStore.activeStore
+        query["Address"] = encodeURI(`${store.StoreName}`)
+      } else {
+        query["Address"] = ""
+      }
+    } else {
+      query["Address"] = encodeURI(purchaseInfoStore.receiver_address)
+    }
     if (
       memberInfoStore.memberInfo.address_obj &&
       Object.keys(memberInfoStore.memberInfo.address_obj).length < 3 &&
@@ -337,6 +351,7 @@ export const useOrderStore = defineStore("order", () => {
     }
   }
 
+  // 確認帳號是否已註冊
   async function hasAccount() {
     let query = {
       storeid: commonStore.site.Name,
@@ -362,6 +377,7 @@ export const useOrderStore = defineStore("order", () => {
       throw new Error(error)
     }
   }
+  // 前往付款
   async function toPay() {
     commonStore.isConfirmToPay = false
 
@@ -419,16 +435,18 @@ export const useOrderStore = defineStore("order", () => {
     }
   }
 
-  //
+  // 取得訂單
+  // type 沒有值: 當前頁設成1
+  // is_filter 沒有值: 把篩選初始化
   async function getOrder(type, is_filter) {
     console.log("getOrder")
     if (!search_phone.value) {
       commonStore.showMessage("請填寫購買人連絡電話", false)
-      order.value = {}
+      order.value = []
       return
     } else if (!search_phone.value) {
       commonStore.showMessage("請填寫購買人電子信箱", false)
-      order.value = {}
+      order.value = []
       return
     }
 
@@ -531,7 +549,7 @@ export const useOrderStore = defineStore("order", () => {
           )
           if (order_pagination.totalPageNum == 0) {
             commonStore.showMessage("沒有您查詢的訂單資料", false)
-            order.value = {}
+            order.value = []
             return
           }
 
@@ -558,6 +576,7 @@ export const useOrderStore = defineStore("order", () => {
     })
   }
 
+  // 重新付款
   async function rePay(flino, url) {
     let query = {
       StoreId: commonStore.site.Name,
@@ -585,6 +604,7 @@ export const useOrderStore = defineStore("order", () => {
     }
   }
 
+  // 查詢運送狀態
   async function searchMartDelivery(item) {
     let MerchantTradeNo = item.FilNo
     let LogisticsSubType = item.Mart.replace("Delivery", "")

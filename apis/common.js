@@ -1,12 +1,13 @@
 /* 登入 商店 */
-export const storeLoginApi = (query) =>
+export const storeLoginApi = (formData) =>
   $fetch("/interface/store/UserLogin", {
     method: "POST",
-    query
+    body: formData
   })
 
 /* 查 web 資訊 */
 export const initialWebApi = (query) => {
+  // process.server: server render 時執行
   if (process.server)
     return $fetch("/interface/web/InitialWeb", {
       query

@@ -1,4 +1,5 @@
 <script setup>
+// 輪播
 import { Swiper, SwiperSlide } from "swiper/vue"
 import { Autoplay, Pagination } from "swiper/modules"
 import "swiper/css"
@@ -13,6 +14,7 @@ import { useRequest } from "@/composables/request"
 
 const config = useRuntimeConfig()
 
+// 輪播
 const modules = reactive([Autoplay, Pagination])
 
 const commonStore = useCommonStore()

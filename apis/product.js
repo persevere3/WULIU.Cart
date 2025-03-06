@@ -13,10 +13,10 @@ export const getProductsApi = (query) =>
   })
 
 /* 查 加價購商品 */
-export const getAddProductsApi = (query) =>
+export const getAddProductsApi = (formData) =>
   $fetch("/interface/store/GetAdditional", {
     method: "POST",
-    query
+    body: formData
   })
 
 /* 查 商品庫存 */

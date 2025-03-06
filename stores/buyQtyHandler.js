@@ -9,6 +9,9 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
 
   // methods ==============================
   // 改變 主商品數量
+  // main: 主商品物件
+  // specIndex: 規格index or null
+  // qty: 數量
   async function changeMainBuyQty(main, specIndex, qty) {
     let spec = specIndex == null ? null : main.specArr[specIndex]
     let target = spec ? spec : main
@@ -109,6 +112,10 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
       cartStore.getTotal(cartStore.step - 1)
   }
   // 改變 加價購數量
+  // main: 主商品物件
+  // addProductIndex: 加價購商品index
+  // specIndex: 規格index or null
+  // qty: 數量
   async function changeAddProductBuyQty(main, addProductIndex, specIndex, qty) {
     let addProduct = main.addProducts[addProductIndex]
     let addProductSpec =
@@ -193,13 +200,17 @@ export const useBuyQtyHandlerStore = defineStore("buyQtyHandler", () => {
 
   // ---------------
 
-  // 取得 庫存 type 1: 沒有規格主商品, 2: 沒有規格加價購, 3: 有規格主商品和加價購
+  // 取得 庫存
+  // main: 主商品物件
+  // addProduct: 加價購商品物件 or null
+  // spec: 規格物件 or null
   async function getAmount(main, addProduct, spec) {
     // 加價購商品 or 主商品
     let product = addProduct ? addProduct : main
     // 商品某規格 or 商品沒規格
     let target = spec ? spec : product
 
+    // type 1: 沒有規格主商品, 2: 沒有規格加價購, 3: 有規格主商品和加價購
     let type
     if (spec) type = 3
     else if (addProduct) type = 2

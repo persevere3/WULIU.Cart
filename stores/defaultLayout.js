@@ -1,3 +1,5 @@
+// layout 找商品 聯絡我們 手機版側欄
+
 import { connectHandlerApi } from "@/apis/common"
 
 import { useVerify } from "@/composables/verify"
@@ -13,11 +15,11 @@ export const useDefaultLayoutStore = defineStore("defaultLayout", () => {
   const state = reactive({
     window_scrollTop: 0,
 
-    // search
+    // search 找商品
     is_search: false,
     searchStr: "",
 
-    // connect
+    // connect 聯絡我們
     is_connect: false,
     connect_mail: {
       value: "",
@@ -41,14 +43,14 @@ export const useDefaultLayoutStore = defineStore("defaultLayout", () => {
       }
     },
 
-    // sidebar
+    // sidebar 手機版側欄
     is_sidebar: false,
     is_slideout: false
   })
 
   // methods ==============================
   const methods = {
-    // search
+    // search 找商品
     close_search() {
       state.is_search = false
       state.searchStr = ""
@@ -57,7 +59,7 @@ export const useDefaultLayoutStore = defineStore("defaultLayout", () => {
       if (state.searchStr) useUrlPush(`/products?search=${state.searchStr}`)
     },
 
-    // connect
+    // connect 聯絡我們
     open_connect() {
       if (commonStore.site.WebPreview == 2)
         commonStore.showMessage("預覽模式下不開放", false)
@@ -101,7 +103,7 @@ export const useDefaultLayoutStore = defineStore("defaultLayout", () => {
       }
     },
 
-    // sidebar
+    // sidebar 手機版側欄
     open_sidebar() {
       state.is_sidebar = true
       setTimeout(function () {

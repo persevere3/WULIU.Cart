@@ -25,6 +25,7 @@ onMounted(() => {
       }
       if (page === "order") {
         memberInfoStore.member_info_nav_active = "order"
+        console.log('page === "order"')
         orderStore.getMemberOrder()
       }
 

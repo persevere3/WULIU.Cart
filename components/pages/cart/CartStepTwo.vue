@@ -1,3 +1,177 @@
+<script setup>
+import CartStepTotal from "./CartStepTotal.vue"
+
+import city_district_json from "@/json/city_district.json"
+
+import { useNumberThousands } from "@/composables/numberThousands"
+import { useVerify } from "@/composables/verify"
+import { useUrlPush } from "@/composables/urlPush"
+
+const { verify } = useVerify()
+
+const commonStore = useCommonStore()
+const cartStore = useCartStore()
+const orderStore = useOrderStore()
+const purchaseInfoStore = usePurchaseInfoStore()
+const memberInfoStore = useMemberInfoStore()
+
+// 購買人 收件人 資訊 是否一樣
+const isSame = ref(false)
+
+//
+const city_district = ref(city_district_json)
+
+// 運輸方式數量
+const transport_number = computed(() => {
+  let number = 0
+  if (commonStore.store.Shipping === "1") number += 2
+  if (commonStore.store.Shipping === "2") number += 1
+  if (commonStore.store.Shipping === "3") number += 1
+
+  if (commonStore.store.UNIMARTDelivery || commonStore.store.UNIMARTC2CDelivery)
+    number += 1
+  if (commonStore.store.UNIMART || commonStore.store.UNIMARTC2C) number += 1
+  if (commonStore.store.UNIMARTFREEZEDelivery) number += 1
+  if (commonStore.store.UNIMARTFREEZE) number += 1
+
+  if (commonStore.store.HILIFEDelivery || commonStore.store.HILIFEC2CDelivery)
+    number += 1
+  if (commonStore.store.HILIFE || commonStore.store.HILIFEC2C) number += 1
+
+  if (commonStore.store.OKMARTC2C) number += 1
+  if (commonStore.store.OKMARTC2CCDelivery) number += 1
+
+  return number
+})
+
+// 運輸方式是否為便利商店取貨
+const is_collection = computed(() => {
+  if (purchaseInfoStore.transport == 0) return undefined
+  else if (purchaseInfoStore.transport.indexOf("Delivery") > -1) return true
+  else return false
+})
+
+const is_other_invoice_type = computed(() => {
+  if (
+    commonStore.store.PhoneCode === "1" ||
+    commonStore.store.NatureCode === "1"
+  )
+    return true
+  return false
+})
+
+// 同步 購買人 收件人 資訊
+watch(isSame, (v) => {
+  if (v) {
+    purchaseInfoStore.info.receiver_name.value =
+      purchaseInfoStore.info.purchaser_name.value
+    purchaseInfoStore.info.receiver_number.value =
+      purchaseInfoStore.info.purchaser_phone.value
+  }
+  verify(
+    purchaseInfoStore.info.receiver_name,
+    purchaseInfoStore.info.receiver_number
+  )
+})
+
+// transport 有改變的話，判斷是否需要重新設定便利商店門市
+watch(
+  () => purchaseInfoStore.transport,
+  (newV, oldV) => {
+    if (newV.indexOf("Delivery") > -1)
+      purchaseInfoStore.pay_method = "MartPayOnDelivery"
+    let newMart = newV
+      .replace("C2CC", "")
+      .replace("C2C", "")
+      .replace("Delivery", "")
+    let oldMart = oldV
+      .replace("C2CC", "")
+      .replace("C2C", "")
+      .replace("Delivery", "")
+    if (newMart != oldMart) {
+      purchaseInfoStore.storeid = ""
+      purchaseInfoStore.storename = ""
+      purchaseInfoStore.storeaddress = ""
+    }
+
+    cartStore.getTotal(1)
+  }
+)
+
+// city 有改變的話，district 要跟著改變
+watch(
+  () => purchaseInfoStore.info.address.city_active,
+  (newV, oldV) => {
+    for (let key in city_district.value[newV]) {
+      if (key == purchaseInfoStore.info.address.district_active) return
+    }
+    purchaseInfoStore.info.address.district_active = ""
+  },
+  { deep: true }
+)
+
+// 如果已經按過送出訂單後，針對地址做驗證
+watch(
+  () => [
+    purchaseInfoStore.info.address.city_active,
+    purchaseInfoStore.info.address.district_active,
+    purchaseInfoStore.info.address.detail_address
+  ],
+  () => {
+    if (orderStore.is_click_finish_order) verify(purchaseInfoStore.info.address)
+  },
+  { deep: true }
+)
+
+// methods ========== ========== ========== ========== ==========
+// 同步 購買人 收件人 資訊
+function input_purchaser() {
+  if (isSame.value) {
+    purchaseInfoStore.info.receiver_name.value =
+      purchaseInfoStore.info.purchaser_name.value
+    purchaseInfoStore.info.receiver_number.value =
+      purchaseInfoStore.info.purchaser_phone.value
+    verify(
+      purchaseInfoStore.info.receiver_name,
+      purchaseInfoStore.info.receiver_number
+    )
+  }
+}
+// 留言字數控制在150以下
+function input_info_message() {
+  if (purchaseInfoStore.info_message.length > 150)
+    purchaseInfoStore.info_message = purchaseInfoStore.info_message.substring(
+      0,
+      150
+    )
+}
+
+function changeTransport(transport, is_show_transport_options) {
+  purchaseInfoStore.transport = transport
+  purchaseInfoStore.is_show_transport_options = is_show_transport_options
+}
+
+function changeCity(city, is_show_city) {
+  purchaseInfoStore.info.address.city_active = city
+  purchaseInfoStore.info.address.is_show_city = is_show_city
+}
+
+function changeDistrict(district, is_show_district) {
+  purchaseInfoStore.info.address.district_active = district
+  purchaseInfoStore.info.address.is_show_district = is_show_district
+}
+
+function changeAddress(city, district, detail) {
+  purchaseInfoStore.info.address.city_active = city
+  purchaseInfoStore.info.address.district_active = district
+  purchaseInfoStore.info.address.detail_address = detail
+}
+
+onMounted(() => {
+  if (commonStore.user_account) memberInfoStore.getMemberInfo()
+})
+</script>
+
 <template>
   <div class="stepTwo">
     <div class="title">填寫購買人資訊</div>
@@ -119,6 +293,7 @@
       <div class="right">
         <!-- 配送狀態 -->
         <label> 配送方式 </label>
+        <!-- 配送方式數量小於6 => button -->
         <template v-if="transport_number < 6">
           <div
             class="custom_option2"
@@ -289,6 +464,7 @@
             OK超商 取貨不付款
           </div>
         </template>
+        <!-- 配送方式數量大於等於6 => select -->
         <template v-else>
           <div
             tabindex="0"
@@ -464,7 +640,7 @@
           請選擇配送方式
         </div>
 
-        <!-- 選擇門市 -->
+        <!-- 選擇實體門市 -->
         <template
           v-if="
             purchaseInfoStore.transport === '2' &&
@@ -830,6 +1006,7 @@
             公司發票
           </div>
 
+          <!-- 個人發票 -->
           <template
             v-if="
               purchaseInfoStore.personal_or_company === '個人發票' &&
@@ -838,6 +1015,7 @@
           >
             <label>個人發票類型</label>
 
+            <!-- 手機載具 -->
             <div
               class="custom_option2"
               :class="{ active: purchaseInfoStore.invoice_type === '1' }"
@@ -845,7 +1023,6 @@
             >
               個人紙本發票
             </div>
-
             <div
               class="custom_option2"
               v-if="commonStore.store.PhoneCode === '1'"
@@ -871,6 +1048,7 @@
               </div>
             </div>
 
+            <!-- 自然人憑證 -->
             <div
               class="custom_option2"
               v-if="commonStore.store.NatureCode === '1'"
@@ -897,6 +1075,7 @@
             </div>
           </template>
 
+          <!-- 公司發票  -->
           <template v-if="purchaseInfoStore.invoice_type === '2'">
             <div>
               <input
@@ -936,6 +1115,7 @@
             </div>
           </template>
 
+          <!-- errorMessage -->
           <div
             class="errorMessage"
             v-if="
@@ -1033,170 +1213,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import CartStepTotal from "./CartStepTotal.vue"
-
-import city_district_json from "@/json/city_district.json"
-
-import { useNumberThousands } from "@/composables/numberThousands"
-import { useVerify } from "@/composables/verify"
-import { useUrlPush } from "@/composables/urlPush"
-
-const { verify } = useVerify()
-
-const commonStore = useCommonStore()
-const cartStore = useCartStore()
-const orderStore = useOrderStore()
-const purchaseInfoStore = usePurchaseInfoStore()
-const memberInfoStore = useMemberInfoStore()
-
-let props = defineProps(["main", "addProduct", "event"])
-
-const isSame = ref(false)
-const city_district = ref(city_district_json)
-
-const transport_number = computed(() => {
-  let number = 0
-  if (commonStore.store.Shipping === "1") number += 2
-  if (commonStore.store.Shipping === "2") number += 1
-  if (commonStore.store.Shipping === "3") number += 1
-
-  if (commonStore.store.UNIMARTDelivery || commonStore.store.UNIMARTC2CDelivery)
-    number += 1
-  if (commonStore.store.UNIMART || commonStore.store.UNIMARTC2C) number += 1
-  if (commonStore.store.UNIMARTFREEZEDelivery) number += 1
-  if (commonStore.store.UNIMARTFREEZE) number += 1
-
-  if (commonStore.store.HILIFEDelivery || commonStore.store.HILIFEC2CDelivery)
-    number += 1
-  if (commonStore.store.HILIFE || commonStore.store.HILIFEC2C) number += 1
-
-  if (commonStore.store.OKMARTC2C) number += 1
-  if (commonStore.store.OKMARTC2CCDelivery) number += 1
-
-  return number
-})
-
-const is_collection = computed(() => {
-  if (purchaseInfoStore.transport == 0) return undefined
-  else if (purchaseInfoStore.transport.indexOf("Delivery") > -1) return true
-  else return false
-})
-
-const is_other_invoice_type = computed(() => {
-  if (
-    commonStore.store.PhoneCode === "1" ||
-    commonStore.store.NatureCode === "1"
-  )
-    return true
-  return false
-})
-
-watch(isSame, (v) => {
-  if (v) {
-    purchaseInfoStore.info.receiver_name.value =
-      purchaseInfoStore.info.purchaser_name.value
-    purchaseInfoStore.info.receiver_number.value =
-      purchaseInfoStore.info.purchaser_phone.value
-  }
-  verify(
-    purchaseInfoStore.info.receiver_name,
-    purchaseInfoStore.info.receiver_number
-  )
-})
-
-watch(
-  () => purchaseInfoStore.transport,
-  (newV, oldV) => {
-    if (newV.indexOf("Delivery") > -1)
-      purchaseInfoStore.pay_method = "MartPayOnDelivery"
-    let newMart = newV
-      .replace("C2CC", "")
-      .replace("C2C", "")
-      .replace("Delivery", "")
-    let oldMart = oldV
-      .replace("C2CC", "")
-      .replace("C2C", "")
-      .replace("Delivery", "")
-    if (newMart != oldMart) {
-      purchaseInfoStore.storeid = ""
-      purchaseInfoStore.storename = ""
-      purchaseInfoStore.storeaddress = ""
-    }
-
-    cartStore.getTotal(1)
-  }
-)
-
-watch(
-  () => purchaseInfoStore.info.address.city_active,
-  (newV, oldV) => {
-    for (let key in city_district.value[newV]) {
-      if (key == purchaseInfoStore.info.address.district_active) return
-    }
-    purchaseInfoStore.info.address.district_active = ""
-  },
-  { deep: true }
-)
-
-watch(
-  () => [
-    purchaseInfoStore.info.address.city_active,
-    purchaseInfoStore.info.address.district_active,
-    purchaseInfoStore.info.address.detail_address
-  ],
-  () => {
-    if (orderStore.is_click_finish_order) verify(purchaseInfoStore.info.address)
-  },
-  { deep: true }
-)
-
-// methods ========== ========== ========== ========== ==========
-// 同步 購買人 收件人 資訊
-function input_purchaser() {
-  if (isSame.value) {
-    purchaseInfoStore.info.receiver_name.value =
-      purchaseInfoStore.info.purchaser_name.value
-    purchaseInfoStore.info.receiver_number.value =
-      purchaseInfoStore.info.purchaser_phone.value
-    verify(
-      purchaseInfoStore.info.receiver_name,
-      purchaseInfoStore.info.receiver_number
-    )
-  }
-}
-// 留言字數控制在150以下
-function input_info_message() {
-  if (purchaseInfoStore.info_message.length > 150)
-    purchaseInfoStore.info_message = purchaseInfoStore.info_message.substring(
-      0,
-      150
-    )
-}
-
-function changeTransport(transport, is_show_transport_options) {
-  purchaseInfoStore.transport = transport
-  purchaseInfoStore.is_show_transport_options = is_show_transport_options
-}
-
-function changeCity(city, is_show_city) {
-  purchaseInfoStore.info.address.city_active = city
-  purchaseInfoStore.info.address.is_show_city = is_show_city
-}
-
-function changeDistrict(district, is_show_district) {
-  purchaseInfoStore.info.address.district_active = district
-  purchaseInfoStore.info.address.is_show_district = is_show_district
-}
-
-function changeAddress(city, district, detail) {
-  purchaseInfoStore.info.address.city_active = city
-  purchaseInfoStore.info.address.district_active = district
-  purchaseInfoStore.info.address.detail_address = detail
-}
-
-onMounted(() => {
-  if (commonStore.user_account) memberInfoStore.getMemberInfo()
-})
-</script>

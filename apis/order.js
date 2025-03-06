@@ -7,6 +7,13 @@ export const createOrderApi = (formData) =>
     body: formData
   })
 
+/* 增 未成立訂單 */
+export const createNotEstablishedOrderApi = (formData) =>
+  $fetch("/LineMK/Line/OrderAbandonmentAdd", {
+    method: "POST",
+    body: formData
+  })
+
 /* 查(一般) */
 export const getOrderApi = (formData) =>
   $fetch("/interface/web/GetOrderContactAjax", {

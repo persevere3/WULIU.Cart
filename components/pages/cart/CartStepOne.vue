@@ -5,6 +5,7 @@ import CartStepTotal from "./CartStepTotal.vue"
 const commonStore = useCommonStore()
 const cartStore = useCartStore()
 
+// rwd響應式，小螢幕介面是否顯示規格 -1不顯示
 const activeCartSpecId = ref({
   value: -1
 })
@@ -68,6 +69,7 @@ const activeCartSpecId = ref({
       </div>
     </div>
 
+    <!-- 折扣 折扣碼 -->
     <div class="discount" v-if="commonStore.store">
       <p v-show="commonStore.store.Discount == 1" class="notice">
         消費滿{{ commonStore.store.Price }}元 ，折扣{{
@@ -96,6 +98,7 @@ const activeCartSpecId = ref({
       </div>
     </div>
 
+    <!-- 滿件優惠 -->
     <div
       class="productDiscountList"
       v-if="

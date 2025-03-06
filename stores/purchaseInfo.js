@@ -1,14 +1,20 @@
-import { ref, onMounted, onUnmounted } from "vue"
-import { v4 as uuidv4 } from "uuid"
+// api
+import { createNotEstablishedOrderApi } from "@/apis/order"
 
 // json
 import city_district_json from "@/json/city_district.json"
 
+//
+import { useRequest } from "@/composables/request"
+
 export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
   let commonStore = useCommonStore()
+  let productStore = useProductStore()
   let cartStore = useCartStore()
   let memberInfoStore = useMemberInfoStore()
   let orderStore = useOrderStore()
+
+  const { return_formData } = useRequest()
 
   // state ==============================
   // 購買人資訊
@@ -164,17 +170,11 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
   const city_district = city_district_json
 
   //
-  const notEstablishedOrderInfo = ref({
-    role: "", // 會員/非會員
-    startTime: "",
-    receiver_name: "",
-    receiver_phone: "",
-    payMethod: "",
-    shipMethod: ""
-  })
+  const notEstablishedOrderInfo = ref({})
 
   // computed ==============================
   // `${city} ${district} ${detail}`
+  // has_address 判斷
   const receiver_address = computed(() => {
     let address = `${info.value.address.city_active} ${info.value.address.district_active} ${info.value.address.detail_address}`
     if (memberInfoStore.memberInfo.address_obj) {
@@ -260,23 +260,30 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     let ECPay_store_form = document.querySelector("#ECPay_store_form")
     ECPay_store_form && ECPay_store_form.submit()
   }
+  // 回填購買人資訊 + 設定 storeid storename storeaddress 的值
   function getConvenienceStore(id, name, address) {
     if (!id || !name || !address) return
 
-    methods.returnInfo()
+    returnInfo()
 
-    purchaseInfoStore.storeid = id
-    purchaseInfoStore.storename = decodeURI(name)
-    purchaseInfoStore.storeaddress = decodeURI(address)
+    storeid.value = id
+    storename.value = decodeURI(name)
+    storeaddress.value = decodeURI(address)
 
     if (!productStore.isSingleProduct) {
       cartStore.step = 2
     }
   }
+  // 選完超商，將localStorage存的資訊填回購買人資訊
   function returnInfo() {
     let order_info = JSON.parse(localStorage.getItem("order_info")) || {}
 
-    info.value = order_info.info
+    info.value.purchaser_email.value = order_info.info.purchaser_email
+    info.value.purchaser_name.value = order_info.info.purchaser_name
+    info.value.purchaser_phone.value = order_info.info.purchaser_phone
+    info.value.receiver_name.value = order_info.info.receiver_name
+    info.value.receiver_number.value = order_info.info.receiver_number
+
     info_message.value = order_info.info_message
 
     transport.value = order_info.transport
@@ -285,6 +292,10 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     invoice_type.value = order_info.invoice_type
     invoice_title.value = order_info.invoice_title
     invoice_uniNumber.value = order_info.invoice_uniNumber
+
+    personal_or_company.value = order_info.personal_or_company
+    natural_barCode.value = order_info.natural_barCode
+    phone_barCode.value = order_info.phone_barCode
 
     cartStore.is_use_bonus = order_info.is_use_bonus
     cartStore.use_bonus = order_info.use_bonus
@@ -317,8 +328,22 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
     await cartStore.getTotal(stepPage)
   }
 
-  //
-  function storeNotEstablishedOrderInfo() {
+  // 產生隨機id
+  function generateUniqueId() {
+    return (
+      Math.random().toString(36).substr(2, 6) +
+      "-" +
+      Math.random().toString(36).substr(2, 6)
+    )
+  }
+
+  // 創建一筆未成立訂單
+  async function storeNotEstablishedOrderInfo() {
+    if (process.server) return
+
+    console.log(cartStore.cart.length)
+    if (cartStore.cart.length < 1) return
+
     let id_key = ""
     if (commonStore.user_account) {
       id_key = `${commonStore.user_account}_id`
@@ -328,96 +353,67 @@ export const usePurchaseInfoStore = defineStore("purchaseInfo", () => {
 
     let id = localStorage.getItem(id_key)
     if (!id) {
-      id = uuidv4()
+      id = generateUniqueId().trim()
       localStorage.setItem(id_key, id)
     }
 
-    console.log(id_key, id)
+    notEstablishedOrderInfo.value.Member = commonStore.user_account ? 1 : 0
+    notEstablishedOrderInfo.value.StoreID = commonStore.site.Name
+    notEstablishedOrderInfo.value.TempFlino = id
 
-    notEstablishedOrderInfo.value.id = id
-    notEstablishedOrderInfo.value.role = commonStore.user_account
-      ? "會員"
-      : "非會員"
-
-    notEstablishedOrderInfo.value.user_account = commonStore.user_account
-
-    notEstablishedOrderInfo.value.receiver_name = info.value.receiver_name.value
-    notEstablishedOrderInfo.value.receiver_phone =
-      info.value.receiver_number.value
+    notEstablishedOrderInfo.value.CustomerName = info.value.receiver_name.value
+    notEstablishedOrderInfo.value.Phone = info.value.receiver_number.value
 
     if (pay_method.value) {
-      notEstablishedOrderInfo.value.payMethod =
+      notEstablishedOrderInfo.value.PayWay =
         orderStore.payMethod_obj[pay_method.value]
+    } else {
+      notEstablishedOrderInfo.value.PayWay = ""
     }
-
     if (transport.value) {
-      notEstablishedOrderInfo.value.shipMethod =
+      notEstablishedOrderInfo.value.SendWay =
         transport_obj.value[transport.value]
+    } else {
+      notEstablishedOrderInfo.value.SendWay = ""
     }
 
     let products = []
     cartStore.cart.forEach((item) => {
       if (!item.specArr) {
         products.push({
-          name: item.Name,
-          spec: "",
-          buyQty: item.buyQty
+          ProductName: item.Name,
+          ProducNum: item.ProducNum,
+          Spec1: "",
+          Spec2: "",
+          ProductAmount: item.buyQty
         })
       } else {
         item.specArr.forEach((spec) => {
           if (spec.buyQty) {
             products.push({
-              name: item.Name,
-              spec: `${spec.Name}${spec.Name2 ? `，${spec.Name2}` : ""}`,
-              buyQty: spec.buyQty
-            })
-          }
-        })
-      }
-
-      if (item.addProducts) {
-        item.addProducts.forEach((addProduct) => {
-          if (!addProduct.specArr) {
-            if (addProduct.buyQty) {
-              products.push({
-                name: addProduct.Name,
-                spec: "",
-                buyQty: addProduct.buyQty
-              })
-            }
-          } else {
-            addProduct.specArr.forEach((spec) => {
-              if (spec.buyQty) {
-                products.push({
-                  name: addProduct.Name,
-                  spec: spec.Name,
-                  buyQty: spec.buyQty
-                })
-              }
+              ProductName: item.Name,
+              ProducNum: spec.ProductNum,
+              Spec1: spec.Name,
+              Spec2: spec.Name2,
+              ProductAmount: spec.buyQty
             })
           }
         })
       }
     })
-    console.log(products)
-    console.log(notEstablishedOrderInfo.value)
+    notEstablishedOrderInfo.value.ProductItems = JSON.stringify(products)
 
-    // let formData = new FormData()
-    // for (let key in notEstablishedOrderInfo.value) {
-    //   let item = notEstablishedOrderInfo.value[key]
-    //   formData.append(key, item)
-    // }
+    localStorage.setItem(
+      "notEstablishedOrderInfo.value.test",
+      JSON.stringify(notEstablishedOrderInfo.value)
+    )
 
-    // fetch("", {
-    //   method: "POST",
-    //   body: formData
-    // })
-    //   .then((response) => {
-    //     console.log(response)
-    //   })
-    //   .catch((error) => {
-    //     console.log("Error:", error)
-    //   })
+    let formData = return_formData(notEstablishedOrderInfo.value)
+    try {
+      createNotEstablishedOrderApi(formData)
+    } catch (error) {
+      throw new Error(error)
+    }
   }
 
   return {

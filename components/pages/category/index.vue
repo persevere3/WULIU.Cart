@@ -92,6 +92,7 @@ onMounted(async () => {
   initCategory(data)
 })
 
+// fullPath 有改變時，重新取得 category
 const fullPath = computed(() => useRoute().fullPath)
 watch(fullPath, async () => {
   let data = await ajaxCategory()

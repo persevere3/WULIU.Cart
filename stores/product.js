@@ -30,11 +30,13 @@ export const useProductStore = defineStore("product", () => {
   // 是否顯示商品詳情
   const isDetail = ref(true)
 
-  //
+  // 是否顯示我的最愛modal
   const is_favorite_modal = ref(false)
+  // 我的最愛
   const favorite = ref({})
 
   // methods ==============================
+  // 遞迴處理分類
   function sort_categories(cg_arr, parentid, layer) {
     let result_arr = []
 
@@ -54,7 +56,6 @@ export const useProductStore = defineStore("product", () => {
 
     return result_arr
   }
-
   async function categoryHandler() {
     let data = JSON.parse(JSON.stringify(commonStore.webData.GetCategory.data))
 
@@ -73,6 +74,7 @@ export const useProductStore = defineStore("product", () => {
     console.log(categories.value)
   }
 
+  // 產品價格字串
   function returnPriceRange(product, priceKey) {
     let priceArr = product.specArr.map((spec) => spec[priceKey] * 1)
     let lowestPrice = Math.min(...priceArr)
@@ -85,6 +87,7 @@ export const useProductStore = defineStore("product", () => {
       )}`
   }
 
+  // 取得所有產品
   async function ajaxProducts() {
     let query = { Preview: commonStore.site.Preview }
 
@@ -98,6 +101,7 @@ export const useProductStore = defineStore("product", () => {
       console.log(error)
     }
   }
+  // 處理 產品
   async function productsHandler(res) {
     let originProducts = res.data
     let specs = res.data2 // 規格
@@ -172,6 +176,7 @@ export const useProductStore = defineStore("product", () => {
     productsRendered.value = true
   }
 
+  // 取得加價購商品 ids: 主商品id陣列
   async function getAddProducts(ids) {
     ids.forEach((id, index) => {
       let product = products.value.find((product) => product.ID == id)
@@ -182,13 +187,15 @@ export const useProductStore = defineStore("product", () => {
 
     let id = ids.join()
 
-    let query = {
+    let obj = {
       id,
       Preview: commonStore.site.Preview
     }
 
+    let formData = return_formData(obj)
+
     try {
-      let res = JSON.parse(await getAddProductsApi(query))
+      let res = JSON.parse(await getAddProductsApi(formData))
       const isReqSuccess = commonStore.resHandler(res)
       if (!isReqSuccess) return getAddProducts(ids)
 
@@ -246,6 +253,7 @@ export const useProductStore = defineStore("product", () => {
   }
 
   // favorite
+  // 從 localStorage 取得我的最愛
   async function getFavorite() {
     // 登入狀態
     if (commonStore.user_account) {
@@ -300,6 +308,7 @@ export const useProductStore = defineStore("product", () => {
       favorite.value = favoriteObj
     }
   }
+  // 切換產品是否加入我的最愛
   async function toggleFavorite(id) {
     // 登入狀態
     if (commonStore.user_account) {

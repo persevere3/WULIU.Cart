@@ -23,11 +23,13 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
   const { return_formData } = useRequest()
 
   // state ==============================
+  // info bonus order
   const member_info_nav_active = ref("info")
 
   // info ---------------
   const memberInfo = ref({})
 
+  // 修改會員資料
   const e_form = reactive({
     // 姓名 信箱 手機 -----
     name: {
@@ -232,6 +234,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
 
   // methods ==============================
   // info ---------------
+  // 取得會員資料
   async function getMemberInfo() {
     let query = {
       storeid: commonStore.site.Name,
@@ -364,6 +367,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
       throw new Error(error)
     }
   }
+  // 登入時，使用一般顧客的購物車
   function login_handle_cart() {
     let localKey = `${commonStore.site.Name}@cart`
     let localCart
@@ -377,6 +381,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
     cartStore.setCart()
   }
 
+  // 修改會員資料
   async function edit_info() {
     if (!verify(e_form.name, e_form.mail, e_form.birthday, e_form.phone)) return
 
@@ -449,6 +454,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
       throw new Error(error)
     }
   }
+  // 修改密碼
   async function edit_pass() {
     if (!verify(e_form.o_password, e_form.password, e_form.confirm_password))
       return
@@ -477,8 +483,8 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
     }
   }
 
+  // memberInfo.value.Adress => memberInfo.value.address_obj
   function createAddressObj(address) {
-    // memberInfo.value.Adress => memberInfo.value.address_obj
     // id: {id, address(`${city} ${district} ${detail}`)}
     let address_obj = {}
     let address_arr = address.split("_#_")
@@ -493,6 +499,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
     return address_obj
   }
 
+  //
   function add_address() {
     let id = new Date().getTime()
     if (e_form.delivery_address.length > 2) return
@@ -517,6 +524,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
   }
 
   // bonus ---------------
+  // type 沒有值: 當前頁設成1
   async function getBonus(type) {
     if (!type) bonus_pagination.activePage = 1
 
@@ -565,7 +573,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
     }
   }
 
-  // ---------------
+  // 登出 ---------------
   async function logoutHandler() {
     commonStore.user_account = ""
     useUrlPush("/user")
@@ -582,7 +590,7 @@ export const useMemberInfoStore = defineStore("memberInfo", () => {
     }
   }
 
-  // ---------------
+  // LINE ---------------
   function bindLine() {
     useUrlPush(
       `${location.origin}/interface/webmember/LineLoginAuthorize?storeid=${commonStore.site.Name}&site=${commonStore.site.Site}&phone=${commonStore.user_account}&method=LineRegister`

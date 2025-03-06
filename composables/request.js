@@ -1,4 +1,7 @@
+// api 參數 物件轉成query或formData
+
 export function useRequest() {
+  // 物件轉成query
   // data => formUrlencoded or 只post WebPreview Preview
   function return_formUrlencoded(origin) {
     let formUrlencoded = ""
@@ -10,6 +13,7 @@ export function useRequest() {
 
     return formUrlencoded
   }
+  // 物件轉成formData
   // data => formData or 只post WebPreview
   function return_formData(origin) {
     let formData = new FormData()

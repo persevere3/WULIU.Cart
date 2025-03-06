@@ -1,3 +1,5 @@
+// 格式化時間 comma: 間格符號 isTime: 是否要顯示時分秒
+
 export function useFormatDate(date, comma = "-", isTime) {
   let d = `${date.getFullYear()}${comma}${date.getMonth() + 1 < 10 ? "0" : ""}${
     date.getMonth() + 1

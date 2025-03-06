@@ -8,8 +8,8 @@ const cartStore = useCartStore()
 const purchaseInfoStore = usePurchaseInfoStore()
 
 onMounted(() => {
-  if (!purchaseInfoStore.notEstablishedOrderInfo.startTime) {
-    purchaseInfoStore.notEstablishedOrderInfo.startTime = useFormatDate(
+  if (!purchaseInfoStore.notEstablishedOrderInfo.OrderFirstPayTime) {
+    purchaseInfoStore.notEstablishedOrderInfo.OrderFirstPayTime = useFormatDate(
       new Date(),
       "-",
       "time"

@@ -1,3 +1,31 @@
+<script setup>
+import { useNumberThousands } from "@/composables/numberThousands"
+
+const commonStore = useCommonStore()
+const cartStore = useCartStore()
+
+let subtotal = computed(() => {
+  return (
+    parseInt(cartStore.total.Total) -
+    parseInt(cartStore.total.Discount) -
+    parseInt(cartStore.total.DiscountCode)
+  )
+})
+
+watch(
+  () => commonStore.is_initial,
+  (v) => {
+    if (v) cartStore.getTotal(cartStore.step - 1)
+  },
+  { immediate: true }
+)
+
+const { successUsedDiscountCode } = storeToRefs(cartStore)
+watch(successUsedDiscountCode, () => {
+  cartStore.getTotal(cartStore.step - 1)
+})
+</script>
+
 <template>
   <div class="total">
     <ul>
@@ -62,31 +90,3 @@
     </ul>
   </div>
 </template>
-
-<script setup>
-import { useNumberThousands } from "@/composables/numberThousands"
-
-const commonStore = useCommonStore()
-const cartStore = useCartStore()
-
-let subtotal = computed(() => {
-  return (
-    parseInt(cartStore.total.Total) -
-    parseInt(cartStore.total.Discount) -
-    parseInt(cartStore.total.DiscountCode)
-  )
-})
-
-watch(
-  () => commonStore.is_initial,
-  (v) => {
-    if (v) cartStore.getTotal(cartStore.step - 1)
-  },
-  { immediate: true }
-)
-
-const { successUsedDiscountCode } = storeToRefs(cartStore)
-watch(successUsedDiscountCode, () => {
-  cartStore.getTotal(cartStore.step - 1)
-})
-</script>
